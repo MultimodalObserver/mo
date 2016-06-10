@@ -36,7 +36,7 @@ public class MainPresenter {
         //System.out.println(e);
         try {
             try {
-                main.InstanciateModule(e.getActionCommand().replace("/", "."));
+                main.InstanciateModule(e.getActionCommand().replace("/", "."), view);
             } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                 Logger.getLogger(MainPresenter.class.getName()).log(Level.SEVERE, null, ex);
             }

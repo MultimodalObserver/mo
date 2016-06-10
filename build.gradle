@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
 sourceCompatibility = '1.8'
-version = '1'
+version = '1.0'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 // NetBeans will automatically add "run" and "debug" tasks relying on the
@@ -19,13 +19,13 @@ jar {
     manifest {
         attributes("Implementation-Title": "Gradle",
                    "Implementation-Version": version,
-                    "Main-Class": 'core.Main',
+                    "Main-Class": 'core.App',
             //"Class-Path": "plugins${File.separator}"
         )
     }
-    //from {
-    //   configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    //}
+    from {
+       configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 
@@ -51,5 +51,6 @@ dependencies {
     // http://mvnrepository.com/artifact/commons-io/commons-io
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
 
-
+    compile fileTree(dir: 'libs', include: '*.jar')
+    compile 'org.dockingframes:docking-frames-common:1.1.1'
 }

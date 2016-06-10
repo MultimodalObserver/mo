@@ -1,5 +1,8 @@
 package core;
 
+import java.util.Collection;
+import javax.swing.JFrame;
+
 public interface Modulable {
 
     /**
@@ -11,4 +14,10 @@ public interface Modulable {
     String getDescription();
     
     void init();
+    
+    Collection<String> getModuleExtensionInterfaces();
+    
+    boolean isSingleton();
+    
+    void setParentFrame(JFrame frame);
 }

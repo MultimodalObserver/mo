@@ -3,6 +3,7 @@ package core;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import javax.swing.JFrame;
 
 public class Main {
     ModuleDiscover md;
@@ -18,7 +19,7 @@ public class Main {
         return md.getModulesFullNameClasses();
     }
     
-    public void InstanciateModule(String name) throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+    public void InstanciateModule(String name, JFrame frame) throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
         //try {
             //ClassReader cr = new ClassReader(name.replace(".", "/"));
             //Class<?> moduleClass = dcl.defineClass(name, cr.b);
@@ -45,6 +46,7 @@ public class Main {
             Method main = act.getMethod("init");
             main.setAccessible(true);
             Modulable t = (Modulable) act.newInstance();
+            t.setParentFrame(frame);
             t.init();
             //main.invoke(t);
             

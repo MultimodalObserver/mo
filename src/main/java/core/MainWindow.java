@@ -1,10 +1,9 @@
 package core;
 
-import java.awt.event.ActionEvent;
+import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -24,15 +23,16 @@ public class MainWindow extends JFrame implements MainWindowI {
     public void createAndShowGUI(){
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("memoria");
-
+        setLocation(450, 200);
+        setPreferredSize(new Dimension(300, 300));
         menuBar = new JMenuBar();
         for (JMenuItem modulesMenuItem : modulesMenuItems) {
             modulesMenu.add(modulesMenuItem);
         }
         
         menuBar.add(modulesMenu);
-        
-        add(menuBar);
+
+        setJMenuBar(menuBar);
         setVisible(true);
         
         pack();
