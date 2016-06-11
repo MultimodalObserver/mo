@@ -3,9 +3,13 @@ package core;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -33,6 +37,8 @@ public class WizardDialog extends JDialog {
     private JButton backButton;
     private JButton nextButton;
     private JButton finishButton;
+    private JLabel warningLabel;
+    private JLabel stepTitleLabel;
     
     public WizardDialog(JFrame parent, String title){
         super(parent, title);
@@ -46,15 +52,13 @@ public class WizardDialog extends JDialog {
         JLabel stepsLabel = new JLabel("Steps", JLabel.LEFT);
         stepsLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         
-        
+        JSeparator sep = new JSeparator();
+        sep.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         
         stepsPanel = new JPanel();
         stepsPanel.setBackground(Color.WHITE);
         stepsPanel.setLayout(new BoxLayout(stepsPanel, BoxLayout.Y_AXIS));
         stepsPanel.add(stepsLabel);
-        
-        JSeparator sep = new JSeparator();
-        sep.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         stepsPanel.add(sep);
         
         JPanel externalStepsPanel = new JPanel();
@@ -69,6 +73,10 @@ public class WizardDialog extends JDialog {
         
         finishButton = new JButton("Finish");
         finishButton.setEnabled(false);
+        finishButton.addActionListener((ActionEvent e) -> {
+            setVisible(false);
+            dispose();
+        });
         
         JButton cancelButton = new JButton("Cancel");
         cancelButton.addActionListener((ActionEvent e) -> {
@@ -92,13 +100,37 @@ public class WizardDialog extends JDialog {
         buttonsPanel.add(Box.createHorizontalStrut(10));
         buttonsPanel.add(cancelButton);
         
+        
+        stepTitleLabel = new JLabel("A Title");
+        stepTitleLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        JSeparator stepTitleSep = new JSeparator();
+        stepTitleSep.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        JPanel panelForTitle = new JPanel();
+        panelForTitle.setLayout(new BoxLayout(panelForTitle, BoxLayout.Y_AXIS));
+        panelForTitle.add(stepTitleLabel);
+        panelForTitle.add(stepTitleSep);
+        
         cards = new JPanel(new CardLayout());
         
+        warningLabel = new JLabel("A warning");
+        warningLabel.setForeground(Color.red);
+        warningLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+        
+        mainPanel.add(panelForTitle, BorderLayout.NORTH);
 
+        mainPanel.add(cards, BorderLayout.CENTER);
+        mainPanel.add(warningLabel, BorderLayout.SOUTH);
+        
         //JPanel stepsPanel = new JPanel();
         Container contentPane = super.getContentPane();
         contentPane.add(externalStepsPanel, BorderLayout.WEST);
-        contentPane.add(cards, BorderLayout.CENTER);
+        contentPane.add(mainPanel, BorderLayout.CENTER);
         contentPane.add(buttonsPanel, BorderLayout.PAGE_END);
         //contentPane.add(buttons, BorderLayout.PAGE_END);
         
@@ -144,9 +176,7 @@ public class WizardDialog extends JDialog {
     public HashMap showWizard(){
         JLabel l = new JLabel();
         Font f = l.getFont();
-        System.out.println(f.getStyle());
         f = new Font(f.getFontName(), Font.PLAIN, f.getSize());
-        System.out.println(f.getStyle());
         for (int i=0; i<panels.size(); i++) {
             JPanel p = panels.get(i);
             cards.add(p.getName(), p);
@@ -159,6 +189,7 @@ public class WizardDialog extends JDialog {
             stepsPanel.add(stepsLabels.get(stepsLabels.size()-1));
         }
         stepsPanel.add(Box.createVerticalGlue());
+        setStepTitle("1.  "+panels.get(0).getName());
         this.pack();
         this.setLocationRelativeTo(null);
         this.setVisible(true);
@@ -166,11 +197,18 @@ public class WizardDialog extends JDialog {
     }
     
     public void addResult(String k, Object v){
+        if (result == null)
+            result = new HashMap<>();
+        
         if (result.containsKey(k)) {
             result.replace(k, v);
         } else {
             result.put(k, v);
         }
+    }
+    
+    public void nullResult(){
+        result = null;
     }
     
     public void enableNext(){
@@ -202,6 +240,14 @@ public class WizardDialog extends JDialog {
         cl.show(cards, name);
     }
     
+    public void setWarningMessage(String message){
+        warningLabel.setText(message);
+    }
+    
+    public void setStepTitle(String title){
+        stepTitleLabel.setText(title);
+    }
+    
     public static void main(String[] args){
         JFrame f = new JFrame("asd aisdoia sd hasodhas hdoaih sd");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -227,5 +273,6 @@ public class WizardDialog extends JDialog {
         } else {
             System.out.println("  no null");
         }
+        System.exit(0);
     }
 }

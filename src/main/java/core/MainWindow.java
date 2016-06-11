@@ -14,10 +14,15 @@ public class MainWindow extends JFrame implements MainWindowI {
     private JMenu modulesMenu;
     private Collection<String> modulesList; 
     private Collection<JMenuItem> modulesMenuItems;
+    private Collection<JMenuItem> fileMenuItems;
+    private JMenu fileMenu;
+    private JMenuItem newProject;
 
     public MainWindow() {
         modulesMenuItems = new ArrayList<>();
+        fileMenuItems = new ArrayList<>();
         modulesMenu = new JMenu("Modules");
+        newProject = new JMenuItem("New Project...");
     }
     
     public void createAndShowGUI(){
@@ -25,17 +30,33 @@ public class MainWindow extends JFrame implements MainWindowI {
         setTitle("memoria");
         setLocation(450, 200);
         setPreferredSize(new Dimension(300, 300));
-        menuBar = new JMenuBar();
+        
+        //newProject = new JMenuItem("New Project...");
+        fileMenuItems.add(newProject);
+        
+        fileMenu = new JMenu("File");
+        
+        for (JMenuItem fileMenuItem : fileMenuItems){
+            fileMenu.add(fileMenuItem);
+        }
+        
         for (JMenuItem modulesMenuItem : modulesMenuItems) {
             modulesMenu.add(modulesMenuItem);
         }
         
+        menuBar = new JMenuBar();
+        menuBar.add(fileMenu);
         menuBar.add(modulesMenu);
+        
 
         setJMenuBar(menuBar);
         setVisible(true);
         
         pack();
+    }
+    
+    public void addNewProjectListener(ActionListener l){
+        newProject.addActionListener(l);
     }
     
     public void addModulesMenuItemsActionListener(ActionListener l){
