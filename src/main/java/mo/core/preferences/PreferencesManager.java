@@ -1,7 +1,7 @@
 package mo.core.preferences;
 
 import com.thoughtworks.xstream.XStream;
-import mo.core.Utils;
+import mo.core.utils.Utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -57,25 +57,26 @@ public class PreferencesManager {
         x.processAnnotations(wrapperClass);
         try {
             o = x.fromXML(xmlFile);
-        } catch ( Exception ex ) {
+        } catch (Exception ex) {
             System.out.println("Can't load app preferences file");
             //Logger.getLogger(PreferencesManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         return o;
     }
-    
-    public Object loadOrCreate(Class wrapperClass, File xmlFile){
+
+    public Object loadOrCreate(Class wrapperClass, File xmlFile) {
         Object o = load(wrapperClass, xmlFile);
-        if (null == o){
+        if (null == o) {
             try {
                 o = wrapperClass.newInstance();
-                if (!xmlFile.isFile()){
-                    if (xmlFile.createNewFile()){
+                if (!xmlFile.isFile()) {
+                    if (xmlFile.createNewFile()) {
                         save(o, xmlFile);
                     }
                 }
             } catch (InstantiationException | IllegalAccessException | IOException ex) {
-                Logger.getLogger(PreferencesManager.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(PreferencesManager.class.getName())
+                        .log(Level.SEVERE, null, ex);
             }
         }
         return o;
@@ -89,14 +90,14 @@ public class PreferencesManager {
 
         AppPreferencesWrapper aa;
 
-            aa = (AppPreferencesWrapper) pm.load(AppPreferencesWrapper.class,
-                    new File(Utils.getBaseFolder() + "/app.xml"));
-            
-            if (aa != null){
+        aa = (AppPreferencesWrapper) pm.load(AppPreferencesWrapper.class,
+                new File(Utils.getBaseFolder() + "/app.xml"));
+
+        if (aa != null) {
             aa.getOpenedProjects().stream().forEach((openedProject) -> {
                 System.out.println(openedProject.getLocation());
             });
 
-            }
+        }
     }
 }

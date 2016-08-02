@@ -1,12 +1,13 @@
 package mo.core.plugin;
 
-import mo.core.Utils;
+import mo.core.utils.Utils;
 import mo.example.IExtPointExample;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static mo.core.plugin.VersionUtils.semverize;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
@@ -19,28 +20,42 @@ import org.objectweb.asm.Opcodes;
  */
 public class ExtensionScanner extends ClassVisitor {
 
-    private static final String EXTENSION_DESC = "Lcore/plugin/Extension;";
+    private static final
+            String EXTENSION_DESC = "Lmo/core/plugin/Extension;";
     
-    private static final 
-            String EXTENSION_POINT_DESC = "Lcore/plugin/Extends;";
+    private static final
+            String EXTENDS_DESC = "Lmo/core/plugin/Extends;";
+    
+    private static final
+            String EXTENSION_POINT_DESC = "Lmo/core/plugin/ExtensionPoint;";
     
     private Plugin plugin = new Plugin();
     
+    private ExtPoint extPoint = new ExtPoint();
+    
     private boolean isExtension = false;
+    
+    private boolean isExtensionPoint = false;
+    
+    private ClassLoader cl;
+    
+    private final static Logger LOGGER = 
+            Logger.getLogger(ExtensionScanner.class.getName()); 
     
     public ExtensionScanner(int i) {    
         super(i);
     }
     
+    public void setClassLoader(ClassLoader cl){
+        this.cl = cl;
+    }
+    
     @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+    public void visit(int version, int access, String name, 
+            String signature, String superName, String[] interfaces) {
         //System.out.println(version+" "+access+" "+name+" "+signature+" "+superName+" "+interfaces);
         plugin.setId(name.replace("/", "."));
-        try {
-            plugin.setClazz(Class.forName(name.replace("/", ".")));
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        extPoint.setId(name.replace("/", "."));
         super.visit(version, access, name, signature, superName, interfaces);
     }
     
@@ -52,7 +67,8 @@ public class ExtensionScanner extends ClassVisitor {
             //plugin = new Plugin();
             //System.out.println(" paso");
             isExtension = true;
-            return new AnnotationVisitor(Opcodes.ASM5, super.visitAnnotation(desc, visible)) {
+            return new AnnotationVisitor(Opcodes.ASM5, 
+                    super.visitAnnotation(desc, visible)) {
                 
                 @Override
                 public void visit(String nam, Object value) {
@@ -85,7 +101,7 @@ public class ExtensionScanner extends ClassVisitor {
                         public AnnotationVisitor visitAnnotation(String name, String desc) {
                             Dependency d = new Dependency();
                             //System.out.println("   vann " + name + " " + desc);
-                            if (desc.compareTo(EXTENSION_POINT_DESC) == 0) {
+                            if (desc.compareTo(EXTENDS_DESC) == 0) {
                                 return new AnnotationVisitor(Opcodes.ASM5, super.visitAnnotation(name, desc)) {
                                     @Override
                                     public void visit(String name, Object value) {
@@ -123,6 +139,35 @@ public class ExtensionScanner extends ClassVisitor {
                     };
                 }
             };
+        } else if (desc.compareTo(EXTENSION_POINT_DESC) == 0) {
+            isExtensionPoint = true;
+            return new AnnotationVisitor(Opcodes.ASM5, 
+                    super.visitAnnotation(desc, visible)) {
+                
+                @Override
+                public void visit(String nam, Object value) {
+                    System.out.println("  visit " + nam + " " + value);
+                    switch (nam) {
+                        case "id":
+                            extPoint.setId((String) value);
+                            break;
+                        case "version":
+                            extPoint.setVersion((String) value);
+                            System.out.println("-v "+extPoint.getVersion());
+                            break;
+                        case "name":
+                            extPoint.setName((String) value);
+                            break;
+                        case "description":
+                            extPoint.setDescription((String) value);
+                            break;
+                        default:
+                            break;
+                    }
+                    super.visit(nam, value);
+                }
+            };
+                    
         } else {
             return super.visitAnnotation(desc, visible);
         }
@@ -130,7 +175,39 @@ public class ExtensionScanner extends ClassVisitor {
 
     @Override
     public void visitEnd() {
-        if (!isExtension) this.plugin = null;
+        if (!isExtension && !isExtensionPoint) {
+            this.plugin = null;
+            this.extPoint = null;
+        } else if (isExtensionPoint) {
+            this.plugin = null;
+            if (extPoint.getVersion() == null)
+                extPoint.setVersion("0.0.0");
+            
+            extPoint.setVersion(semverize(extPoint.getVersion()));
+ 
+        } else if (isExtension) {
+            this.extPoint = null;
+            try {
+                Class c = Class.forName(plugin.getId());
+                plugin.setClazz(c);
+            } catch (NoClassDefFoundError | ClassNotFoundException | IllegalAccessError ex) {
+                try {
+                    //Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex);
+                    //ClassLoader cl = ExtensionScanner.class.getClassLoader();
+
+                    plugin.setClazz(cl.loadClass(plugin.getId()));
+                    //URLClassLoader u = 
+                } catch (ClassNotFoundException ex1) {
+                    Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+            }
+            
+            if (plugin.getVersion() == null)
+                plugin.setVersion("0.0.0");
+            
+            plugin.setVersion(semverize(plugin.getVersion()));
+            
+        }
         super.visitEnd(); //To change body of generated methods, choose Tools | Templates.
     }
     
@@ -138,6 +215,10 @@ public class ExtensionScanner extends ClassVisitor {
     
     public Plugin getPlugin(){
         return this.plugin;
+    }
+    
+    public ExtPoint getExtPoint() {
+        return this.extPoint;
     }
 
     public static void main(String[] args) throws Exception {

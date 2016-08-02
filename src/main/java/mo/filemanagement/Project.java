@@ -1,4 +1,4 @@
-package mo.core;
+package mo.filemanagement;
 
 import java.io.File;
 import javax.xml.parsers.DocumentBuilder;
@@ -29,7 +29,7 @@ public class Project {
         }
     }
 
-    File getFolder() {
+    public File getFolder() {
         return this.folder;
     }
 

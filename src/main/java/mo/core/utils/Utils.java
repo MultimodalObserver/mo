@@ -1,4 +1,4 @@
-package mo.core;
+package mo.core.utils;
 
 import java.io.File;
 

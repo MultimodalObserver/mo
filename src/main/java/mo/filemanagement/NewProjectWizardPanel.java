@@ -1,6 +1,6 @@
-package mo.core.ui;
+package mo.filemanagement;
 
-import mo.core.Utils;
+import mo.core.utils.Utils;
 import mo.core.ui.WizardDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import mo.core.ui.WizardDialog;
 
 /**
  *

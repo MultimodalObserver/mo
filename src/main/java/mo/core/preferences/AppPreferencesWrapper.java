@@ -19,6 +19,15 @@ public class AppPreferencesWrapper {
     @XStreamAlias("plugins")
     private HashSet<String> pluginFolders;
     
+    private int frameX = 450;
+    
+    private int frameY = 200;
+    
+    private int frameWidth = 300;
+    
+    private int frameHeight = 300;
+    
+    
     //@XStreamAlias("")
     
     public AppPreferencesWrapper(){
@@ -67,6 +76,40 @@ public class AppPreferencesWrapper {
         if (!pluginFolders.contains(folder))
             pluginFolders.add(folder);
     }
+
+    public int getFrameX() {
+        return frameX;
+    }
+
+    public void setFrameX(int frameX) {
+        this.frameX = frameX;
+    }
+
+    public int getFrameY() {
+        return frameY;
+    }
+
+    public void setFrameY(int frameY) {
+        this.frameY = frameY;
+    }
+
+    public int getFrameWidth() {
+        return frameWidth;
+    }
+
+    public void setFrameWidth(int frameWidth) {
+        this.frameWidth = frameWidth;
+    }
+
+    public int getFrameHeight() {
+        return frameHeight;
+    }
+
+    public void setFrameHeight(int frameHeight) {
+        this.frameHeight = frameHeight;
+    }
+    
+    
     
     public static void main(String [] args){
         XStream x = new XStream();

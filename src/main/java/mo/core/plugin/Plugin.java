@@ -99,9 +99,12 @@ public class Plugin {
         result += "version: " + version + ", ";
         result += "name: " + name + ", ";
         result += "description: " + description + ", ";
+        result += "path: " + path + ", ";
+        result += "clazz: " + clazz + ", ";
         result += "dependencies: [";
-        for (Dependency dependency : getDependencies()) {
-            result += dependency.getId() + " " + dependency.getVersion() + ", ";
+        for (Dependency dep : getDependencies()) {
+            result += dep.getId() + " " + dep.getVersion() + 
+                    " " + dep.isPresent() + ", ";
         }
         result = result.substring(0, result.length()-2);
         result += "]";

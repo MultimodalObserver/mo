@@ -1,0 +1,54 @@
+<?xml version='1.0'?>
+<root>
+	<dockables>
+		<dockable>
+			<id>4</id>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="TOP" size="0.75" id="1469391353648"/>
+					<node location="TOP" size="0.6666666666666666" id="1469391353650"/>
+					<leaf id="1469391353652"/>
+				</property>
+			</location>
+		</dockable>
+		<dockable>
+			<id>2</id>
+			<location type="CStackLocation">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="CStackLocation">
+					<node location="TOP" size="0.75" id="1469391353648"/>
+					<node location="BOTTOM" size="0.33333333333333337" id="1469391353650"/>
+					<leaf id="1469391353654"/>
+				</property>
+				<index>0</index>
+			</location>
+		</dockable>
+		<dockable>
+			<id>3</id>
+			<location type="CStackLocation">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="CStackLocation">
+					<node location="TOP" size="0.75" id="1469391353648"/>
+					<node location="BOTTOM" size="0.33333333333333337" id="1469391353650"/>
+					<leaf id="1469391353654"/>
+				</property>
+				<index>1</index>
+			</location>
+		</dockable>
+		<dockable>
+			<id>1</id>
+			<location type="CFlapIndexLocation">
+				<root>ccontrol north</root>
+				<mode>dock.mode.minimized</mode>
+				<property type="CFlapIndexLocation">
+					<index>0</index>
+					<holding>false</holding>
+				</property>
+			</location>
+		</dockable>
+	</dockables>
+</root>

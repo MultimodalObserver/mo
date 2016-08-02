@@ -16,7 +16,7 @@ version = '0.0.0'
 // prefer. In this case NetBeans will not add these tasks but you may rely on
 // your own implementation.
 if (!hasProperty('mainClass')) {
-    ext.mainClass = 'core.App'
+    ext.mainClass = 'mo.core.MultimodalObserver'
 }
 
 repositories {
@@ -65,6 +65,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.reflections/reflections
     compile group: 'org.reflections', name: 'reflections', version: '0.9.10'
 
+    // https://mvnrepository.com/artifact/com.github.zafarkhaja/java-semver
+    compile group: 'com.github.zafarkhaja', name: 'java-semver', version: '0.9.0'
 
 
 }
@@ -73,7 +75,7 @@ jar {
     manifest {
         attributes( 'Implementation-Title'   : 'Gradle'         ,
                     'Implementation-Version' :  version         ,
-                    'Main-Class'             : 'core.App'       ,
+                    'Main-Class'             : 'mo.core.MultimodalObserver'       ,
             //'SplashScreen-Image'     : 'images/splash.gif'
             //"Class-Path": "plugins${File.separator}"
         )

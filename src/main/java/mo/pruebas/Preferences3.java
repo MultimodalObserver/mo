@@ -1,6 +1,6 @@
 package mo.pruebas;
 
-import mo.core.Utils;
+import mo.core.utils.Utils;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;

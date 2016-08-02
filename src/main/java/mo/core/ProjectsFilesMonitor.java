@@ -1,7 +1,5 @@
 package mo.core;
 
-
-
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -18,7 +16,7 @@ import org.apache.commons.io.monitor.FileAlterationObserver;
 public class ProjectsFilesMonitor {
         // A hardcoded path to a folder you are monitoring .
     public static final String FOLDER =
-            "C:/Users/Celso/Desktop/pruebas/watchDir/asd";
+            "C:/Users/Celso/Desktop";
     
     HashSet<String> folders;
 
@@ -37,6 +35,7 @@ public class ProjectsFilesMonitor {
         
         FileAlterationMonitor monitor =
                 new FileAlterationMonitor(pollingInterval);
+        
         FileAlterationListener listener = new FileAlterationListenerAdaptor() {
             // Is triggered when a file is created in the monitored folder
             @Override

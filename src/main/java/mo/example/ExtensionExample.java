@@ -8,17 +8,17 @@ import mo.core.plugin.Extension;
  * @author Celso
  */
 @Extension(
-        id = "example.ExtensionExample",
+        id = "mo.example.ExtensionExample",
         name = "Example",
         description = "Description",
         version = "0",
         xtends = {
             @Extends(
-                    extensionPointId = "example.IExtPointExample",
+                    extensionPointId = "mo.example.IExtPointExample",
                     extensionPointVersion = ">=0"
             ),
             @Extends(
-                    extensionPointId = "example.IExtPointExample2",
+                    extensionPointId = "mo.example.IExtPointExample2",
                     extensionPointVersion = ">=0"
             )
         }
