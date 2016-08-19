@@ -3,10 +3,6 @@ package mo.core.ui;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
 
-/**
- *
- * @author Celso
- */
 public class GridBConstraints extends GridBagConstraints {
     
     public GridBConstraints clear(){
@@ -68,12 +64,12 @@ public class GridBConstraints extends GridBagConstraints {
         return this;
     }
     
-    public GridBConstraints wx(int weightx){
+    public GridBConstraints wx(double weightx){
         this.weightx = weightx;
         return this;
     }
     
-    public GridBConstraints wy(int weighty){
+    public GridBConstraints wy(double weighty){
         this.weighty = weighty;
         return this;
     }

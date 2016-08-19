@@ -1,9 +1,8 @@
 package mo.core.plugin;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
+import java.util.ArrayList;
+import java.util.List;
+
 public class ExtPoint {
     
     String id;
@@ -11,6 +10,8 @@ public class ExtPoint {
     
     String name;
     String description;
+    
+    List<Plugin> plugins;
 
     public String getId() {
         return id;
@@ -42,6 +43,20 @@ public class ExtPoint {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    
+    public void addPlugin(Plugin p) {
+        if (plugins == null) {
+            plugins = new ArrayList<>();
+        }
+        plugins.add(p);
+    }
+    
+    public List<Plugin> getPlugins() {
+        if (plugins == null) {
+            plugins = new ArrayList<>();
+        }
+        return plugins;
     }
     
     @Override

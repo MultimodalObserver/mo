@@ -1,11 +1,11 @@
 package mo.filemanagement;
 
 import bibliothek.gui.dock.common.CControl;
-import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -14,22 +14,21 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeSelectionModel;
+import mo.core.MultimodalObserver;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
-import mo.core.ui.frames.DockableElement;
-import mo.core.ui.frames.DockablesRegistry;
-import mo.core.ui.frames.IDockableElement;
+import mo.core.preferences.AppPreferencesWrapper;
+import mo.core.preferences.AppProjectPreferencesWrapper;
+import mo.core.preferences.PreferencesManager;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.IDockableElementProvider;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 @Extension(
         xtends = {
-            @Extends(extensionPointId = "mo.core.ui.frames.IDockableElement")
+            @Extends(extensionPointId = "mo.core.ui.dockables.IDockableElementProvider")
         }
 )
-public class FilesPane implements IDockableElement {
+public class FilesPane implements IDockableElementProvider {
 
     private DockableElement dockable;
     private final FilesTreeModel filesTreeModel;
@@ -65,29 +64,29 @@ public class FilesPane implements IDockableElement {
         filesTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent event) {
-                // thanks to urbanq for the bug fix!
-                
+
                 if (SwingUtilities.isRightMouseButton(event)) {
-                    System.out.println("pressed");
-                    int row = filesTree.getRowForLocation(event.getX(), event.getY());
-                    if (row == -1) {
-                        return;
-                    }
-                    filesTree.setSelectionRow(row);
-                    File selected = (File) filesTree.getLastSelectedPathComponent();
-                    System.out.println(selected);
+
                     if (event.isPopupTrigger()) {
-                        
+
+                        int row = filesTree.getRowForLocation(event.getX(), event.getY());
+                        if (row == -1) {
+                            return;
+                        }
+                        filesTree.setSelectionRow(row);
+                        File selected = (File) filesTree.getLastSelectedPathComponent();
+
                         JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
-                        
-                        if (pop != null)
-                        pop.show((JComponent) event.getSource(),
-                                event.getX(), event.getY());
+
+                        if (pop != null) {
+                            pop.show((JComponent) event.getSource(),
+                                    event.getX(), event.getY());
+                        }
                         //popup.show((JComponent) event.getSource(), event.getX(), event.getY());
                     }
                 }
             }
-            
+
         });
         JScrollPane filesScrollPane = new JScrollPane(filesTree);
 
@@ -102,10 +101,32 @@ public class FilesPane implements IDockableElement {
         dockable.add(filesScrollPane);
 
         //dockable.setVisible(true);
+        PreferencesManager prefManager = new PreferencesManager();
+        Class c = AppPreferencesWrapper.class;
+        File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
+        AppPreferencesWrapper preferences = (AppPreferencesWrapper) prefManager.loadOrCreate(c, prefFile);
+
+        List<String> projectsNotFound = new ArrayList<>();
+        preferences.getOpenedProjects().stream().forEach((AppProjectPreferencesWrapper openedProject) -> {
+            File f = new File(openedProject.getLocation());
+
+            if (f.exists()) {
+                addFile(new File(openedProject.toString()));
+            } else {
+                projectsNotFound.add(openedProject.getLocation());
+            }
+
+        });
+
+        for (String projectPath : projectsNotFound) {
+            preferences.removeOpenedProject(projectPath);
+        }
+        prefManager.save(preferences, prefFile);
     }
 
     @Override
     public DockableElement getElement() {
+
         return dockable;
     }
 
@@ -130,13 +151,26 @@ public class FilesPane implements IDockableElement {
     public static void main(String[] args) {
         JFrame f = new JFrame("hola");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         FilesPane p = new FilesPane();
-        
+
         CControl control = new CControl(f);
         control.addDockable(p.getElement());
         f.add(control.getContentArea());
         p.getElement().setVisible(true);
         f.setVisible(true);
+    }
+
+    void addFile(File file) {
+        filesTreeModel.addFile(file);
+
+        if (!filesTree.isExpanded(0)) {
+            filesTree.expandRow(0);
+        }
+    }
+
+    @Override
+    public String getDockableGroup() {
+        return null;
     }
 }

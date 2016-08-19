@@ -4,12 +4,8 @@ import javax.swing.JMenuItem;
 
 import mo.core.plugin.ExtensionPoint;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 @ExtensionPoint
-public interface IMenuBarItem {
+public interface IMenuBarItemProvider {
     
     static final int UNDER  = -2;
     static final int BEFORE = -3;

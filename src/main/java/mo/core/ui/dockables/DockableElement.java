@@ -1,16 +1,14 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
+import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.action.CAction;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class DockableElement extends DefaultSingleCDockable {
     
     String group;
     String id;
+    CLocation backupLocation;
     
     public DockableElement(String id, CAction... actions) {
         this(id, null, actions);
@@ -44,5 +42,11 @@ public class DockableElement extends DefaultSingleCDockable {
         return "[DockE="+id+"]";
     }
     
+    public void setBackupLocation(CLocation location) {
+        backupLocation = location;
+    }
     
+    public CLocation getBackupLocation() {
+        return backupLocation;
+    }
 }

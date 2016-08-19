@@ -11,14 +11,10 @@ import javax.swing.JMenuItem;
 
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
-import static mo.core.ui.menubar.IMenuBarItem.AFTER;
-import static mo.core.ui.menubar.IMenuBarItem.BEFORE;
-import static mo.core.ui.menubar.IMenuBarItem.UNDER;
+import static mo.core.ui.menubar.IMenuBarItemProvider.AFTER;
+import static mo.core.ui.menubar.IMenuBarItemProvider.BEFORE;
+import static mo.core.ui.menubar.IMenuBarItemProvider.UNDER;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class MenuBar extends JMenuBar {
     
     private static MenuBar mb;
@@ -34,8 +30,8 @@ public class MenuBar extends JMenuBar {
         JMenu m = new JMenu("File");
         addItem(m, 0, null);
         
-        m = new JMenu("Window");
-        addItem(m, 1, null);
+        //m = new JMenu("Window");
+        //addItem(m, 1, null);
         
         m = new JMenu("Plugins");
         addItem(m, 2, null);
@@ -46,24 +42,18 @@ public class MenuBar extends JMenuBar {
         List<Plugin> plugins = 
                 PluginRegistry
                         .getInstance()
-                        .getPluginsFor("mo.core.ui.menubar.IMenuBarItem");
+                        .getPluginsFor("mo.core.ui.menubar.IMenuBarItemProvider");
         
         plugins.stream().forEach((plugin) -> {
             
-            IMenuBarItem i;
-            try {
-                
-                i = (IMenuBarItem) plugin.getClazz().newInstance();
-                
-                addItem(i.getItem(),
-                        i.getRelativePosition(),
-                        i.getRelativeTo().toLowerCase());
-                
-            } catch (InstantiationException | IllegalAccessException ex) {
-                Logger.getLogger(MenuBar.class.getName())
-                        .log(Level.SEVERE, null, ex);
-            }
+            IMenuBarItemProvider i;
+            i = (IMenuBarItemProvider) plugin.getInstance();
+            addItem(i.getItem(),
+                    i.getRelativePosition(),
+                    i.getRelativeTo().toLowerCase());
+            
         });
+        
     }
     
     public static MenuBar getInstance() {
@@ -88,7 +78,7 @@ public class MenuBar extends JMenuBar {
     }
     
     private void addItem(JMenuItem item, int position, String relativeTo) {
-        
+
         if (item.getName() == null || item.getName().isEmpty())
             if (item.getText() != null && !item.getText().isEmpty())
                 item.setName(item.getText().toLowerCase());
@@ -105,6 +95,8 @@ public class MenuBar extends JMenuBar {
                     //only JMenu can have items
                     if (relative instanceof JMenu) {
                         relative.add(item);
+                    } else {
+                        System.out.println("Can't add JMenu");
                     }
                     break;
                 }
@@ -132,7 +124,12 @@ public class MenuBar extends JMenuBar {
     
     @Override
     public String toString() {
-        String result = "";
+        String result = "MenuBar [\n";
+        for (JMenuItem menuItem : menuItems) {
+            result += " "+menuItem + "\n";
+        }
+        result = result.substring(0,result.length()-1);
+        result+= "\n]";
         return result;
     }
     

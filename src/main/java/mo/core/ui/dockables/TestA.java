@@ -1,4 +1,4 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.DefaultDockable;

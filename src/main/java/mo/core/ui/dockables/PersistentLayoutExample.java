@@ -1,4 +1,4 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
 import java.awt.Color;
 import java.awt.event.ActionEvent;

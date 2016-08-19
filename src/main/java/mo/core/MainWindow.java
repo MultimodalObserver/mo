@@ -1,13 +1,12 @@
 package mo.core;
 
-import java.awt.event.ActionListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import mo.core.ui.frames.DockableElement;
-import mo.core.ui.frames.DockablesRegistry;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.menubar.MenuBar;
 import mo.filemanagement.FileRegistry;
 
@@ -32,11 +31,11 @@ public class MainWindow extends JFrame {
         DockablesRegistry dr = DockablesRegistry.getInstance();
         dr.setJFrame(this);
         add(dr.getControl().getContentArea());
-        
-        
-        DockableElement filesDock = FileRegistry.getInstance().getFilesPane().getElement();
-        dr.getControl().addDockable(filesDock);
-        filesDock.setVisible(true);
+
+        FileRegistry.getInstance();
+        //DockableElement filesDock = FileRegistry.getInstance().getFilesPane().getElement();
+        //dr.getControl().addDockable(filesDock);
+        //filesDock.setVisible(true);
         
 //        JToolBar tools = new JToolBar();
 //        tools.add(new JButton("asd"));
@@ -44,10 +43,6 @@ public class MainWindow extends JFrame {
 
         pack();
         setVisible(true);
-    }
-
-    public void addNewProjectListener(ActionListener l) {
-        //newProject.addActionListener(l);
     }
 
     private void setLookAndFeel() {

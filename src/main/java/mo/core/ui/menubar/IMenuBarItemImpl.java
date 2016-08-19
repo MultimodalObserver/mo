@@ -12,7 +12,7 @@ import mo.core.plugin.Extension;
             )
         }
 )
-public class IMenuBarItemImpl implements IMenuBarItem {
+public class IMenuBarItemImpl implements IMenuBarItemProvider {
 
     @Override
     public JMenuItem getItem() {

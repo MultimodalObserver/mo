@@ -5,25 +5,22 @@ import java.awt.event.ActionListener;
 import java.util.Date;
 import java.util.List;
 import javax.swing.JMenuItem;
-import mo.core.ui.menubar.IMenuBarItem;
+import mo.core.ui.menubar.IMenuBarItemProvider;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
+
 @Extension(
         xtends = {
             @Extends(
-                    extensionPointId = "mo.core.ui.menubar.IMenuBarItem"
+                    extensionPointId = "mo.core.ui.menubar.IMenuBarItemProvider"
             )
         }
 )
-public class PluginPlainViewer implements IMenuBarItem {
+public class PluginPlainViewer implements IMenuBarItemProvider {
     
     JMenuItem menuLauncher;
     
     public PluginPlainViewer() {
-        menuLauncher = new JMenuItem("Plugin Viewer");
+        menuLauncher = new JMenuItem("Plain Plugin Viewer");
         menuLauncher.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -43,7 +40,7 @@ public class PluginPlainViewer implements IMenuBarItem {
 
     @Override
     public int getRelativePosition() {
-        return IMenuBarItem.UNDER;
+        return IMenuBarItemProvider.UNDER;
     }
 
     @Override

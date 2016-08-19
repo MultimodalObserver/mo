@@ -1,4 +1,4 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;

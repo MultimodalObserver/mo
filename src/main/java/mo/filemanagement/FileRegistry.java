@@ -2,12 +2,10 @@ package mo.filemanagement;
 
 import java.io.File;
 import java.util.TreeMap;
-import mo.core.ui.frames.DockablesRegistry;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
+import mo.core.ui.dockables.DockablesRegistry;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class FileRegistry {
     
     private static FileRegistry fileRegistry;
@@ -15,10 +13,14 @@ public class FileRegistry {
     private final TreeMap<String,String> openedFiles; //<path, name>
     
     private FilesPane filesPane;
-
+    
     public FileRegistry() {
         openedFiles = new TreeMap<>();
-        filesPane = new FilesPane();
+        Plugin filesPanePlugin = PluginRegistry.getInstance().getPlugin("mo.filemanagement.FilesPane");
+        if (filesPanePlugin != null) {
+            filesPane = (FilesPane) filesPanePlugin.getInstance();
+            DockablesRegistry.getInstance().addAppWideDockable(filesPane.getElement());
+        }
     }
 
     public void addOpenedFile(File p) {
@@ -40,10 +42,8 @@ public class FileRegistry {
         openedFiles.put(
                 project.getFolder().getAbsolutePath(),
                 project.getFolder().getName());
-        filesPane.getFilesTreeModel()
-                .addFile(new File(project.getFolder().getAbsolutePath()));
-        //filesPane.refreshFiles();
         
+        filesPane.addFile(new File(project.getFolder().getAbsolutePath()));
     }
 
     public FilesPane getFilesPane() {

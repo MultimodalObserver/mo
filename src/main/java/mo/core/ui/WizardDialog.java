@@ -23,13 +23,10 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-/**
- *
- * @author Celso
- */
 public class WizardDialog extends JDialog {
     private ArrayList<JPanel> panels;
     private JPanel cards, stepsPanel;
@@ -235,6 +232,7 @@ public class WizardDialog extends JDialog {
     
     public void enableFinish(){
         finishButton.setEnabled(true);
+        SwingUtilities.getRootPane(finishButton).setDefaultButton(finishButton);
     }
     
     public void disableNext(){

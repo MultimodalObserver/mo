@@ -2,26 +2,28 @@
 <root>
 	<dockables>
 		<dockable>
-			<id>4</id>
+			<id>1</id>
 			<location type="TreeLocationLeaf">
 				<root>ccontrol center</root>
 				<mode>dock.mode.normal</mode>
 				<property type="TreeLocationLeaf">
-					<node location="TOP" size="0.75" id="1469391353648"/>
-					<node location="TOP" size="0.6666666666666666" id="1469391353650"/>
-					<leaf id="1469391353652"/>
+					<node location="BOTTOM" size="0.5" id="1470949291749"/>
+					<node location="BOTTOM" size="0.5" id="1470949290540"/>
+					<leaf id="1470949288973"/>
 				</property>
 			</location>
 		</dockable>
 		<dockable>
 			<id>2</id>
 			<location type="CStackLocation">
-				<root>ccontrol center</root>
-				<mode>dock.mode.normal</mode>
+				<root>external</root>
+				<mode>dock.mode.externalized</mode>
 				<property type="CStackLocation">
-					<node location="TOP" size="0.75" id="1469391353648"/>
-					<node location="BOTTOM" size="0.33333333333333337" id="1469391353650"/>
-					<leaf id="1469391353654"/>
+					<x>692</x>
+					<y>316</y>
+					<width>334</width>
+					<height>75</height>
+					<fullscreen>false</fullscreen>
 				</property>
 				<index>0</index>
 			</location>
@@ -29,25 +31,16 @@
 		<dockable>
 			<id>3</id>
 			<location type="CStackLocation">
-				<root>ccontrol center</root>
-				<mode>dock.mode.normal</mode>
+				<root>external</root>
+				<mode>dock.mode.externalized</mode>
 				<property type="CStackLocation">
-					<node location="TOP" size="0.75" id="1469391353648"/>
-					<node location="BOTTOM" size="0.33333333333333337" id="1469391353650"/>
-					<leaf id="1469391353654"/>
+					<x>692</x>
+					<y>316</y>
+					<width>334</width>
+					<height>75</height>
+					<fullscreen>false</fullscreen>
 				</property>
 				<index>1</index>
-			</location>
-		</dockable>
-		<dockable>
-			<id>1</id>
-			<location type="CFlapIndexLocation">
-				<root>ccontrol north</root>
-				<mode>dock.mode.minimized</mode>
-				<property type="CFlapIndexLocation">
-					<index>0</index>
-					<holding>false</holding>
-				</property>
 			</location>
 		</dockable>
 	</dockables>

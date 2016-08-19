@@ -17,10 +17,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import mo.core.ui.WizardDialog;
 
-/**
- *
- * @author Celso
- */
 public class NewProjectWizardPanel extends JPanel {
     WizardDialog wizard;
     JFileChooser fileChooser;

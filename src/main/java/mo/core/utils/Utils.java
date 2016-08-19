@@ -2,10 +2,6 @@ package mo.core.utils;
 
 import java.io.File;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class Utils {
     public static String getBaseFolder(){
         File baseFolder = 

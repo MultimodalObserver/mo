@@ -2,46 +2,71 @@ package mo.filemanagement;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
+import static mo.filemanagement.ProjectUtils.isProjectFolder;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class PopupRegistry {
     private static PopupRegistry popupRegistry;
-    HashMap <String, FilePopup> popups; //by extension
-    private JPopupMenu projectFolderPopup;
+    HashMap <String, FilePopupMenu> popups; //by extension
+    private List<JMenuItem> projectOptions;
+    private FilePopupMenu projectPopup;
     private JPopupMenu folderPopup;
     
     private PopupRegistry() {
         popups = new HashMap<>();
+        projectOptions = new ArrayList<>();
+        projectPopup = new FilePopupMenu();
+        
+        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.filemanagement.PopupOptionProvider")) {
+            addPopupOptionFor(((PopupOptionProvider) p.getInstance()).getPopupItem(), null);
+        }
+        
+        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.filemanagement.ProjectOptionProvider")) {
+            addPopupOptionForProjects(((ProjectOptionProvider) p.getInstance()).getOption());
+        }
     }
     
-    public void addPopupOptionFor(PopupItem itemToAdd, String fileExtension) {
+    public void addPopupOptionForFolders(PopupItem item) {
+        
+    }
+    
+    public void addPopupOptionForProjects(JMenuItem item) {
+        projectOptions.add(item);
+        projectPopup.add(item);
+    }
+    
+    public void addPopupOptionFor(JMenuItem itemToAdd, String fileExtension) {
         if (!popups.containsKey(fileExtension))
-            popups.put(fileExtension, new FilePopup());
+            popups.put(fileExtension, new FilePopupMenu());
         
-        FilePopup popup = popups.get(fileExtension);
-        JMenuItem item = itemToAdd.getItem();
-        int position = itemToAdd.getPosition();
+        //FilePopupMenu popup = popups.get(fileExtension);
+        //JMenuItem item = itemToAdd.getItem();
+        //int position = itemToAdd.getPosition();
         
-        popup.add(item, position);
-        
-        
+        //popup.add(itemToAdd);
     }
     
     JPopupMenu getPopupFor(File file) {
         if (file.isDirectory()) {
             if (isProjectFolder(file)) {
-                return projectFolderPopup;
+                projectPopup.setFile(file);
+                return projectPopup;
             } else {
                 return folderPopup;
             }
         } else {
-            String extension = file.getName().substring(file.getName().lastIndexOf(".")+1);
+            String extension = null;
+        
+            if (file.getName().contains(".")) {
+                extension = file.getName().substring(file.getName().lastIndexOf(".")+1);
+            }
+            
             return popups.get(extension);
         }
     }
@@ -52,15 +77,5 @@ public class PopupRegistry {
         }
         
         return popupRegistry;
-    }
-
-    private boolean isProjectFolder(File file) {
-        if (file.isDirectory()) {
-            FilenameFilter filter = 
-                    (File dir, String name) -> name.equals("moproject.xml");
-            
-            return file.list(filter).length == 1;
-        }
-        return false;
     }
 }

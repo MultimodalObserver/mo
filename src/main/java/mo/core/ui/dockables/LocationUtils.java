@@ -1,4 +1,4 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.intern.CDockable;
@@ -23,10 +23,6 @@ import bibliothek.gui.dock.common.location.TreeLocationRoot;
 import bibliothek.util.xml.XAttribute;
 import bibliothek.util.xml.XElement;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class LocationUtils {
     
     public static XElement getLocationXML(CDockable dockable) {

@@ -3,11 +3,9 @@ package mo.core.plugin;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/**
- *
- * @author Celso
- */
 public class Plugin {
 
     private String id;//classname
@@ -15,6 +13,8 @@ public class Plugin {
     
     private String name;
     private String description;
+    
+    private Object instance;
     
     //private List<Plugin> dependencies;
     //private List<String> dependenciesStrs;
@@ -90,6 +90,17 @@ public class Plugin {
 
     public void setClazz(Class<?> clazz) {
         this.clazz = clazz;
+    }
+    
+    public Object getInstance() {
+        if (instance == null) {
+            try {
+                instance = clazz.newInstance();
+            } catch (InstantiationException | IllegalAccessException ex) {
+                Logger.getLogger(Plugin.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return instance;
     }
     
     @Override

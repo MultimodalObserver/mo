@@ -13,4 +13,8 @@ public class PopupItem {
     public int getPosition() {
         return position;
     }
+    
+    public String getPositionRelative() {
+        return null;
+    }
 }

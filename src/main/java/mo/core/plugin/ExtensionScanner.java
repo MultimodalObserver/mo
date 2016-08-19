@@ -183,6 +183,14 @@ public class ExtensionScanner extends ClassVisitor {
             if (extPoint.getVersion() == null)
                 extPoint.setVersion("0.0.0");
             
+            if (extPoint.getName() == null) {
+                String id = extPoint.getId();
+                if (id.contains("."))
+                    extPoint.setName(id.substring(id.lastIndexOf(".") + 1));
+                else
+                    extPoint.setName(id);
+            }
+            
             extPoint.setVersion(semverize(extPoint.getVersion()));
  
         } else if (isExtension) {
@@ -204,6 +212,14 @@ public class ExtensionScanner extends ClassVisitor {
             
             if (plugin.getVersion() == null)
                 plugin.setVersion("0.0.0");
+            
+            if (plugin.getName() == null) {
+                String id = plugin.getId();
+                if (id.contains("."))
+                    plugin.setName(id.substring(id.lastIndexOf(".") + 1));
+                else
+                    plugin.setName(id);
+            }
             
             plugin.setVersion(semverize(plugin.getVersion()));
             

@@ -44,7 +44,16 @@ public class AppPreferencesWrapper {
         if (openedProjects == null)
             openedProjects = new HashSet<>();
         
-        openedProjects.add(new AppProjectPreferencesWrapper(projectAbsPath));
+        if (!projectIsInOpenedProjects(projectAbsPath))
+            openedProjects.add(new AppProjectPreferencesWrapper(projectAbsPath));
+    }
+    
+    private boolean projectIsInOpenedProjects(String projectAbsPath) {
+        for (AppProjectPreferencesWrapper openedProject : openedProjects) {
+            if (openedProject.getLocation().equals(projectAbsPath))
+                return true;
+        }
+        return false;
     }
     
     public void removeOpenedProject(String projectAbsPath){
@@ -123,4 +132,13 @@ public class AppPreferencesWrapper {
         a.removeOpenedProject("ruta");
         System.out.println(x.toXML(a));
     }
+
+    @Override
+    public String toString() {
+        String result = String.format("(%s, %s) %sx%s ", frameX, frameY, frameHeight, frameWidth);
+        result += openedProjects;
+        return result; //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
 }

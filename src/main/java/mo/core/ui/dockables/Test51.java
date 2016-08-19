@@ -1,44 +1,24 @@
-package mo.core.ui.frames;
+package mo.core.ui.dockables;
 
 import bibliothek.gui.DockController;
 import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.SplitDockStation;
 import bibliothek.gui.dock.StackDockStation;
-import bibliothek.gui.dock.action.DockActionSource;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CGrid;
 import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.CStation;
-import bibliothek.gui.dock.common.CWorkingArea;
 import bibliothek.gui.dock.common.DefaultMultipleCDockable;
 import bibliothek.gui.dock.common.DefaultSingleCDockable;
 import bibliothek.gui.dock.common.SingleCDockable;
-import bibliothek.gui.dock.common.intern.AbstractDockableCStation;
-import bibliothek.gui.dock.common.intern.CControlAccess;
-import bibliothek.gui.dock.common.intern.CDockController;
 import bibliothek.gui.dock.common.intern.CDockable;
-import bibliothek.gui.dock.common.intern.CommonDockable;
 import bibliothek.gui.dock.common.intern.station.CSplitDockStation;
-import bibliothek.gui.dock.common.intern.station.CommonDockStation;
-import bibliothek.gui.dock.common.intern.station.CommonDockStationFactory;
 import bibliothek.gui.dock.common.intern.station.CommonStationDelegate;
 import bibliothek.gui.dock.common.location.CBaseLocation;
 import bibliothek.gui.dock.common.location.CExternalizedLocation;
-import bibliothek.gui.dock.common.location.CMaximalExternalizedLocation;
-import bibliothek.gui.dock.common.location.CStackLocation;
-import bibliothek.gui.dock.common.mode.CNormalModeArea;
 import bibliothek.gui.dock.common.mode.ExtendedMode;
-import bibliothek.gui.dock.common.perspective.CStationPerspective;
-import bibliothek.gui.dock.common.perspective.SingleCDockablePerspective;
-import bibliothek.gui.dock.facile.mode.LocationMode;
-import bibliothek.gui.dock.facile.mode.ModeAreaListener;
 import bibliothek.gui.dock.layout.DockableProperty;
 import bibliothek.gui.dock.station.split.DockableSplitDockTree;
-import bibliothek.gui.dock.station.split.SplitDockProperty;
-import bibliothek.gui.dock.station.stack.DefaultStackDockComponent;
-import bibliothek.gui.dock.support.mode.AffectedSet;
-import bibliothek.gui.dock.title.DockTitleVersion;
-import bibliothek.util.Path;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.awt.event.ActionEvent;
@@ -52,10 +32,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
@@ -67,7 +44,7 @@ import javax.swing.JMenuItem;
  *
  * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
  */
-public class Test5 {
+public class Test51 {
     JFrame frame;
     CControl control;
     
@@ -193,14 +170,14 @@ public class Test5 {
                     XIO.writeUTF(saved, os);
                     
                 } catch (FileNotFoundException ex) {
-                    Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
-                    Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
                     try {
                         os.close();
                     } catch (IOException ex) {
-                        Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -217,12 +194,16 @@ public class Test5 {
 
                     XElement doc = xe.getElement("dockables");
                     XElement[] docks = doc.children();
-
+                    
+                    
+                    
                     for (XElement dock : docks) {
 
+                        
+                        
                         //de.setLocation(getLocationFromXml(dock.getElement("location")));
-                        XElement property = dock.getElement("location").getElement("property");
-                        if (property.getElement("leaf") == null) {
+                        
+                        if (!dock.getElement("location").getAttribute("type").getString().equals("TreeLocationLeaf")) {
                             
                             DockableElement de = new DockableElement(dock.getElement("id").getValue());
                             de.setTitleText(dock.getElement("id").getValue());
@@ -231,20 +212,22 @@ public class Test5 {
                             setLocationFromXml(de, dock.getElement("location"));
                             de.setVisible(true);
                         }
-
+                            
+                        
+                        
                     }
                     
                     recreateTree(docks);
                     
                 } catch (FileNotFoundException ex) {
-                    Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
-                    Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                 } finally {
                     try {
                         in.close();
                     } catch (IOException ex) {
-                        Logger.getLogger(Test5.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Test51.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
@@ -320,12 +303,9 @@ public class Test5 {
         del.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                for (int i = 0; i < control.getCDockableCount(); i++) {
-//                    //if (control.getCDockable(i) instanceof SingleCDockable) 
-//                    control.removeDockable((SingleCDockable) control.getCDockable(i));
-//                }
-                while (control.getCDockableCount()>0) {
-                    control.removeDockable((SingleCDockable) control.getCDockable( 0));
+                for (int i = 0; i < control.getCDockableCount(); i++) {
+                    //if (control.getCDockable(i) instanceof SingleCDockable) 
+                    control.removeDockable((SingleCDockable) control.getCDockable(i));
                 }
             }
         });
@@ -413,8 +393,6 @@ public class Test5 {
                     System.out.println("si l : "+l.get(0).id);
                     dockable.setLocationsAside(l.get(0));
                 }
-            } else if (mode.endsWith("normal")) {
-                System.out.println(" normal");
             }
         } else if (type.compareTo("CFlapIndexLocation") == 0) {
             dockable.setLocation(CLocation.base());
@@ -447,7 +425,7 @@ public class Test5 {
 
                 LocationNode node = new LocationNode();
                 
-                node.docks.add( new DockableElement(dockable.getElement("id").getString()));
+                node.dock = new DockableElement(dockable.getElement("id").getString());
 
                 node.id = leaf.getAttribute("id").getLong();
                 
@@ -459,8 +437,6 @@ public class Test5 {
                 
                 node.size = nodes[nodes.length - 1].getAttribute("size")
                         .getFloat();
-                
-                node.type = property.getAttribute("type").getString();
                 
                 LocationNode lastNode = node;
                 
@@ -502,7 +478,7 @@ public class Test5 {
                     lastNode = n;
                 }
                 
-                printNode(lastNode);
+                //printNode(lastNode);
 
                 if ( !treesByRoot.containsKey(lastNode.id)) {
                     treesByRoot.put(lastNode.id, new ArrayList<>());
@@ -543,21 +519,20 @@ public class Test5 {
                                 currentMain.secondChild.parent = currentMain;
                                 added = true;
                             }
-                        } else {
-                            currentMain.docks.addAll(currentNew.docks);
-                            added = true;
                         }
                     }
                 }
             }
-            //printNode(tree);
+            printNode(tree);
             trees.add(tree);
         }
-        if (trees.size() > 0) {
-            printNode(trees.get(0));
-            CGrid g = createGrid(control, trees.get(0));
-            control.getContentArea().deploy(g);
-        }
+        
+        CGrid g = createGrid(control, trees.get(0));
+        control.getContentArea().deploy(g);
+        
+        XElement xe = new XElement("r");
+        control.writeXML(xe);
+        System.out.println(xe);
     }
 
     public CGrid createGrid(CControl control, LocationNode root) {
@@ -566,58 +541,50 @@ public class Test5 {
         return grid;
     }
     
-    public void addDockableFromTree(CGrid grid, LocationNode node, float x, float y, float w, float h) {
+    public void addDockableFromTree(CGrid grid, LocationNode node, double x, double y, double w, double h) {
         
-        System.out.format("(%.2f %.2f) %.2f %.2f %s%n" , x, y, w, h, node);
+        //System.out.format("(%.2f %.2f) %.2f %.2f %s%n" , x, y, w, h, node);
         
-        if (node.docks.size() > 0) {
-            DockableElement[] arr = new DockableElement[node.docks.size()];
-            node.docks.toArray(arr);
-            System.out.println(node.docks);
-            grid.add(x, y, w, h, arr);
-            //grid.
-        
-        } else {
-            float fw = w, fh = h;
-            if (node.firstChild != null){
-
-                if (node.childrenOrientation.equals(ChildrenOrientation.HORIZONTAL)) {
-                    if (node.secondChild != null) {
-                        fw *= node.firstChild.size;
-                    }
-                } else {
-                    if (node.secondChild != null) {
-                        fh *= node.firstChild.size;
-                    }
-                }
-                
-                addDockableFromTree(grid, node.firstChild, x, y, fw, fh);
-            }
-            
-            if (node.secondChild != null) {
-
-                if (node.childrenOrientation.equals(ChildrenOrientation.HORIZONTAL)) {
-                    if (node.firstChild != null) {
-                        x += node.firstChild.size * w;
-                        w *= node.secondChild.size;
-                        
-                    }
-                } else {
-                    if (node.firstChild != null) {
-                        y += node.firstChild.size * h;
-                        h *= node.secondChild.size;
-                        
-                    }
-                }
-                
-                addDockableFromTree(grid, node.secondChild, x, y, w, h);
+        if (node.parent != null) {
+            if (node.parent.childrenOrientation.equals(ChildrenOrientation.HORIZONTAL)) {
+                w = node.size * w;
+            } else {
+                h = node.size * h;
             }
             
         }
         
+        if (node.dock != null) {
+            
+            //System.out.println("++ "+node.dock+" ("+x+" "+y+") "+w+" "+h);
+            System.out.format("  ++ (%.2f %.2f) %.2f %.2f %s%n" , x, y, w, h, node.dock );
+            grid.add(x, y, w, h, node.dock);
+            
+        } else {
+
+            if (node.firstChild != null){
+                //System.out.println("-  "+node.firstChild+" ("+x+" "+y+") "+w+" "+h);
+                System.out.format("  -  (%.2f %.2f) %.2f %.2f %s%n" , x, y, w, h, node.firstChild );
+                addDockableFromTree(grid, node.firstChild, x, y, w, h);
+            }
+            
+            if (node.secondChild != null) {
+                
+                if (node.firstChild != null){
+                    if (node.childrenOrientation.equals(ChildrenOrientation.HORIZONTAL)) {
+                        x += node.firstChild.size * w;
+                    } else {
+                        y += node.firstChild.size * h;
+                    }
+                }
+
+                //System.out.println("-- "+node.secondChild+" ("+x+" "+y+") "+w+" "+h);
+                System.out.format("  -- (%.2f %.2f) %.2f %.2f %s%n" , x, y, w, h, node.secondChild );
+                addDockableFromTree(grid, node.secondChild, x, y, w, h);
+            }
+        }
     }
     
-    /*
     public SplitDockStation createDockablesTree(LocationNode tree) {
         //CommonStationDelegate
         SplitDockStation station = new SplitDockStation();
@@ -629,9 +596,7 @@ public class Test5 {
         System.out.println(station);
         return new CSplitDockStation( (CommonStationDelegate<CSplitDockStation>) station);
     }
-    */
     
-    /*
     public DockableSplitDockTree.Key getNodeKey(LocationNode node, DockableSplitDockTree t) {
         System.out.println(node + " " + (node != null));
         if (node.dock != null) {
@@ -661,7 +626,7 @@ public class Test5 {
                 }    
             } 
         }
-    }*/
+    }
     
     public Location locationFromString(String location) {
         switch (location) {
@@ -677,7 +642,7 @@ public class Test5 {
                 return null;
         }
     }
-    /*
+    
     public void testA() {
         
         
@@ -824,7 +789,6 @@ public class Test5 {
         CGrid g = createGrid(control, r);
         control.getContentArea().deploy(g);
     }
-*/
     
     public void printLocation(CDockable d) {
         CLocation l = d.getBaseLocation();
@@ -869,7 +833,7 @@ public class Test5 {
     }
         
     public static void main(String[] args) {
-        Test5 t = new Test5();
+        Test51 t = new Test51();
         t.init();
         //t.testF();
         //t.TestC();
@@ -905,7 +869,7 @@ public class Test5 {
         public long id;
         public float size;
         public Location location;
-        List<DockableElement> docks = null;
+        DockableElement dock = null;
         public String type;
         
         public LocationNode parent = null;
@@ -913,12 +877,10 @@ public class Test5 {
         public LocationNode firstChild = null; //left or top
         public LocationNode secondChild = null;//right or bottom
         
-        LocationNode() {
-            docks = new ArrayList<>();
-        }
+        LocationNode() {}
         
-        LocationNode(float s, Location l) {
-            docks = new ArrayList<>();
+        LocationNode(DockableElement d, float s, Location l) {
+            dock = d;
             size = s;
             location = l;
         }
@@ -967,7 +929,7 @@ public class Test5 {
         @Override
         public String toString() {
             return "[ "+id+" "+location+" "+size+" "+childrenOrientation+" "
-                    + ((firstChild!=null && secondChild!=null)?"leaf":"node") + " " + docks +"]";
+                    + ((firstChild!=null && secondChild!=null)?"leaf":"node") + " " + dock +"]";
         }
 
         @Override
