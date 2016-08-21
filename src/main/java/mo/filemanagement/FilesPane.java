@@ -1,6 +1,7 @@
 package mo.filemanagement;
 
 import bibliothek.gui.dock.common.CControl;
+import bibliothek.util.xml.XElement;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -22,21 +23,22 @@ import mo.core.preferences.AppProjectPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.IDockableElementProvider;
+import mo.core.ui.dockables.StorableDockable;
+import mo.organization.OrganizationDockable;
 
 @Extension(
         xtends = {
             @Extends(extensionPointId = "mo.core.ui.dockables.IDockableElementProvider")
         }
 )
-public class FilesPane implements IDockableElementProvider {
+public class FilesPane extends DockableElement implements IDockableElementProvider, StorableDockable {
 
-    private DockableElement dockable;
     private final FilesTreeModel filesTreeModel;
     private final JTree filesTree;
 
     public FilesPane() {
 
-        dockable = new DockableElement("Files", "Files");
+        setTitleText("Files");
         filesTreeModel = new FilesTreeModel();
 
         JPopupMenu popup = new JPopupMenu();
@@ -98,7 +100,7 @@ public class FilesPane implements IDockableElementProvider {
         //GridBConstraints c = new GridBConstraints();
         //p.add(new JTree(),c.clear().f(GridBConstraints.BOTH).wx(1).wy(1));
         //p.add();
-        dockable.add(filesScrollPane);
+        add(filesScrollPane);
 
         //dockable.setVisible(true);
         PreferencesManager prefManager = new PreferencesManager();
@@ -127,7 +129,7 @@ public class FilesPane implements IDockableElementProvider {
     @Override
     public DockableElement getElement() {
 
-        return dockable;
+        return this;
     }
 
     void refreshFiles() {
@@ -173,4 +175,15 @@ public class FilesPane implements IDockableElementProvider {
     public String getDockableGroup() {
         return null;
     }
+
+    @Override
+    public String toFileContent() {
+        return "hola";
+    }
+
+    @Override
+    public DockableElement dockableFromFile(String fileContent) {
+        return new FilesPane();
+    }
+
 }

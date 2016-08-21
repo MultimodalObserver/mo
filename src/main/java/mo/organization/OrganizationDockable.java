@@ -2,19 +2,19 @@ package mo.organization;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.action.CAction;
+import bibliothek.util.xml.XElement;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.Locale;
@@ -39,13 +39,13 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import mo.core.ui.GridBConstraints;
 import static mo.core.ui.Utils.centerOnScreen;
 import mo.core.ui.dockables.DockableElement;
-import mo.core.ui.dockables.PersistableDockable;
+import mo.core.ui.dockables.StorableDockable;
 import org.jdatepicker.impl.DateComponentFormatter;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 
-public class OrganizationDockable extends DockableElement implements PersistableDockable {
+public class OrganizationDockable extends DockableElement implements StorableDockable {
 
     public OrganizationDockable(String id, CAction... actions) {
         super(id, actions);
@@ -107,13 +107,13 @@ public class OrganizationDockable extends DockableElement implements Persistable
     }
 
     @Override
-    public Object getPersistableData() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public String toFileContent() {
+        return "orgaDock";
     }
 
     @Override
-    public DockableElement createDockableFrom(Object data) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public DockableElement dockableFromFile(String fileContent) {
+        return new OrganizationDockable("asd");
     }
 
     private class Participant {

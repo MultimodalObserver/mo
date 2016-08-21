@@ -1,9 +1,7 @@
 package mo.core.ui.dockables;
 
 import bibliothek.gui.dock.common.CControl;
-import bibliothek.gui.dock.common.CLocation;
 import bibliothek.gui.dock.common.event.CDockableLocationEvent;
-import bibliothek.gui.dock.common.event.CDockableLocationListener;
 import bibliothek.gui.dock.common.event.CVetoClosingEvent;
 import bibliothek.gui.dock.common.event.CVetoClosingListener;
 import bibliothek.gui.dock.common.intern.CDockable;
@@ -11,12 +9,15 @@ import bibliothek.gui.dock.util.DirectWindowProvider;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.menubar.IMenuBarItemProvider;
 import static mo.core.utils.Utils.getBaseFolder;
 
@@ -40,18 +43,17 @@ import static mo.core.utils.Utils.getBaseFolder;
 )
 public class DockablesRegistry implements IMenuBarItemProvider {
 
-    private final Logger LOGGER = Logger.getLogger(DockablesRegistry.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(DockablesRegistry.class.getName());
 
     private static DockablesRegistry registry;
 
+    private final HashMap<String, List<DockableElement>> dockables; //<directory, list>
+
     private final CControl control;
 
-    public JMenu windowMenu = new JMenu("Window");
+    private final  JMenu windowMenu = new JMenu("Window");
 
-    // mantiene todos los dockables de la app
-    private final HashMap<String, List<DockableElement>> dockables;
-
-    public List<JMenuItem> dockablesGroupedMenus;
+    private final List<JMenuItem> dockablesGroupedMenus;
 
     public DockablesRegistry() {
         registry = this;
@@ -62,12 +64,9 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
         JMenuItem test = new JMenuItem("test");
         windowMenu.add(test);
-        test.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("saving...");
-                saveDockables();
-            }
+        test.addActionListener((ActionEvent e) -> {
+            System.out.println("saving...");
+            saveDockables();
         });
     }
 
@@ -76,19 +75,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
             registry = new DockablesRegistry();
         }
         return registry;
-    }
-
-    public class DockableCheckBoxMenuItem extends JCheckBoxMenuItem {
-
-        DockableElement dockable;
-
-        public void setDockable(DockableElement dockable) {
-            this.dockable = dockable;
-        }
-
-        public DockableElement getDockable() {
-            return this.dockable;
-        }
     }
 
     public void addAppWideDockable(DockableElement dockable) {
@@ -105,7 +91,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     }
 
     private void addDockableElement(DockableElement dockable) {
-
         control.addDockable(dockable);
         dockable.setVisible(true);
 
@@ -122,17 +107,12 @@ public class DockablesRegistry implements IMenuBarItemProvider {
                 dockableCheckItem.setSelected(false);
             }
         });
-        dockable.addCDockableLocationListener(new CDockableLocationListener() {
-            @Override
-            public void changed(CDockableLocationEvent cdle) {
+        dockable.addCDockableLocationListener((CDockableLocationEvent cdle) -> {
+            CDockable d = cdle.getDockable();
 
-                CDockable d = cdle.getDockable();
-
-                if (!d.isVisible()) {
-                    dockableCheckItem.setSelected(false);
-                    dockable.setBackupLocation(cdle.getOldLocation());
-                }
-
+            if (!d.isVisible()) {
+                dockableCheckItem.setSelected(false);
+                dockable.setBackupLocation(cdle.getOldLocation());
             }
         });
         dockableCheckItem.setState(true);
@@ -166,42 +146,100 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
     private void storeDockables(String dir, List<DockableElement> dockables) {
         File folder = new File(dir);
-        if (folder.isDirectory()) {
-            File xml = new File(folder, "dockables.xml");
-            try {
-                if (!xml.isFile()) {
-                    if (!xml.createNewFile()) {
-                        LOGGER.log(Level.WARNING, null, "Can't create dockables file");
-                        return;
-                    }
-                }
+        File xmlFile = new File(folder, "dockables.xml");
 
-                XElement dockablesElement = new XElement("dockables");
-                for (DockableElement d : dockables) {
+        if (filesAreValid(folder, xmlFile)) {
+
+            XElement xmlContent = new XElement("dockables");
+            for (DockableElement dockable : dockables) {
+                System.out.println(dockable);
+                if (dockable instanceof StorableDockable) {
+                
+                    StorableDockable sd = (StorableDockable) dockable;
+                    
                     XElement dock = new XElement("dockable");
-                    dock.addElement(LocationUtils.getLocationXML(d));
-                    dockablesElement.addElement(dock);
-                }
-
-                OutputStream os = null;
-                try {
-                    os = new FileOutputStream(xml);
-                    XIO.writeUTF(dockablesElement, os);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
-                } finally {
-                    try {
-                        os.close();
-                    } catch (IOException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
+                    dock.addElement(dockable.getLocationXML());
+                    dock.addBoolean("isVisible", dockable.isVisible());
+                    
+                    XElement group = new XElement("group");
+                    if ( !dir.equals(getBaseFolder())) {
+                        group.setString(dir);
+                        dock.addElement(group);
                     }
+                    
+                    XElement data = new XElement("data");
+                    data.addString("class", dockable.getClass().getCanonicalName());
+                    data.setString(sd.toFileContent());
+                    
+                    
+                    dock.addElement(data);
+                    
+                    xmlContent.addElement(dock);
                 }
-            } catch (IOException ex) {
-                Logger.getLogger(DockablesRegistry.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+            writeXmlToFile(xmlContent, xmlFile);
         }
     }
 
+    private boolean filesAreValid(File folder, File file) {
+        if (folder.isDirectory()) {
+            try {
+                createFileIfNotExists(file);
+                return true;
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
+            }
+        }
+
+        return false;
+    }
+
+    private void createFileIfNotExists(File file) throws IOException {
+        if (!file.isFile() && !file.createNewFile()) {
+            LOGGER.log(Level.WARNING, null,"Can't create dockables file <" + file + ">");
+        }
+    }
+
+    private void writeXmlToFile(XElement xml, File file) {
+        try (OutputStream os = new FileOutputStream(file)) {
+            XIO.writeUTF(xml, os);
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void loadDockablesFromFile(File file) {
+        try (InputStream input = new FileInputStream(file)) {
+            XElement root = XIO.readUTF(input);
+            XElement[] docks = root.getElements("dockable");
+            for (XElement dock : docks) {
+                System.out.println(dock);
+                XElement data = dock.getElement("data");
+                String className = data.getAttribute("class").getString();
+                Class<?> clazz = Class.forName(className);
+                Plugin p = PluginRegistry.getInstance().getPlugin(className);
+                
+                System.out.println(p);
+                Method method = clazz.getDeclaredMethod("dockableFromFile", String.class);
+                
+                String dataStr = dock.getElement("data").getString();
+                
+                DockableElement sd = 
+                        (DockableElement) method.invoke(p.getInstance(), dataStr);
+                
+                String group = dock.getElement("group").getString();
+                
+                addDockableInProjectGroup(group, sd);
+            }
+        } catch (IOException | ClassNotFoundException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
+                IllegalArgumentException | InvocationTargetException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public void setJFrame(JFrame frame) {
         getInstance();
         control.setRootWindow(new DirectWindowProvider(frame));
@@ -230,4 +268,21 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         return "file";
     }
 
+    public class DockableCheckBoxMenuItem extends JCheckBoxMenuItem {
+
+        DockableElement dockable;
+
+        public void setDockable(DockableElement dockable) {
+            this.dockable = dockable;
+        }
+
+        public DockableElement getDockable() {
+            return this.dockable;
+        }
+    }
+    
+    public static void main(String[] args) {
+        getInstance().loadDockablesFromFile(new File(getBaseFolder(), "dockables.xml"));
+        System.exit(0);
+    }
 }

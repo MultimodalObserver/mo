@@ -7,40 +7,78 @@
 				<root>ccontrol center</root>
 				<mode>dock.mode.normal</mode>
 				<property type="TreeLocationLeaf">
-					<node location="BOTTOM" size="0.5" id="1470949291749"/>
-					<node location="BOTTOM" size="0.5" id="1470949290540"/>
-					<leaf id="1470949288973"/>
+					<node location="BOTTOM" size="0.5" id="1471748620575"/>
+					<node location="BOTTOM" size="0.5" id="1471748619855"/>
+					<node location="BOTTOM" size="0.5" id="1471748619159"/>
+					<node location="BOTTOM" size="0.5" id="1471748618447"/>
+					<node location="BOTTOM" size="0.5" id="1471748617767"/>
+					<leaf id="1471748617053"/>
 				</property>
 			</location>
 		</dockable>
 		<dockable>
 			<id>2</id>
-			<location type="CStackLocation">
-				<root>external</root>
-				<mode>dock.mode.externalized</mode>
-				<property type="CStackLocation">
-					<x>692</x>
-					<y>316</y>
-					<width>334</width>
-					<height>75</height>
-					<fullscreen>false</fullscreen>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="BOTTOM" size="0.5" id="1471748620575"/>
+					<node location="BOTTOM" size="0.5" id="1471748619855"/>
+					<node location="BOTTOM" size="0.5" id="1471748619159"/>
+					<node location="BOTTOM" size="0.5" id="1471748618447"/>
+					<node location="TOP" size="0.5" id="1471748617767"/>
+					<leaf id="1471748617765"/>
 				</property>
-				<index>0</index>
 			</location>
 		</dockable>
 		<dockable>
 			<id>3</id>
-			<location type="CStackLocation">
-				<root>external</root>
-				<mode>dock.mode.externalized</mode>
-				<property type="CStackLocation">
-					<x>692</x>
-					<y>316</y>
-					<width>334</width>
-					<height>75</height>
-					<fullscreen>false</fullscreen>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="BOTTOM" size="0.5" id="1471748620575"/>
+					<node location="BOTTOM" size="0.5" id="1471748619855"/>
+					<node location="BOTTOM" size="0.5" id="1471748619159"/>
+					<node location="TOP" size="0.5" id="1471748618447"/>
+					<leaf id="1471748618445"/>
 				</property>
-				<index>1</index>
+			</location>
+		</dockable>
+		<dockable>
+			<id>4</id>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="BOTTOM" size="0.5" id="1471748620575"/>
+					<node location="BOTTOM" size="0.5" id="1471748619855"/>
+					<node location="TOP" size="0.5" id="1471748619159"/>
+					<leaf id="1471748619157"/>
+				</property>
+			</location>
+		</dockable>
+		<dockable>
+			<id>5</id>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="BOTTOM" size="0.5" id="1471748620575"/>
+					<node location="TOP" size="0.5" id="1471748619855"/>
+					<leaf id="1471748619853"/>
+				</property>
+			</location>
+		</dockable>
+		<dockable>
+			<id>6</id>
+			<location type="TreeLocationLeaf">
+				<root>ccontrol center</root>
+				<mode>dock.mode.normal</mode>
+				<property type="TreeLocationLeaf">
+					<node location="TOP" size="0.5" id="1471748620575"/>
+					<leaf id="1471748620573"/>
+				</property>
 			</location>
 		</dockable>
 	</dockables>

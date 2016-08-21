@@ -19,7 +19,7 @@ public class FileRegistry {
         Plugin filesPanePlugin = PluginRegistry.getInstance().getPlugin("mo.filemanagement.FilesPane");
         if (filesPanePlugin != null) {
             filesPane = (FilesPane) filesPanePlugin.getInstance();
-            DockablesRegistry.getInstance().addAppWideDockable(filesPane.getElement());
+            DockablesRegistry.getInstance().addAppWideDockable(filesPane);
         }
     }
 
