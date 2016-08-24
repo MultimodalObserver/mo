@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.menubar.MenuBar;
 import mo.filemanagement.FileRegistry;
@@ -17,15 +16,9 @@ public class MainWindow extends JFrame {
     }
 
     public void createAndShowGUI() {
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        
         setTitle("Multimodal Observer");
-
-        //fileMenuItems.add(newProject);
-//        for (JMenuItem fileMenuItem : fileMenuItems) {
-//            fileMenu.add(fileMenuItem);
-//        }
-
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setJMenuBar(MenuBar.getInstance());
         
         DockablesRegistry dr = DockablesRegistry.getInstance();
@@ -33,13 +26,6 @@ public class MainWindow extends JFrame {
         add(dr.getControl().getContentArea());
 
         FileRegistry.getInstance();
-        //DockableElement filesDock = FileRegistry.getInstance().getFilesPane().getElement();
-        //dr.getControl().addDockable(filesDock);
-        //filesDock.setVisible(true);
-        
-//        JToolBar tools = new JToolBar();
-//        tools.add(new JButton("asd"));
-//        control.addDockable(tools);
 
         pack();
         setVisible(true);

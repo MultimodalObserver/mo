@@ -1,17 +1,15 @@
 package mo.core;
 
-import mo.filemanagement.Project;
 import java.awt.Dimension;
 import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
-import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.SwingUtilities;
-import mo.filemanagement.FileRegistry;
+import mo.core.ui.dockables.DockablesRegistry;
 
 public class MainPresenter {
 
@@ -61,25 +59,14 @@ public class MainPresenter {
                 preferences.setFrameWidth(view.getWidth());
                 preferences.setFrameHeight(view.getHeight());
                 prefManager.save(preferences, prefFile);
+                
+                DockablesRegistry.getInstance().saveDockables();
             }
         });
     }
 
     public void start() {
         SwingUtilities.invokeLater(view::createAndShowGUI);
-    }
-
-    private void moduleSelected(ActionEvent e) {
-//        //System.out.println(e);
-//        try {
-//            try {
-//                main.InstanciateModule(e.getActionCommand().replace("/", "."), view);
-//            } catch (NoSuchMethodException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-//                Logger.getLogger(MainPresenter.class.getName()).log(Level.SEVERE, null, ex);
-//            }
-//        } catch (ClassNotFoundException ex) {
-//            Logger.getLogger(MainPresenter.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     public AppPreferencesWrapper getPreferences() {

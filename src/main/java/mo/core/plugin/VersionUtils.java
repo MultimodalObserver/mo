@@ -1,9 +1,5 @@
 package mo.core.plugin;
 
-/**
- *
- * @author Celso Gutiérrez <celso.gutierrez@usach.cl>
- */
 public class VersionUtils {
     public static String semverize(String version) {
         String[] v = version.split("\\.");
@@ -14,9 +10,5 @@ public class VersionUtils {
             version += ".0";
         
         return version;
-    }
-    public static void main(String [] args) {
-        String s = " as.as ";
-        System.out.println(s.split("\\.").length);
     }
 }

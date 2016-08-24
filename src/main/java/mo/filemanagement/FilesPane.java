@@ -1,7 +1,6 @@
 package mo.filemanagement;
 
 import bibliothek.gui.dock.common.CControl;
-import bibliothek.util.xml.XElement;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -22,9 +21,9 @@ import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.AppProjectPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.dockables.IDockableElementProvider;
 import mo.core.ui.dockables.StorableDockable;
-import mo.organization.OrganizationDockable;
 
 @Extension(
         xtends = {
@@ -43,11 +42,9 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
 
         JPopupMenu popup = new JPopupMenu();
         JMenuItem mi = new JMenuItem("Insert a children");
-        //mi.addActionListener(this);
         mi.setActionCommand("insert");
         popup.add(mi);
         mi = new JMenuItem("Remove this node");
-        //mi.addActionListener(this);
         mi.setActionCommand("remove");
         popup.add(mi);
         popup.setOpaque(true);
@@ -55,10 +52,10 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
 
         filesTree = new JTree(filesTreeModel) {
             @Override
-            public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-                return super.convertValueToText(((File) value).getName(), selected, expanded, leaf, row, hasFocus); //To change body of generated methods, choose Tools | Templates.
+            public String convertValueToText(Object value, boolean selected, 
+                    boolean expanded, boolean leaf, int row, boolean hasFocus) {
+                return super.convertValueToText(((File) value).getName(), selected, expanded, leaf, row, hasFocus);
             }
-
         };
 
         filesTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -67,53 +64,42 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
             @Override
             public void mouseReleased(MouseEvent event) {
 
-                if (SwingUtilities.isRightMouseButton(event)) {
+                if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
+                    int row = filesTree.getRowForLocation(event.getX(), event.getY());
+                    
+                    if (row == -1)
+                        return;
+                    
+                    filesTree.setSelectionRow(row);
+                    File selected = (File) filesTree.getLastSelectedPathComponent();
 
-                    if (event.isPopupTrigger()) {
+                    JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
 
-                        int row = filesTree.getRowForLocation(event.getX(), event.getY());
-                        if (row == -1) {
-                            return;
-                        }
-                        filesTree.setSelectionRow(row);
-                        File selected = (File) filesTree.getLastSelectedPathComponent();
-
-                        JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
-
-                        if (pop != null) {
-                            pop.show((JComponent) event.getSource(),
-                                    event.getX(), event.getY());
-                        }
-                        //popup.show((JComponent) event.getSource(), event.getX(), event.getY());
+                    if (pop != null) {
+                        pop.show((JComponent) event.getSource(),
+                                event.getX(), event.getY());
                     }
                 }
             }
-
         });
         JScrollPane filesScrollPane = new JScrollPane(filesTree);
 
-        //TODO why is not working when there are no files to show
-        //filesTree.setRootVisible(false);
+        //filesTree.setRootVisible(false); //TODO why is not working when there are no files to show
         filesTree.setShowsRootHandles(true);
 
-        //p.setLayout(new GridBagLayout());
-        //GridBConstraints c = new GridBConstraints();
-        //p.add(new JTree(),c.clear().f(GridBConstraints.BOTH).wx(1).wy(1));
-        //p.add();
         add(filesScrollPane);
 
-        //dockable.setVisible(true);
-        PreferencesManager prefManager = new PreferencesManager();
         Class c = AppPreferencesWrapper.class;
         File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
-        AppPreferencesWrapper preferences = (AppPreferencesWrapper) prefManager.loadOrCreate(c, prefFile);
+        AppPreferencesWrapper preferences = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(c, prefFile);
 
         List<String> projectsNotFound = new ArrayList<>();
         preferences.getOpenedProjects().stream().forEach((AppProjectPreferencesWrapper openedProject) -> {
             File f = new File(openedProject.getLocation());
 
             if (f.exists()) {
-                addFile(new File(openedProject.toString()));
+                addFile(f);
+                DockablesRegistry.getInstance().loadDockablesFromFile(new File(f, "dockables.xml"));
             } else {
                 projectsNotFound.add(openedProject.getLocation());
             }
@@ -123,23 +109,12 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
         for (String projectPath : projectsNotFound) {
             preferences.removeOpenedProject(projectPath);
         }
-        prefManager.save(preferences, prefFile);
+        PreferencesManager.save(preferences, prefFile);
     }
 
     @Override
     public DockableElement getElement() {
-
         return this;
-    }
-
-    void refreshFiles() {
-        //Collection<String> files = FileRegistry.getInstance().getOpenedFiles().keySet();
-        //for (String file : files) {
-        //System.out.println(file);
-        //filesTreeModel.addFile(new File(file));
-        //}
-
-        //filesTree.updateUI();
     }
 
     public JTree getFilesTree() {
@@ -148,19 +123,6 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
 
     public FilesTreeModel getFilesTreeModel() {
         return filesTreeModel;
-    }
-
-    public static void main(String[] args) {
-        JFrame f = new JFrame("hola");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        FilesPane p = new FilesPane();
-
-        CControl control = new CControl(f);
-        control.addDockable(p.getElement());
-        f.add(control.getContentArea());
-        p.getElement().setVisible(true);
-        f.setVisible(true);
     }
 
     void addFile(File file) {
@@ -177,13 +139,25 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
     }
 
     @Override
-    public String toFileContent() {
-        return "hola";
+    public File dockableToFile() {
+        return new File("asd");
     }
 
     @Override
-    public DockableElement dockableFromFile(String fileContent) {
+    public DockableElement dockableFromFile(File file) {
         return new FilesPane();
     }
 
+    public static void main(String[] args) {
+        JFrame f = new JFrame("hola");
+        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        FilesPane p = new FilesPane();
+
+        CControl control = new CControl(f);
+        control.addDockable(p.getElement());
+        f.add(control.getContentArea());
+        p.getElement().setVisible(true);
+        f.setVisible(true);
+    }
 }

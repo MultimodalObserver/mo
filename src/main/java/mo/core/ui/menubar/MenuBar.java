@@ -69,7 +69,7 @@ public class MenuBar extends JMenuBar {
 
         for (JMenuItem menuItem : menuItems) {
             if (menuItem.getName().compareTo(name) == 0) {
-                System.out.println(menuItem.getName());
+                //System.out.println(menuItem.getName());
                 return menuItem;
             }
         }

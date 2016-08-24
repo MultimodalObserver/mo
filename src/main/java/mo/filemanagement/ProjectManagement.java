@@ -85,7 +85,7 @@ public class ProjectManagement implements IMenuBarItemProvider {
         AppPreferencesWrapper app = (AppPreferencesWrapper)pm.loadOrCreate(AppPreferencesWrapper.class, new File(MultimodalObserver.APP_PREFERENCES_FILE));
         app.addOpenedProject(project.getFolder().getAbsolutePath());
         pm.save(app, new File(MultimodalObserver.APP_PREFERENCES_FILE));
-        System.out.println(app);
+        //System.out.println(app);
     }
     
     private void newProject(ActionEvent e) {

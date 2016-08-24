@@ -8,16 +8,14 @@ import bibliothek.gui.dock.common.intern.CDockable;
 import bibliothek.gui.dock.util.DirectWindowProvider;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,21 +49,18 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
     private final CControl control;
 
-    private final  JMenu windowMenu = new JMenu("Window");
-
-    private final List<JMenuItem> dockablesGroupedMenus;
+    private final JMenu windowMenu = new JMenu("Window");
 
     public DockablesRegistry() {
         registry = this;
         dockables = new HashMap<>();
 
         control = new CControl();
-        dockablesGroupedMenus = new ArrayList<>();
 
         JMenuItem test = new JMenuItem("test");
         windowMenu.add(test);
         test.addActionListener((ActionEvent e) -> {
-            System.out.println("saving...");
+            //System.out.println("saving...");
             saveDockables();
         });
     }
@@ -82,42 +77,75 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     }
 
     public void addDockableInProjectGroup(String projectPath, DockableElement dockable) {
-        if (!dockables.containsKey(projectPath)) {
-            dockables.put(projectPath, new ArrayList<>());
-        }
-
-        dockables.get(projectPath).add(dockable);
-        addDockableElement(dockable);
+        addDockable(projectPath, dockable);
     }
 
-    private void addDockableElement(DockableElement dockable) {
-        control.addDockable(dockable);
-        dockable.setVisible(true);
+    private void addDockable(String group, DockableElement dockable) {
+        addDockableToHashMap(group, dockable);
+        addDockableToControlAndSetVisible(dockable);
 
-        DockableCheckBoxMenuItem dockableCheckItem = new DockableCheckBoxMenuItem();
-        dockableCheckItem.setText(dockable.getTitleText());
-        dockableCheckItem.setDockable(dockable);
-        dockable.addVetoClosingListener(new CVetoClosingListener() {
+        JMenu parentMenu;
+        if (group == null) {
+            parentMenu = windowMenu;
+        } else {
+            parentMenu = getOrCreateMenuItemForGroup(group);
+        }
+        setupMenuItemForAppDockable(parentMenu, dockable);
+    }
+
+    private void addDockableToHashMap(String group, DockableElement d) {
+        if (!dockables.containsKey(group)) {
+            dockables.put(group, new ArrayList<>());
+        }
+        dockables.get(group).add(d);
+    }
+
+    private void addDockableToControlAndSetVisible(DockableElement d) {
+        control.addDockable(d);
+        d.setVisible(true);
+    }
+
+    private void setupMenuItemForAppDockable(JMenu parentMenu, DockableElement d) {
+        DockableCheckBoxMenuItem menuItem = new DockableCheckBoxMenuItem();
+        menuItem.setText(d.getTitleText());
+        menuItem.setDockable(d);
+        d.addVetoClosingListener(new CVetoClosingListener() {
             @Override
             public void closing(CVetoClosingEvent cvce) {
             }
 
             @Override
             public void closed(CVetoClosingEvent cvce) {
-                dockableCheckItem.setSelected(false);
+                menuItem.setSelected(false);
             }
         });
-        dockable.addCDockableLocationListener((CDockableLocationEvent cdle) -> {
-            CDockable d = cdle.getDockable();
+        d.addCDockableLocationListener((CDockableLocationEvent cdle) -> {
+            CDockable cd = cdle.getDockable();
+            if (!cd.isVisible()) {
+                menuItem.setSelected(false);
+                d.setBackupLocation(cdle.getOldLocation());
+            }
+        });
+        menuItem.setState(true);
 
-            if (!d.isVisible()) {
-                dockableCheckItem.setSelected(false);
-                dockable.setBackupLocation(cdle.getOldLocation());
+        parentMenu.add(menuItem);
+        menuItem.addItemListener(this::checkBoxMenuItemStateChanged);
+    }
+
+    private JMenu getOrCreateMenuItemForGroup(String group) {
+
+        for (Component c : windowMenu.getMenuComponents()) {
+            if ((c.getName() != null) && c.getName().equals(group) && (c instanceof JMenu)) {
+                return (JMenu) c;
             }
-        });
-        dockableCheckItem.setState(true);
-        windowMenu.add(dockableCheckItem);
-        dockableCheckItem.addItemListener(this::checkBoxMenuItemStateChanged);
+        }
+
+        File folder = new File(group);
+        JMenu groupMenu = new JMenu(folder.getName());
+        groupMenu.setName(group);
+        windowMenu.add(groupMenu);
+
+        return groupMenu;
     }
 
     private void checkBoxMenuItemStateChanged(ItemEvent event) {
@@ -126,10 +154,10 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         DockableElement dockable = item.getDockable();
 
         if (event.getStateChange() == ItemEvent.DESELECTED) {
-            dockable.setBackupLocation(dockable.getBaseLocation());
+            dockable.saveBackupLocation();
             dockable.setVisible(false);
         } else {
-            dockable.setLocation(dockable.getBackupLocation());
+            dockable.restoreBackupLocation();
             dockable.setVisible(true);
         }
     }
@@ -152,32 +180,35 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
             XElement xmlContent = new XElement("dockables");
             for (DockableElement dockable : dockables) {
-                System.out.println(dockable);
+
                 if (dockable instanceof StorableDockable) {
-                
+
                     StorableDockable sd = (StorableDockable) dockable;
-                    
+
                     XElement dock = new XElement("dockable");
                     dock.addElement(dockable.getLocationXML());
                     dock.addBoolean("isVisible", dockable.isVisible());
-                    
+                    dock.addElement("id").setString(dockable.getId());
+
                     XElement group = new XElement("group");
-                    if ( !dir.equals(getBaseFolder())) {
+                    if (!dir.equals(getBaseFolder())) {
                         group.setString(dir);
                         dock.addElement(group);
                     }
-                    
+
                     XElement data = new XElement("data");
-                    data.addString("class", dockable.getClass().getCanonicalName());
-                    data.setString(sd.toFileContent());
+                    data.addString("class", dockable.getClass().getTypeName());
                     
-                    
+                    Path docksRoot = Paths.get(dir);
+                    Path dockFilePath = Paths.get(sd.dockableToFile().toURI());
+                    Path relative = docksRoot.relativize(dockFilePath);
+                    data.setString(relative.toString());
+
                     dock.addElement(data);
-                    
+
                     xmlContent.addElement(dock);
                 }
             }
-
             writeXmlToFile(xmlContent, xmlFile);
         }
     }
@@ -197,7 +228,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
     private void createFileIfNotExists(File file) throws IOException {
         if (!file.isFile() && !file.createNewFile()) {
-            LOGGER.log(Level.WARNING, null,"Can't create dockables file <" + file + ">");
+            LOGGER.log(Level.WARNING, null, "Can't create file <" + file + ">");
         }
     }
 
@@ -213,33 +244,62 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         try (InputStream input = new FileInputStream(file)) {
             XElement root = XIO.readUTF(input);
             XElement[] docks = root.getElements("dockable");
+            
+            DockablesTreeRecreator treeRecreator = new DockablesTreeRecreator(control);
+            
             for (XElement dock : docks) {
-                System.out.println(dock);
+                //System.out.println(dock);
                 XElement data = dock.getElement("data");
                 String className = data.getAttribute("class").getString();
-                Class<?> clazz = Class.forName(className);
-                Plugin p = PluginRegistry.getInstance().getPlugin(className);
-                
-                System.out.println(p);
-                Method method = clazz.getDeclaredMethod("dockableFromFile", String.class);
-                
-                String dataStr = dock.getElement("data").getString();
-                
-                DockableElement sd = 
-                        (DockableElement) method.invoke(p.getInstance(), dataStr);
-                
-                String group = dock.getElement("group").getString();
-                
-                addDockableInProjectGroup(group, sd);
+
+                DockableElement element = createDockableInstance(dock, className);
+                if (element != null) {
+
+                    XElement location = dock.getElement("location");
+                    XElement property = location.getElement("property");
+                    XElement leaf = property.getElement("leaf");
+
+                    if (leaf == null) {
+                        control.addDockable(element);
+                        element.setLocationFromXml(control, location);
+                        element.setVisible(true);
+                    } else {
+                        treeRecreator.addDockable(element, property);
+                    }
+
+                    String group = dock.getElement("group").getString();
+                    addDockableInProjectGroup(group, element);
+                }
             }
-        } catch (IOException | ClassNotFoundException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
-        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | 
-                IllegalArgumentException | InvocationTargetException ex) {
+            
+            List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
+            treeRecreator.createTrees(trees);
+            
+            
+        } catch (IOException | SecurityException | IllegalArgumentException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
     }
-    
+
+    private DockableElement createDockableInstance(XElement dockableXData, String className) {
+        DockableElement sd = null;
+        try {
+            Class<?> clazz = Class.forName(className);
+            Object o = clazz.newInstance();
+            String dataStr = dockableXData.getElement("data").getString();
+            Method method = clazz.getDeclaredMethod("dockableFromFile", File.class);
+
+            sd = (DockableElement) method.invoke(o, new File(dataStr));
+        } catch (ClassNotFoundException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        } catch (InstantiationException | IllegalAccessException |
+                IllegalArgumentException | InvocationTargetException |
+                NoSuchMethodException | SecurityException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        return sd;
+    }
+
     public void setJFrame(JFrame frame) {
         getInstance();
         control.setRootWindow(new DirectWindowProvider(frame));
@@ -280,7 +340,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
             return this.dockable;
         }
     }
-    
+
     public static void main(String[] args) {
         getInstance().loadDockablesFromFile(new File(getBaseFolder(), "dockables.xml"));
         System.exit(0);

@@ -146,14 +146,14 @@ public class ExtensionScanner extends ClassVisitor {
                 
                 @Override
                 public void visit(String nam, Object value) {
-                    System.out.println("  visit " + nam + " " + value);
+                    //System.out.println("  visit " + nam + " " + value);
                     switch (nam) {
                         case "id":
                             extPoint.setId((String) value);
                             break;
                         case "version":
                             extPoint.setVersion((String) value);
-                            System.out.println("-v "+extPoint.getVersion());
+                            //System.out.println("-v "+extPoint.getVersion());
                             break;
                         case "name":
                             extPoint.setName((String) value);

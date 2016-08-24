@@ -1,4 +1,4 @@
-package mo.core;
+package mo.pruebas;
 
 import java.io.File;
 import java.io.IOException;

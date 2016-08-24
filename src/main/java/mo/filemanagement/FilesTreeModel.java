@@ -39,8 +39,6 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
     private TreeSet<File> files;
     private DirectoryWatcher dirWatcher;
     
-    
-    //
     private JMenuItem item = new JMenuItem("hola");
 
     public FilesTreeModel() {
@@ -50,7 +48,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
         dirWatcher.addWatchHandler(new WatchHandler() {
             @Override
             public void onCreate(File file) {
-                System.out.println("create");
+                //System.out.println("create");
                 updateTree(file);
                 
                 List<Object> path = pathToNode(root, file, new ArrayList<Object>());
@@ -66,7 +64,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
 
             @Override
             public void onDelete(File file) {
-                System.out.println("del");
+                //System.out.println("del");
                 updateTree(file);
                 
                 
@@ -90,12 +88,12 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
 
             @Override
             public void onModify(File file) {
-                System.out.println("mod");
+                //System.out.println("mod");
                 updateTree(file);
                 
                 List<Object> path = pathToNode(root, file, new ArrayList<Object>());
                 if (path != null) {
-                    System.out.println("    path no null>"+path);
+                    //System.out.println("    path no null>"+path);
                     path.remove(path.size() - 1);
                     String[] listArray = file.getParentFile().list();
                     //ArrayList<String> list = new ArrayList<String>(listArray);
@@ -126,9 +124,9 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
         item.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("files:");
+                //System.out.println("files:");
                 for (File file : files) {
-                    System.out.println("  "+file);
+                    //System.out.println("  "+file);
                 }
             }
         });
@@ -151,7 +149,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
         }
 
         int count = getChildCount(parent);
-        System.out.println("c "+count);
+        //System.out.println("c "+count);
         for (int i = 0; i < count; i++) {
             ArrayList<Object> pathCopy = new ArrayList<>(path);
             List<Object> p = pathToNode((File) getChild(parent, i), node, pathCopy);
@@ -160,7 +158,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
             }
         }
 
-        System.out.println("returning null "+parent+" "+node+" "+path);
+        //System.out.println("returning null "+parent+" "+node+" "+path);
         return null;
     }
 
@@ -171,7 +169,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
     }
 
     private void updateTree(File file) {
-        System.out.println(file);
+        //System.out.println(file);
     }
 
     public void addFile(File f) {
@@ -292,8 +290,8 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
 
     @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
-        System.out.println("*** valueForPathChanged : "
-                + path + " --> " + newValue);
+        //System.out.println("*** valueForPathChanged : "
+        //        + path + " --> " + newValue);
     }
 
     @Override
