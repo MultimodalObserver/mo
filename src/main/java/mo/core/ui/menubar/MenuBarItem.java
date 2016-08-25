@@ -1,13 +1,11 @@
 package mo.core.ui.menubar;
 
-import java.util.List;
 import javax.swing.JMenuItem;
 
 public class MenuBarItem {
     private JMenuItem menuItem;
     private int location;
     private String relativeTo;
-    private List<MenuBarItem> menuBarItems;
 
     public MenuBarItem(JMenuItem menuItem, int location, String relativeTo) {
         this.menuItem = menuItem;

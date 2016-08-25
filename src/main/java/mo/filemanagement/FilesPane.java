@@ -1,45 +1,48 @@
 package mo.filemanagement;
 
-import bibliothek.gui.dock.common.CControl;
+import bibliothek.util.xml.XElement;
+import bibliothek.util.xml.XIO;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeSelectionModel;
-import mo.core.MultimodalObserver;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
-import mo.core.preferences.AppPreferencesWrapper;
-import mo.core.preferences.AppProjectPreferencesWrapper;
-import mo.core.preferences.PreferencesManager;
 import mo.core.ui.dockables.DockableElement;
-import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.dockables.IDockableElementProvider;
+import mo.core.ui.dockables.StartupDockableProvider;
 import mo.core.ui.dockables.StorableDockable;
+import static mo.core.utils.Utils.getBaseFolder;
 
 @Extension(
         xtends = {
-            @Extends(extensionPointId = "mo.core.ui.dockables.IDockableElementProvider")
+            @Extends(extensionPointId = "mo.core.ui.dockables.IDockableElementProvider"),
+            @Extends(extensionPointId = "mo.core.ui.dockables.StartupDockableProvider")
         }
 )
-public class FilesPane extends DockableElement implements IDockableElementProvider, StorableDockable {
+public class FilesPane extends DockableElement implements IDockableElementProvider, StorableDockable, StartupDockableProvider {
 
+    private final static Logger LOGGER = Logger.getLogger(FilesPane.class.getName());
     private final FilesTreeModel filesTreeModel;
     private final JTree filesTree;
-
+    
     public FilesPane() {
-
+        
         setTitleText("Files");
         filesTreeModel = new FilesTreeModel();
-
+        
         JPopupMenu popup = new JPopupMenu();
         JMenuItem mi = new JMenuItem("Insert a children");
         mi.setActionCommand("insert");
@@ -49,32 +52,33 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
         popup.add(mi);
         popup.setOpaque(true);
         popup.setLightWeightPopupEnabled(true);
-
+        
         filesTree = new JTree(filesTreeModel) {
             @Override
-            public String convertValueToText(Object value, boolean selected, 
+            public String convertValueToText(Object value, boolean selected,
                     boolean expanded, boolean leaf, int row, boolean hasFocus) {
                 return super.convertValueToText(((File) value).getName(), selected, expanded, leaf, row, hasFocus);
             }
         };
-
+        
         filesTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-
+        
         filesTree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent event) {
-
+                
                 if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
                     int row = filesTree.getRowForLocation(event.getX(), event.getY());
                     
-                    if (row == -1)
+                    if (row == -1) {
                         return;
+                    }
                     
                     filesTree.setSelectionRow(row);
                     File selected = (File) filesTree.getLastSelectedPathComponent();
-
+                    
                     JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
-
+                    
                     if (pop != null) {
                         pop.show((JComponent) event.getSource(),
                                 event.getX(), event.getY());
@@ -86,78 +90,96 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
 
         //filesTree.setRootVisible(false); //TODO why is not working when there are no files to show
         filesTree.setShowsRootHandles(true);
-
+        
         add(filesScrollPane);
-
-        Class c = AppPreferencesWrapper.class;
-        File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
-        AppPreferencesWrapper preferences = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(c, prefFile);
-
-        List<String> projectsNotFound = new ArrayList<>();
-        preferences.getOpenedProjects().stream().forEach((AppProjectPreferencesWrapper openedProject) -> {
-            File f = new File(openedProject.getLocation());
-
-            if (f.exists()) {
-                addFile(f);
-                DockablesRegistry.getInstance().loadDockablesFromFile(new File(f, "dockables.xml"));
-            } else {
-                projectsNotFound.add(openedProject.getLocation());
-            }
-
-        });
-
-        for (String projectPath : projectsNotFound) {
-            preferences.removeOpenedProject(projectPath);
-        }
-        PreferencesManager.save(preferences, prefFile);
     }
-
+    
     @Override
     public DockableElement getElement() {
         return this;
     }
-
+    
     public JTree getFilesTree() {
         return filesTree;
     }
-
+    
     public FilesTreeModel getFilesTreeModel() {
         return filesTreeModel;
     }
-
+    
     void addFile(File file) {
-        filesTreeModel.addFile(file);
-
-        if (!filesTree.isExpanded(0)) {
-            filesTree.expandRow(0);
+        if (file.exists()) {
+            filesTreeModel.addFile(file);
+            
+            if (!filesTree.isExpanded(0)) 
+                filesTree.expandRow(0);
+            
+        } else {
+            System.out.println("File <" + file + "> does not exists");
         }
     }
-
+    
     @Override
     public String getDockableGroup() {
         return null;
     }
-
+    
     @Override
     public File dockableToFile() {
-        return new File("asd");
+        File result = null;
+        try {
+            result = new File(getBaseFolder(), "files.xml");
+            result.createNewFile();
+            
+            XElement xmlContent = new XElement("filesPane");
+            XElement openedProjects = new XElement("openedProjects");
+            
+            for (File file : filesTreeModel.getFiles()) {
+                XElement project = new XElement("project");
+                project.setString(file.getAbsolutePath());
+                openedProjects.addElement(project);
+            }
+            
+            xmlContent.addElement(openedProjects);
+            
+            XIO.writeUTF(xmlContent, new FileOutputStream(result));
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        return result;
+    }
+    
+    @Override
+    public DockableElement dockableFromFile(File file) {
+        FilesPane d = new FilesPane();
+        //System.out.println("hola"+);
+        if (file.exists()) {
+            try (InputStream in = new FileInputStream(file)) {
+                System.out.println("si?");
+                FileRegistry.getInstance().setFilesPane(d);
+                
+                XElement x = XIO.readUTF(in);
+                System.out.println(x);
+                XElement openedProjects = x.getElement("openedProjects");
+                for (XElement project : openedProjects.getElements("project")) {
+                    System.out.println(project);
+                    //d.addFile(new File(project.getString()));
+                    FileRegistry.getInstance().addOpenedProject(new Project(project.getString()));
+                }
+                System.out.println("DDD: " + d);
+                
+                return d;
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
+            }
+        } else {
+            LOGGER.log(Level.INFO, "File <"+file.getAbsolutePath()+"> does not exists");
+        }
+        return d;
     }
 
     @Override
-    public DockableElement dockableFromFile(File file) {
-        return new FilesPane();
-    }
-
-    public static void main(String[] args) {
-        JFrame f = new JFrame("hola");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        FilesPane p = new FilesPane();
-
-        CControl control = new CControl(f);
-        control.addDockable(p.getElement());
-        f.add(control.getContentArea());
-        p.getElement().setVisible(true);
-        f.setVisible(true);
+    public DockableElement getDockable() {
+        return dockableFromFile(new File(getBaseFolder(), "files.xml"));
     }
 }

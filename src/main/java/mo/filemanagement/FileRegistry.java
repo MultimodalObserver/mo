@@ -2,8 +2,6 @@ package mo.filemanagement;
 
 import java.io.File;
 import java.util.TreeMap;
-import mo.core.plugin.Plugin;
-import mo.core.plugin.PluginRegistry;
 import mo.core.ui.dockables.DockablesRegistry;
 
 public class FileRegistry {
@@ -14,24 +12,15 @@ public class FileRegistry {
     
     private FilesPane filesPane;
     
-    public FileRegistry() {
+    private FileRegistry() {
         openedFiles = new TreeMap<>();
-        Plugin filesPanePlugin = PluginRegistry.getInstance().getPlugin("mo.filemanagement.FilesPane");
-        if (filesPanePlugin != null) {
-            filesPane = (FilesPane) filesPanePlugin.getInstance();
-            DockablesRegistry.getInstance().addAppWideDockable(filesPane);
-        }
-    }
-
-    public void addOpenedFile(File p) {
-        
     }
     
     public TreeMap<String, String> getOpenedFiles() {
         return openedFiles;
     }
     
-    public static FileRegistry getInstance() {
+    public synchronized static FileRegistry getInstance() {
         if (fileRegistry == null) {
             fileRegistry = new FileRegistry();
         }
@@ -39,11 +28,18 @@ public class FileRegistry {
     }
 
     public void addOpenedProject(Project project) {
-        openedFiles.put(
-                project.getFolder().getAbsolutePath(),
-                project.getFolder().getName());
         
-        filesPane.addFile(new File(project.getFolder().getAbsolutePath()));
+        File f = project.getFolder();
+                
+        openedFiles.put(
+                f.getAbsolutePath(),
+                f.getName());
+        System.out.println(project);
+        System.out.println(project.getFolder());
+        System.out.println(filesPane);
+        filesPane.addFile(new File(f.getAbsolutePath()));
+
+        DockablesRegistry.getInstance().loadDockablesFromFile(new File(f, "dockables.xml"));
     }
 
     public FilesPane getFilesPane() {
@@ -51,6 +47,7 @@ public class FileRegistry {
     }
 
     public void setFilesPane(FilesPane filesPane) {
+        System.out.println("seted "+filesPane);
         this.filesPane = filesPane;
     }
 }

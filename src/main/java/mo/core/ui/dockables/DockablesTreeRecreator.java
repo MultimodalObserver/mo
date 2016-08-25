@@ -33,7 +33,6 @@ public class DockablesTreeRecreator {
         last.id = element.getId();
         last.location = Location.fromString(locationStr);
         last.size = lastXNode.getAttribute("size").getFloat();
-        last.type = locationProperty.getAttribute("type").getString();
 
         LocationNode lastVisited = last;
 
@@ -104,7 +103,6 @@ public class DockablesTreeRecreator {
                                 currentMain = currentMain.firstChild;
                             } else {
                                 currentMain.firstChild = currentNew;
-                                currentMain.firstChild.parent = currentMain;
                                 added = true;
                             }
                         } else if (currentNew.secondChild != null) {
@@ -113,7 +111,6 @@ public class DockablesTreeRecreator {
                                 currentMain = currentMain.secondChild;
                             } else {
                                 currentMain.secondChild = currentNew;
-                                currentMain.secondChild.parent = currentMain;
                                 added = true;
                             }
                         } else {
@@ -257,10 +254,9 @@ public class DockablesTreeRecreator {
         public String id;
         public float size;
         public Location location;
-        List<DockableElement> docks = null;
+        public List<DockableElement> docks = null;
         public String type;
 
-        public LocationNode parent = null;
         public ChildrenOrientation childrenOrientation = null;
         public LocationNode firstChild = null; //left or top
         public LocationNode secondChild = null;//right or bottom

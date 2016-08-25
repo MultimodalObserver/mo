@@ -1,12 +1,10 @@
 package mo.filemanagement;
 
 import mo.core.utils.Utils;
-import mo.core.ui.WizardDialog;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -78,12 +76,7 @@ public class NewProjectWizardPanel extends JPanel {
         folderField.setEditable(false);
         
         JButton browseBtn = new JButton("Browse...");
-        browseBtn.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                selectLocation(e);
-            }
-        });
+        browseBtn.addActionListener(this::selectLocation);
         
         c.gridx = 0;
         c.gridy = 0;

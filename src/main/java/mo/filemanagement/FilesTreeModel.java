@@ -1,17 +1,13 @@
 package mo.filemanagement;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import mo.core.utils.Utils;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeModelEvent;
@@ -20,26 +16,15 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import mo.core.DirectoryWatcher;
 import mo.core.WatchHandler;
-import mo.core.plugin.Extends;
-import mo.core.plugin.Extension;
-import mo.core.ui.menubar.IMenuBarItemProvider;
 
-@Extension(
-        xtends = {
-            @Extends (
-                   extensionPointId = "mo.core.ui.menubar.IMenuBarItemProvider"
-            )
-        }
-                )
-
-public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
+public class FilesTreeModel implements TreeModel {
 
     private final File root = new File("multimodal-observer");
     private final HashSet<TreeModelListener> listeners;
     private TreeSet<File> files;
-    private DirectoryWatcher dirWatcher;
+    private final DirectoryWatcher dirWatcher;
     
-    private JMenuItem item = new JMenuItem("hola");
+    //private final JMenuItem item = new JMenuItem("hola");
 
     public FilesTreeModel() {
         listeners = new HashSet<>();
@@ -51,7 +36,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
                 //System.out.println("create");
                 updateTree(file);
                 
-                List<Object> path = pathToNode(root, file, new ArrayList<Object>());
+                List<Object> path = pathToNode(root, file, new ArrayList<>());
                 path.remove(path.size() - 1);
                 TreeModelEvent event = new TreeModelEvent(
                         file,
@@ -66,12 +51,9 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
             public void onDelete(File file) {
                 //System.out.println("del");
                 updateTree(file);
-                
-                
-                List<Object> path = pathToNode(root, file.getParentFile(), new ArrayList<Object>());
-                //path.remove(path.size() - 1);
-                String[] listArray = file.getParentFile().list();
-                //ArrayList<String> list = new ArrayList<String>(listArray);
+        
+                List<Object> path = pathToNode(root, file.getParentFile(), new ArrayList<>());
+
                 TreeModelEvent removeEvent = new TreeModelEvent(
                         this,
                         path.toArray(),
@@ -79,8 +61,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
                         new Object[]{file}
                 );
                 notifyStructureChangedToListeners(removeEvent);
-                
-                
+   
                 if (files.contains(file)) {
                     files.remove(file);
                 }
@@ -91,12 +72,11 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
                 //System.out.println("mod");
                 updateTree(file);
                 
-                List<Object> path = pathToNode(root, file, new ArrayList<Object>());
+                List<Object> path = pathToNode(root, file, new ArrayList<>());
                 if (path != null) {
                     //System.out.println("    path no null>"+path);
                     path.remove(path.size() - 1);
-                    String[] listArray = file.getParentFile().list();
-                    //ArrayList<String> list = new ArrayList<String>(listArray);
+
                     TreeModelEvent removeEvent = new TreeModelEvent(
                             this,
                             path.toArray(),
@@ -106,8 +86,7 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
                     notifyChangedToListeners(removeEvent);
                 } else {
                     
-                    for (Iterator<File> iterator = files.iterator(); iterator.hasNext();) {
-                        File next = iterator.next();
+                    for (File next : files) {
                         if ( !next.exists() )
                             files.remove(next);
                     }
@@ -121,15 +100,12 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
             }
         });
         dirWatcher.start();
-        item.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //System.out.println("files:");
-                for (File file : files) {
-                    //System.out.println("  "+file);
-                }
+        /*item.addActionListener((ActionEvent e) -> {
+            //System.out.println("files:");
+            for (File file : files) {
+                //System.out.println("  "+file);
             }
-        });
+        });*/
     }
     
     private List<Object> pathToNode(File parent, File node, List<Object> path) {
@@ -198,10 +174,9 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
 
     public void removeFile(File f) {
         File toRemove = null;
-        TreeModelEvent removeEvent = null;
+        TreeModelEvent removeEvent;
 
-        for (Iterator<File> iterator = files.iterator(); iterator.hasNext();) {
-            File next = iterator.next();
+        for (File next : files) {
             if (f.getAbsolutePath().compareTo(next.getAbsolutePath()) == 0) {
                 toRemove = next;
             }
@@ -345,52 +320,4 @@ public class FilesTreeModel implements TreeModel, IMenuBarItemProvider {
             listeners.remove(l);
         }
     }
-
-    public static void main(String[] args) throws InterruptedException {
-        JFrame frame = new JFrame();
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        FilesTreeModel m = new FilesTreeModel();
-        m.addFile(new File(Utils.getBaseFolder()));
-
-        JTree tree = new JTree(m) {
-            @Override
-            public String convertValueToText(Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-                return super.convertValueToText(((File) value).getName(), selected, expanded, leaf, row, hasFocus); //To change body of generated methods, choose Tools | Templates.
-            }
-
-        };
-        //tree.setRootVisible(false);
-
-        JScrollPane scrollPane = new JScrollPane(tree);
-        frame.add(scrollPane);
-
-        frame.setSize(300, 200);
-        frame.setVisible(true);
-
-        Thread.sleep(3000);
-
-        m.addFile(new File("C:/Users/Celso/Desktop/pruebas/watchDir"));
-        //tree.updateUI();
-        Thread.sleep(3000);
-        m.removeFile(new File(Utils.getBaseFolder()));
-        //tree.updateUI();
-
-    }
-
-    @Override
-    public JMenuItem getItem() {
-        return item;
-    }
-
-    @Override
-    public int getRelativePosition() {
-        return IMenuBarItemProvider.UNDER;
-    }
-
-    @Override
-    public String getRelativeTo() {
-        return "file";
-    }
-
 }

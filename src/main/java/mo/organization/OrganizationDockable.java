@@ -6,6 +6,18 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalField;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,18 +39,20 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     private List<Participant> participants;
 
     public OrganizationDockable() {
+        participants = new ArrayList<>();
+        
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Project ");
         DefaultMutableTreeNode participantsNode = new DefaultMutableTreeNode("Participants");
         root.add(participantsNode);
 
         JMenuItem addParticipantMenu = new JMenuItem("add participant");
         addParticipantMenu.addActionListener((ActionEvent e) -> {
-            ParticipantDialog dialog = new ParticipantDialog();
+            ParticipantDialog dialog = new ParticipantDialog(this);
             Participant participant = dialog.showDialog();
             if (participant != null) {
-                System.out.println("yess");
-            } else {
-                System.out.println("nouu");
+                participants.add(participant);
+                DefaultMutableTreeNode newParticipant = new DefaultMutableTreeNode(participant);
+                participantsNode.add(newParticipant);
             }
         });
 
@@ -94,6 +108,23 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             b.setString(this.getTitleText());
             e.addElement(b);
             
+            XElement p = new XElement("participants");
+            for (Participant participant : participants) {
+                XElement xParticipant = new XElement("participant");
+                xParticipant.addElement("id").setString(participant.id);
+                xParticipant.addElement("name").setString(participant.name);
+                xParticipant.addElement("notes").setString(participant.notes);
+                XElement date = new XElement("date");
+                Calendar c = Calendar.getInstance();
+                c.setTime(participant.date);
+                date.addElement("day").setInt(c.get(Calendar.DAY_OF_MONTH));
+                date.addElement("month").setInt(c.get(Calendar.MONTH));
+                date.addElement("year").setInt(c.get(Calendar.YEAR));
+                xParticipant.addElement(date);
+                p.addElement(xParticipant);
+            }
+            e.addElement(p);
+            
             XIO.writeUTF(e, new FileOutputStream(file));
 
             return file;
@@ -108,16 +139,34 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         if (file.exists()) {
             try (InputStream in = new FileInputStream(file)) {
-                //System.out.println(file);
+
                 XElement e = XIO.read(in, "UTF-8");
-                //System.out.println(e);
-                for (XElement xElement : e.children()) {
-                    //System.out.println(xElement);
-                }
-                
+
                 OrganizationDockable d = new OrganizationDockable();
                 d.setTitleText(e.getElement("title").getString());
                 d.setProjectPath(file.getParentFile().getParentFile().getAbsolutePath());
+                
+                XElement[] ps = e.getElement("participants").getElements("participant");
+                for (XElement participant : ps) {
+                    Participant p = new Participant();
+                    p.id = participant.getElement("id").getString();
+                    p.name = participant.getElement("name").getString();
+                    p.notes = participant.getElement("notes").getString();
+                    
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd MM yyyy");
+                    String day = participant.getElement("date").getElement("day").getString();
+                    String month = participant.getElement("date").getElement("month").getString();
+                    String year = participant.getElement("date").getElement("year").getString();
+                    Date date = new Date();
+                    try {
+                        date = formatter.parse(day+" "+month+" "+year);
+                    } catch (ParseException ex) {
+                        LOGGER.log(Level.SEVERE, null, ex);
+                    }
+                    p.date = date;
+                    d.participants.add(p);
+                }
+                
                 return d;
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
@@ -125,5 +174,9 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         }
         System.out.println(file);
         return null;
+    }
+
+    List<Participant> getParticipants() {
+        return this.participants;
     }
 }

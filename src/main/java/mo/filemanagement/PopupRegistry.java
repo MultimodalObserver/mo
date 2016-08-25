@@ -1,7 +1,6 @@
 package mo.filemanagement;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,11 +10,11 @@ import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 import static mo.filemanagement.ProjectUtils.isProjectFolder;
 
-public class PopupRegistry {
+public final class PopupRegistry {
     private static PopupRegistry popupRegistry;
     HashMap <String, FilePopupMenu> popups; //by extension
-    private List<JMenuItem> projectOptions;
-    private FilePopupMenu projectPopup;
+    private final List<JMenuItem> projectOptions;
+    private final FilePopupMenu projectPopup;
     private JPopupMenu folderPopup;
     
     private PopupRegistry() {

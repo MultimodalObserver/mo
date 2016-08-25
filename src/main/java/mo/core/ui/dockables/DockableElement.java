@@ -182,57 +182,63 @@ public class DockableElement extends DefaultSingleCDockable {
     
     public void setLocationFromXml(CControl control, XElement xmlLocationInfo) {
         String type = xmlLocationInfo.getAttribute("type").getValue();
-
-        if (type.equals("CExternalizedLocation")) {
-            //System.out.println("externalized");
-            int x, y, w, h;
-            XElement prop = xmlLocationInfo.getElement("property");
-            x = prop.getElement("x").getInt();
-            y = prop.getElement("y").getInt();
-            w = prop.getElement("width").getInt();
-            h = prop.getElement("height").getInt();
-
-            if (xmlLocationInfo.getElement("mode").getValue().endsWith("maximized")) {
-                //System.out.println("  maximized");
-                setLocation(CLocation.external(x, y, w, h));
-                //TODO maximize
-            } else {
-                //System.out.println("  no maximized");
-                setLocation(CLocation.external(x, y, w, h));
-
-            }
-        } else if (type.equals("CMaximalExternalizedLocation")) {
-            //never happends?
-        } else if (type.equals("CStackLocation")) {
-            //System.out.println("  cstacklocation");
-            String mode = xmlLocationInfo.getElement("mode").getValue();
-            if (mode.endsWith("externalized")) {
-                //System.out.println("   external");
-                XElement property = xmlLocationInfo.getElement("property");
-                int x = property.getElement("x").getInt();
-                int y = property.getElement("y").getInt();
-                int w = property.getElement("width").getInt();
-                int h = property.getElement("height").getInt();
-                List<DockableElement> l = findDockablesInControlWithBounds(control, x, y, w, h);
-                //System.out.println("l size: " + l.size());
-                if (l.isEmpty()) {
-                    //System.out.println("no l");
+        
+        switch (type) {
+            case "CExternalizedLocation": {
+                int x, y, w, h;
+                XElement prop = xmlLocationInfo.getElement("property");
+                x = prop.getElement("x").getInt();
+                y = prop.getElement("y").getInt();
+                w = prop.getElement("width").getInt();
+                h = prop.getElement("height").getInt();
+                if (xmlLocationInfo.getElement("mode").getValue().endsWith("maximized")) {
+                    //System.out.println("  maximized");
                     setLocation(CLocation.external(x, y, w, h));
-
+                    //TODO maximize
                 } else {
-                    //System.out.println("si l : " + l.get(0).id);
-                    setLocationsAside(l.get(0));
+                    //System.out.println("  no maximized");
+                    setLocation(CLocation.external(x, y, w, h));
+                    
                 }
-            } else if (mode.endsWith("normal")) {
-                //System.out.println("   normal");
+                break;
+        //never happends?
             }
-        } else if (type.equals("CFlapIndexLocation")) {
-            setLocation(CLocation.base());
-            setExtendedMode(ExtendedMode.MINIMIZED);
-        } else if (type.equals("TreeLocationLeaf")) {
-            //delegated to tree
-        } else {
-            setLocation(CLocation.base());
+            case "CMaximalExternalizedLocation":
+                break;
+            case "CStackLocation":
+                //System.out.println("  cstacklocation");
+                String mode = xmlLocationInfo.getElement("mode").getValue();
+                if (mode.endsWith("externalized")) {
+                    //System.out.println("   external");
+                    XElement property = xmlLocationInfo.getElement("property");
+                    int x = property.getElement("x").getInt();
+                    int y = property.getElement("y").getInt();
+                    int w = property.getElement("width").getInt();
+                    int h = property.getElement("height").getInt();
+                    List<DockableElement> l = findDockablesInControlWithBounds(control, x, y, w, h);
+                    //System.out.println("l size: " + l.size());
+                    if (l.isEmpty()) {
+                        //System.out.println("no l");
+                        setLocation(CLocation.external(x, y, w, h));
+                        
+                    } else {
+                        //System.out.println("si l : " + l.get(0).id);
+                        setLocationsAside(l.get(0));
+                    }
+                } else if (mode.endsWith("normal")) {
+                    //System.out.println("   normal");
+                }
+                break;
+            case "CFlapIndexLocation":
+                setLocation(CLocation.base());
+                setExtendedMode(ExtendedMode.MINIMIZED);
+                break;
+        //delegated to tree
+            case "TreeLocationLeaf":
+                break;
+            default:
+                setLocation(CLocation.base());
+                break;
         }
     }
 

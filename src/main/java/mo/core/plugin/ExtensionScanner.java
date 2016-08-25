@@ -1,23 +1,12 @@
 package mo.core.plugin;
 
-import mo.core.utils.Utils;
-import mo.example.IExtPointExample;
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static mo.core.plugin.VersionUtils.semverize;
-import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.AnnotationVisitor;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 
-/**
- *
- * @author Celso
- */
 public class ExtensionScanner extends ClassVisitor {
 
     private static final
@@ -186,7 +175,7 @@ public class ExtensionScanner extends ClassVisitor {
             if (extPoint.getName() == null) {
                 String id = extPoint.getId();
                 if (id.contains("."))
-                    extPoint.setName(id.substring(id.lastIndexOf(".") + 1));
+                    extPoint.setName(id.substring(id.lastIndexOf('.') + 1));
                 else
                     extPoint.setName(id);
             }
@@ -206,7 +195,7 @@ public class ExtensionScanner extends ClassVisitor {
                     plugin.setClazz(cl.loadClass(plugin.getId()));
                     //URLClassLoader u = 
                 } catch (ClassNotFoundException ex1) {
-                    Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex1);
+                    LOGGER.log(Level.SEVERE, null, ex1);
                 }
             }
             
@@ -216,7 +205,7 @@ public class ExtensionScanner extends ClassVisitor {
             if (plugin.getName() == null) {
                 String id = plugin.getId();
                 if (id.contains("."))
-                    plugin.setName(id.substring(id.lastIndexOf(".") + 1));
+                    plugin.setName(id.substring(id.lastIndexOf('.') + 1));
                 else
                     plugin.setName(id);
             }
@@ -226,32 +215,12 @@ public class ExtensionScanner extends ClassVisitor {
         }
         super.visitEnd(); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
-    
+
     public Plugin getPlugin(){
         return this.plugin;
     }
     
     public ExtPoint getExtPoint() {
         return this.extPoint;
-    }
-
-    public static void main(String[] args) throws Exception {
-        String[] exts = {"class"};
-        File path = new File(Utils.getBaseFolder());
-        Collection<File> files = FileUtils.listFiles(path, exts, true);
-        for (File file : files) {
-            FileInputStream in = new FileInputStream(file);
-            ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
-            ClassReader cr = new ClassReader(in);
-            cr.accept(exScanner, 0);
-            
-            if (exScanner.plugin!= null) {
-                IExtPointExample i =(IExtPointExample) exScanner.getPlugin().getClazz().newInstance();
-                i.SayHi();
-            }
-        }
-    }
-    
+    }   
 }

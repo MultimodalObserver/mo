@@ -31,6 +31,7 @@ import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 import mo.core.ui.menubar.IMenuBarItemProvider;
 import static mo.core.utils.Utils.getBaseFolder;
+import mo.filemanagement.FilesPane;
 
 @Extension(
         xtends = {
@@ -59,13 +60,14 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
         JMenuItem test = new JMenuItem("test");
         windowMenu.add(test);
+
         test.addActionListener((ActionEvent e) -> {
             //System.out.println("saving...");
             saveDockables();
         });
     }
 
-    public static DockablesRegistry getInstance() {
+    public synchronized static DockablesRegistry getInstance() {
         if (registry == null) {
             registry = new DockablesRegistry();
         }
@@ -106,6 +108,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     }
 
     private void setupMenuItemForAppDockable(JMenu parentMenu, DockableElement d) {
+
         DockableCheckBoxMenuItem menuItem = new DockableCheckBoxMenuItem();
         menuItem.setText(d.getTitleText());
         menuItem.setDockable(d);
@@ -129,6 +132,8 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         menuItem.setState(true);
 
         parentMenu.add(menuItem);
+        menuItem.setVisible(true);
+        //System.out.println("P>" + parentMenu + "\nS>" + menuItem);
         menuItem.addItemListener(this::checkBoxMenuItemStateChanged);
     }
 
@@ -144,7 +149,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         JMenu groupMenu = new JMenu(folder.getName());
         groupMenu.setName(group);
         windowMenu.add(groupMenu);
-
+        System.out.println(groupMenu);
         return groupMenu;
     }
 
@@ -198,7 +203,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                     XElement data = new XElement("data");
                     data.addString("class", dockable.getClass().getTypeName());
-                    
+
                     Path docksRoot = Paths.get(dir);
                     Path dockFilePath = Paths.get(sd.dockableToFile().toURI());
                     Path relative = docksRoot.relativize(dockFilePath);
@@ -241,47 +246,59 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     }
 
     public void loadDockablesFromFile(File file) {
-        try (InputStream input = new FileInputStream(file)) {
-            XElement root = XIO.readUTF(input);
-            XElement[] docks = root.getElements("dockable");
-            
-            DockablesTreeRecreator treeRecreator = new DockablesTreeRecreator(control);
-            
-            for (XElement dock : docks) {
-                //System.out.println(dock);
-                XElement data = dock.getElement("data");
-                String className = data.getAttribute("class").getString();
+        if (file.exists()) {
+            try (InputStream input = new FileInputStream(file)) {
+                XElement root = XIO.readUTF(input);
+                XElement[] docks = root.getElements("dockable");
 
-                DockableElement element = createDockableInstance(dock, className);
-                if (element != null) {
+                DockablesTreeRecreator treeRecreator = new DockablesTreeRecreator(control);
 
-                    XElement location = dock.getElement("location");
-                    XElement property = location.getElement("property");
-                    XElement leaf = property.getElement("leaf");
+                for (XElement dock : docks) {
+                    //System.out.println(dock);
+                    XElement data = dock.getElement("data");
+                    String className = data.getAttribute("class").getString();
 
-                    if (leaf == null) {
-                        control.addDockable(element);
-                        element.setLocationFromXml(control, location);
-                        element.setVisible(true);
-                    } else {
-                        treeRecreator.addDockable(element, property);
+                    DockableElement element = createDockableInstance(file, dock, className);
+                    if (element != null) {
+
+                        XElement location = dock.getElement("location");
+                        XElement property = location.getElement("property");
+                        XElement leaf = property.getElement("leaf");
+
+                        if (leaf == null) {
+                            control.addDockable(element);
+                            element.setLocationFromXml(control, location);
+                            element.setVisible(true);
+                        } else {
+                            treeRecreator.addDockable(element, property);
+                        }
+
+                        XElement group = dock.getElement("group");
+                        if (group == null) {
+                            addDockableInProjectGroup(null, element);
+                        } else {
+                            addDockableInProjectGroup(group.getString(), element);
+                        }
+
+                        boolean isVisible = dock.getAttribute("isVisible").getBoolean();
+                        if (!isVisible) {
+                            element.setVisible(false);
+                        }
                     }
-
-                    String group = dock.getElement("group").getString();
-                    addDockableInProjectGroup(group, element);
                 }
+
+                List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
+                treeRecreator.createTrees(trees);
+
+            } catch (IOException | SecurityException | IllegalArgumentException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
             }
-            
-            List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
-            treeRecreator.createTrees(trees);
-            
-            
-        } catch (IOException | SecurityException | IllegalArgumentException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+        } else {
+            System.out.println("No dockables config found");
         }
     }
 
-    private DockableElement createDockableInstance(XElement dockableXData, String className) {
+    private DockableElement createDockableInstance(File file, XElement dockableXData, String className) {
         DockableElement sd = null;
         try {
             Class<?> clazz = Class.forName(className);
@@ -289,7 +306,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
             String dataStr = dockableXData.getElement("data").getString();
             Method method = clazz.getDeclaredMethod("dockableFromFile", File.class);
 
-            sd = (DockableElement) method.invoke(o, new File(dataStr));
+            sd = (DockableElement) method.invoke(o, new File(file.getParentFile(), dataStr));
         } catch (ClassNotFoundException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         } catch (InstantiationException | IllegalAccessException |
@@ -339,10 +356,5 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         public DockableElement getDockable() {
             return this.dockable;
         }
-    }
-
-    public static void main(String[] args) {
-        getInstance().loadDockablesFromFile(new File(getBaseFolder(), "dockables.xml"));
-        System.exit(0);
     }
 }

@@ -1,6 +1,9 @@
 package mo.filemanagement;
 
 import java.io.File;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -15,7 +18,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 public class Project {
-    private File folder;
+    private static final Logger LOGGER = Logger.getLogger(Project.class.getName());
+    private final File folder;
     
     public Project(String rootFolder){
         this.folder = new File(rootFolder);
@@ -50,9 +54,7 @@ public class Project {
             //System.out.println("\nXML DOM Created Successfully..");
  
         } catch (ParserConfigurationException | DOMException | IllegalArgumentException | TransformerException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, (Supplier<String>) e);
         }
     }
-    
-    
 }

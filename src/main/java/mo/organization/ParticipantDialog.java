@@ -6,7 +6,6 @@ import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.*;
@@ -22,16 +21,17 @@ import org.jdatepicker.impl.UtilDateModel;
 
 public class ParticipantDialog extends JDialog {
 
-    Participant participant;
+    private Participant participant;
 
     JTextField idField;
     JTextField nameField;
     JLabel errorLabel;
     JButton accept;
+    List<Participant> orgParticipants;
 
-    public ParticipantDialog() {
+    public ParticipantDialog(OrganizationDockable organization) {
         super(null, "New participant", Dialog.ModalityType.APPLICATION_MODAL);
-
+        orgParticipants = organization.getParticipants();
         participant = new Participant();
 
         setLayout(new GridBagLayout());
@@ -165,8 +165,21 @@ public class ParticipantDialog extends JDialog {
             errorLabel.setText("An ID and name must be specified");
             accept.setEnabled(false);
         } else {
-            errorLabel.setText("");
-            accept.setEnabled(true);
+            if (isParticipantIdUnique(idField.getText())){
+                errorLabel.setText("");
+                accept.setEnabled(true);
+            } else {
+                errorLabel.setText("ID must be unique");
+                accept.setEnabled(false);
+            }
         }
+    }
+    
+    private boolean isParticipantIdUnique(String id) {
+        for (Participant p : orgParticipants) {
+            if (p.id.equals(id))
+                return false;
+        }
+        return true;
     }
 }

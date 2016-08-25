@@ -2,14 +2,10 @@ package mo.core.plugin;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Enumeration;
 import java.util.List;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
@@ -44,11 +40,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
 
     public PluginViewer() {
         dockable = new DockableElement("PluginViewer");
-        menuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                menuItemClicked();
-            }
+        menuItem.addActionListener((ActionEvent e) -> {
+            menuItemClicked();
         });
 
         PluginCellRenderer renderer = new PluginCellRenderer();
@@ -143,11 +136,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         return null;
     }
 
-    class PluginCellRenderer implements TreeCellRenderer {
-
-        JPanel panel = new JPanel();
-        JLabel comp = new JLabel();
-        private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
+    private static class PluginCellRenderer implements TreeCellRenderer {
+        private final DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -166,13 +156,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
                         returnValue = getTreeCellRendererComponentForDependency((DefaultTreeCellRenderer)(new DefaultTreeCellRenderer()).getTreeCellRendererComponent(tree, value, leaf, expanded, leaf, row, hasFocus), d);
                 }
             }
-
-            if (returnValue == null) {
-                returnValue = (DefaultTreeCellRenderer) defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
-                
-            }
             return returnValue;
-
         }
 
         private DefaultTreeCellRenderer getTreeCellRendererComponentForPlugin(DefaultTreeCellRenderer c, Plugin o) {

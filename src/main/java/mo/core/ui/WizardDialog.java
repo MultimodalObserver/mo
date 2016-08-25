@@ -1,6 +1,5 @@
 package mo.core.ui;
 
-//import mo.core.MainWindow;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -12,8 +11,6 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -24,19 +21,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 
 public class WizardDialog extends JDialog {
     private ArrayList<JPanel> panels;
-    private JPanel cards, stepsPanel;
-    private ArrayList<JLabel> stepsLabels;
+    private final JPanel cards, stepsPanel;
+    private final ArrayList<JLabel> stepsLabels;
     private HashMap<String,Object> result;
-    private JButton backButton;
-    private JButton nextButton;
-    private JButton finishButton;
-    private JLabel warningLabel;
-    private JLabel stepTitleLabel;
+    private final JButton backButton;
+    private final JButton nextButton;
+    private final JButton finishButton;
+    private final JLabel warningLabel;
+    private final JLabel stepTitleLabel;
     private int currentStepIndex = 0;
     
     Font defFont = (new JLabel()).getFont();
@@ -296,44 +291,5 @@ public class WizardDialog extends JDialog {
         currentStepIndex--;
         if (currentStepIndex < 0)
             currentStepIndex = 0;
-    }
-    
-    public static void main(String[] args) {
-        try {
-            // Significantly improves the look of the output in
-            // terms of the file names returned by FileSystemView!
-            UIManager.setLookAndFeel(
-                    UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            Logger.getLogger(WizardDialog.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        JFrame f = new JFrame("asd aisdoia sd hasodhas hdoaih sd");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setSize(100,100);
-        f.setLocationRelativeTo(null);
-        f.setVisible(true);
-        
-        JPanel p = new JPanel();
-        p.setName("Terminar la tesis");
-        p.add(new JLabel("asd"));
-        
-        JPanel pp = new JPanel();
-        pp.setName("Encontrar trabajo");
-        pp.add(new JLabel("hgdf"));
-        
-        WizardDialog w = new WizardDialog(f, "Hola");
-        w.enableNext();
-        w.enableBack();
-        w.addPanel(p);
-        w.addPanel(pp);
-        //w.setSize(300,300);
-        HashMap result = w.showWizard();
-        if (null==result){
-            System.out.println("  null");
-        } else {
-            System.out.println("  no null");
-        }
-        System.exit(0);
     }
 }

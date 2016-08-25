@@ -76,14 +76,10 @@ public class PreferencesManager {
     }
 
     public static void main(String[] args) {
-        PreferencesManager pm = new PreferencesManager();
-        //AppPreferencesWrapper a = new AppPreferencesWrapper();
-        //a.addOpenedProject("chau");
-        //pm.save(a, new File(Utils.getBaseFolder()+"/app.xml"));
 
         AppPreferencesWrapper aa;
 
-        aa = (AppPreferencesWrapper) pm.load(AppPreferencesWrapper.class,
+        aa = (AppPreferencesWrapper) PreferencesManager.load(AppPreferencesWrapper.class,
                 new File(Utils.getBaseFolder() + "/app.xml"));
 
         if (aa != null) {

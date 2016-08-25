@@ -15,8 +15,6 @@ public class MainPresenter {
 
     private final MainWindow view;
 
-    private final PreferencesManager prefManager = new PreferencesManager();
-
     private AppPreferencesWrapper preferences;
 
     public MainPresenter(MainWindow w) {
@@ -25,7 +23,7 @@ public class MainPresenter {
         Class c = AppPreferencesWrapper.class;
         File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
         preferences
-                = (AppPreferencesWrapper) prefManager.loadOrCreate(c, prefFile);
+                = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(c, prefFile);
 
         view.setLocation(preferences.getFrameX(), preferences.getFrameY());
         view.setPreferredSize(new Dimension(preferences.getFrameWidth(),
@@ -46,19 +44,19 @@ public class MainPresenter {
         for (String projectPath : projectsNotFound) {
             preferences.removeOpenedProject(projectPath);
         }
-        prefManager.save(preferences, prefFile);
+        PreferencesManager.save(preferences, prefFile);
         //view.refreshFiles();
 
         view.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
-                preferences = (AppPreferencesWrapper) prefManager.loadOrCreate(c, prefFile);
+                preferences = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(c, prefFile);
                 preferences.setFrameX(view.getX());
                 preferences.setFrameY(view.getY());
                 preferences.setFrameWidth(view.getWidth());
                 preferences.setFrameHeight(view.getHeight());
-                prefManager.save(preferences, prefFile);
+                PreferencesManager.save(preferences, prefFile);
                 
                 DockablesRegistry.getInstance().saveDockables();
             }

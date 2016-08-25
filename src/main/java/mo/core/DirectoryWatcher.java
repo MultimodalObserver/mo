@@ -1,6 +1,5 @@
 package mo.core;
 
-import java.io.File;
 import java.io.IOException;
 import static java.lang.Thread.interrupted;
 import java.nio.file.FileSystems;
@@ -25,8 +24,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 public class DirectoryWatcher {
     private static final Logger LOGGER = Logger.getLogger(DirectoryWatcher.class.getName());
@@ -213,29 +210,5 @@ public class DirectoryWatcher {
 
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
         return (WatchEvent<T>) event;
-    }
-
-    public static void main(String args[]) throws InterruptedException {
-        DirectoryWatcher d = new DirectoryWatcher();
-        d.addDirectory((new File("F:\\test")).toPath(), true);
-        d.addWatchHandler(new WatchHandler() {
-            @Override
-            public void onCreate(File file) {
-                System.out.println("created");
-            }
-
-            @Override
-            public void onDelete(File file) {
-                System.out.println("deleted");
-            }
-
-            @Override
-            public void onModify(File file) {
-                System.out.println("modified");
-            }
-        });
-        d.start();
-        int res = JOptionPane.showConfirmDialog(new JFrame(), "hola");
-        System.exit(0);
     }
 }

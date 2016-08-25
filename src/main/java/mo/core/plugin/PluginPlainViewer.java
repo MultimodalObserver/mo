@@ -1,7 +1,6 @@
 package mo.core.plugin;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Date;
 import java.util.List;
 import javax.swing.JMenuItem;
@@ -21,14 +20,11 @@ public class PluginPlainViewer implements IMenuBarItemProvider {
     
     public PluginPlainViewer() {
         menuLauncher = new JMenuItem("Plain Plugin Viewer");
-        menuLauncher.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("hola "+new Date());
-                List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
-                for (Plugin plugin : plugins) {
-                    System.out.println(plugin);
-                }
+        menuLauncher.addActionListener((ActionEvent e) -> {
+            System.out.println("hola "+new Date());
+            List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
+            for (Plugin plugin : plugins) {
+                System.out.println(plugin);
             }
         });
     }
