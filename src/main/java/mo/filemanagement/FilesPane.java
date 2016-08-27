@@ -1,5 +1,6 @@
 package mo.filemanagement;
 
+import mo.filemanagement.project.Project;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.awt.event.MouseAdapter;

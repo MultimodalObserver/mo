@@ -1,7 +1,6 @@
-package mo.filemanagement;
+package mo.filemanagement.project;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.HashMap;
 import javax.swing.JFileChooser;
@@ -15,6 +14,7 @@ import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.WizardDialog;
 import mo.core.ui.menubar.IMenuBarItemProvider;
+import mo.filemanagement.FileRegistry;
 
 @Extension(
         xtends = {

@@ -1,4 +1,4 @@
-package mo.filemanagement;
+package mo.filemanagement.project;
 
 import javax.swing.JMenuItem;
 import mo.core.plugin.ExtensionPoint;

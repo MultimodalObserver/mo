@@ -1,4 +1,4 @@
-package mo.organization;
+package mo.organization.tree;
 
 import java.awt.Color;
 import java.awt.Dialog;

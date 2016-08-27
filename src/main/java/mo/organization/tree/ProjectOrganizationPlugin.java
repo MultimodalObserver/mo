@@ -1,4 +1,4 @@
-package mo.organization;
+package mo.organization.tree;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -7,12 +7,12 @@ import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.filemanagement.FilePopupMenu;
-import mo.filemanagement.ProjectOptionProvider;
+import mo.filemanagement.project.ProjectOptionProvider;
 
 @Extension(
     xtends = {
         @Extends(
-                extensionPointId = "mo.filemanagement.ProjectOptionProvider"
+                extensionPointId = "mo.filemanagement.project.ProjectOptionProvider"
         )
     }
 )

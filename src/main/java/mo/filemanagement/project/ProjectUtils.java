@@ -1,4 +1,4 @@
-package mo.filemanagement;
+package mo.filemanagement.project;
 
 import java.io.File;
 import java.io.FilenameFilter;

@@ -111,7 +111,7 @@ public class DockableElement extends DefaultSingleCDockable {
                 prop.addElement(propStore.getElement(i));
             }
             
-            prop.addAttribute(type);
+            prop.addAttribute(propType);
             xLocation.addElement(prop);
         }
         

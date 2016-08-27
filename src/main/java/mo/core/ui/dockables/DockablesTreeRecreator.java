@@ -2,7 +2,11 @@ package mo.core.ui.dockables;
 
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CGrid;
+import bibliothek.gui.dock.common.CLocation;
+import bibliothek.gui.dock.common.intern.CDockable;
+import bibliothek.gui.dock.common.location.CBaseLocation;
 import bibliothek.gui.dock.layout.DockableProperty;
+import bibliothek.util.xml.XAttribute;
 import bibliothek.util.xml.XElement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,17 +15,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DockablesTreeRecreator {
+
     private static final Logger LOGGER = Logger.getLogger(DockablesRegistry.class.getName());
-    
+
     private CControl control;
     private HashMap<String, List<LocationNode>> treesByRoot;
 
+    private static DockablesTreeRecreator instance;
+    
+    public static synchronized DockablesTreeRecreator getInstance(CControl c) {
+        if (instance == null) {
+            instance = new DockablesTreeRecreator(c);
+        }
+        return instance;
+    }
+    
     public DockablesTreeRecreator(CControl control) {
         this.control = control;
         treesByRoot = new HashMap<>();
     }
 
     public void addDockable(DockableElement element, XElement locationProperty) {
+
         XElement[] nodes = locationProperty.getElements("node");
         int lastNodeIndex = nodes.length - 1;
         XElement lastXNode = nodes[lastNodeIndex];
@@ -30,7 +45,7 @@ public class DockablesTreeRecreator {
 
         LocationNode last = new LocationNode();
         last.docks.add(element);
-        last.id = element.getId();
+        last.id = lastXNode.getAttribute("id").getString();
         last.location = Location.fromString(locationStr);
         last.size = lastXNode.getAttribute("size").getFloat();
 
@@ -76,15 +91,14 @@ public class DockablesTreeRecreator {
         }
 
         //lastVisited.preOrderPrint();
-
         if (!treesByRoot.containsKey(lastVisited.id)) {
             treesByRoot.put(lastVisited.id, new ArrayList<>());
         }
 
         treesByRoot.get(lastVisited.id).add(lastVisited);
     }
-    
-    public List<LocationNode> joinTrees () {
+
+    public List<LocationNode> joinTrees() {
         ArrayList<LocationNode> trees = new ArrayList<>();
 
         for (String id : treesByRoot.keySet()) {
@@ -124,15 +138,14 @@ public class DockablesTreeRecreator {
         }
         return trees;
     }
-    
+
     public void createTrees(List<LocationNode> trees) {
-        if (trees.size() == 1) {
-            //trees.get(0).preOrderPrint();
-            CGrid g = createGrid(control, trees.get(0));
+        for (LocationNode tree : trees) {
+            CGrid g = createGrid(control, tree);
             control.getContentArea().deploy(g);
         }
     }
-    
+
     private CGrid createGrid(CControl control, LocationNode root) {
         CGrid grid = new CGrid(control);
         addDockableFromTree(grid, root, 0, 0, 1, 1);
@@ -142,7 +155,6 @@ public class DockablesTreeRecreator {
     private void addDockableFromTree(CGrid grid, LocationNode node, float x, float y, float w, float h) {
 
         //System.out.format("(%.2f %.2f) %.2f %.2f %s%n", x, y, w, h, node);
-
         if (node.docks.size() > 0) {
             DockableElement[] arr = new DockableElement[node.docks.size()];
             node.docks.toArray(arr);
@@ -179,7 +191,21 @@ public class DockablesTreeRecreator {
             }
         }
     }
-    
+
+    private CLocation getLocation(CDockable d) {
+        if (d.getBaseLocation() == null) {
+            if (d.getAutoBaseLocation(false) != null) {
+                return d.getAutoBaseLocation(false);
+            } else if (d.getAutoBaseLocation(true) != null) {
+                return d.getAutoBaseLocation(true);
+            } else {
+                return new CBaseLocation();
+            }
+        } else {
+            return d.getBaseLocation();
+        }
+    }
+
     public enum ChildrenOrientation {
         HORIZONTAL, VERTICAL
     }
@@ -203,8 +229,8 @@ public class DockablesTreeRecreator {
             throw new IllegalArgumentException("Unrecognised string for location");
         }
     }
-    
-        public static List<DockableElement> findDockablesInControlWithBounds(CControl control, int x, int y, int w, int h) {
+
+    public static List<DockableElement> findDockablesInControlWithBounds(CControl control, int x, int y, int w, int h) {
         ArrayList<DockableElement> result = new ArrayList<>();
         for (int i = 0; i < control.getCDockableCount(); i++) {
             boolean xtrue = false, ytrue = false, wtrue = false, htrue = false;

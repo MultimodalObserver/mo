@@ -43,7 +43,7 @@ public class PluginRegistry {
     private final DirectoryWatcher dirWatcher;
 
     //private final Map<String, Listeners>;
-    private final List<ExtPoint> extensioPoints;
+    private final List<ExtPoint> extensionPoints;
 
     private final static Logger LOGGER
             = Logger.getLogger(PluginRegistry.class.getName());
@@ -51,7 +51,7 @@ public class PluginRegistry {
     private PluginRegistry() {
         plugins = new ArrayList<>();
         pluginFolders = new ArrayList<>();
-        extensioPoints = new ArrayList<>();
+        extensionPoints = new ArrayList<>();
         File file = new File(PLUGINS_FOLDER);
         if (!file.isDirectory()) {
             if (file.mkdir()) {
@@ -207,6 +207,19 @@ public class PluginRegistry {
 
     public List<Plugin> getPluginsFor(String extensionPointId, String version) {
         List<Plugin> result = new ArrayList<>();
+        
+        String xpId = null;
+        for (ExtPoint extensionPoint : extensionPoints) {
+            if (extensionPoint.getId().equals(extensionPointId))
+                xpId = extensionPoint.getId();
+        }
+        
+        if (xpId == null) {
+            System.out.println("Id for extension point <"+extensionPointId+"> not found");
+            return result;
+        }
+            
+        
         for (Plugin plugin : plugins) {
             for (Dependency dependency : plugin.getDependencies()) {
                 if (dependency.getId().compareTo(extensionPointId) == 0) {
@@ -285,7 +298,7 @@ public class PluginRegistry {
     }
 
     public List<ExtPoint> getExtPoints() {
-        return extensioPoints;
+        return extensionPoints;
     }
 
     public void suscribeToExtensioPoint(String extensionPointId) {
@@ -302,13 +315,13 @@ public class PluginRegistry {
     }
 
     private void addExtensionPoint(ExtPoint extPoint) {
-        extensioPoints.add(extPoint);
+        extensionPoints.add(extPoint);
     }
 
     private void checkDependencies() {
         for (Plugin plugin : plugins) {
             for (Dependency dependency : plugin.getDependencies()) {
-                for (ExtPoint extensioPoint : extensioPoints) {
+                for (ExtPoint extensioPoint : extensionPoints) {
                     if (dependency.getId().equals(extensioPoint.getId())) {
                         dependency.setExtensionPoint(extensioPoint);
                         dependency.setIsPresent(true);

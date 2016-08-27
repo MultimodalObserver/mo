@@ -1,5 +1,6 @@
 package mo.filemanagement;
 
+import mo.filemanagement.project.Project;
 import java.io.File;
 import java.util.TreeMap;
 import mo.core.ui.dockables.DockablesRegistry;

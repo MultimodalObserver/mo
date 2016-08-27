@@ -251,7 +251,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
                 XElement root = XIO.readUTF(input);
                 XElement[] docks = root.getElements("dockable");
 
-                DockablesTreeRecreator treeRecreator = new DockablesTreeRecreator(control);
+                DockablesTreeRecreator treeRecreator = DockablesTreeRecreator.getInstance(control);
 
                 for (XElement dock : docks) {
                     //System.out.println(dock);
@@ -289,6 +289,8 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                 List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
                 treeRecreator.createTrees(trees);
+                
+                //System.out.println(">>>"+trees);
 
             } catch (IOException | SecurityException | IllegalArgumentException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);

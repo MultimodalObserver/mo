@@ -1,4 +1,4 @@
-package mo.filemanagement;
+package mo.filemanagement.project;
 
 import mo.core.utils.Utils;
 import java.awt.GridBagConstraints;
