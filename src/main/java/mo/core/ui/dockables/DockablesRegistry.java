@@ -149,7 +149,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         JMenu groupMenu = new JMenu(folder.getName());
         groupMenu.setName(group);
         windowMenu.add(groupMenu);
-        System.out.println(groupMenu);
         return groupMenu;
     }
 
@@ -206,6 +205,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                     Path docksRoot = Paths.get(dir);
                     Path dockFilePath = Paths.get(sd.dockableToFile().toURI());
+                    
                     Path relative = docksRoot.relativize(dockFilePath);
                     data.setString(relative.toString());
 
@@ -296,7 +296,9 @@ public class DockablesRegistry implements IMenuBarItemProvider {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         } else {
-            System.out.println("No dockables config found");
+
+                LOGGER.log(Level.INFO, "No dockables config file found <"+file+">");
+            
         }
     }
 

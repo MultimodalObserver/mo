@@ -228,6 +228,7 @@ public class PluginRegistry {
                 }
             }
         }
+        System.out.println(result);
         return result;
     }
 

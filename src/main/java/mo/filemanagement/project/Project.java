@@ -1,6 +1,7 @@
 package mo.filemanagement.project;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,6 +14,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import mo.organization.ProjectOrganization;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -20,13 +22,19 @@ import org.w3c.dom.Element;
 public class Project {
     private static final Logger LOGGER = Logger.getLogger(Project.class.getName());
     private final File folder;
+    private ProjectOrganization organization;
     
     public Project(String rootFolder){
         this.folder = new File(rootFolder);
-        File xml = new File(folder+"/moproject.xml");
+        
+        File xml = new File(folder, "moproject.xml");
         if (!xml.exists()){
             createProjectXml();
         }
+        
+        organization = new ProjectOrganization(this);
+        
+        organization.store();
     }
 
     public File getFolder() {
@@ -55,6 +63,17 @@ public class Project {
  
         } catch (ParserConfigurationException | DOMException | IllegalArgumentException | TransformerException e) {
             LOGGER.log(Level.SEVERE, (Supplier<String>) e);
+        }
+    }
+
+    private void createProjectOrganizationFile(File organizationXml) {
+        try {
+            organizationXml.createNewFile();
+            
+            
+            
+        } catch (IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
         }
     }
 }

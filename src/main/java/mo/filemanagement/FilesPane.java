@@ -78,8 +78,8 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
                     filesTree.setSelectionRow(row);
                     File selected = (File) filesTree.getLastSelectedPathComponent();
                     
-                    JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
-                    
+                    FilePopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
+
                     if (pop != null) {
                         pop.show((JComponent) event.getSource(),
                                 event.getX(), event.getY());
@@ -156,18 +156,17 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
         //System.out.println("hola"+);
         if (file.exists()) {
             try (InputStream in = new FileInputStream(file)) {
-                System.out.println("si?");
                 FileRegistry.getInstance().setFilesPane(d);
                 
                 XElement x = XIO.readUTF(in);
-                System.out.println(x);
+
                 XElement openedProjects = x.getElement("openedProjects");
                 for (XElement project : openedProjects.getElements("project")) {
-                    System.out.println(project);
+                   
                     //d.addFile(new File(project.getString()));
                     FileRegistry.getInstance().addOpenedProject(new Project(project.getString()));
                 }
-                System.out.println("DDD: " + d);
+
                 
                 return d;
             } catch (IOException ex) {

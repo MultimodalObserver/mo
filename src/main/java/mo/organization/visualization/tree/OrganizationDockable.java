@@ -1,10 +1,12 @@
-package mo.organization.tree;
+package mo.organization.visualization.tree;
 
+import mo.organization.Participant;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
@@ -19,8 +21,11 @@ import javax.swing.tree.*;
 
 import mo.core.plugin.Dependency;
 import mo.core.plugin.ExtPoint;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.StorableDockable;
+import mo.organization.StageNodeProvider;
 
 public class OrganizationDockable extends DockableElement implements StorableDockable {
 
@@ -78,14 +83,27 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             //printDescendants(root, "");
         });
 
-        JMenuItem captureMenu = new JMenuItem("Capture");
-        captureMenu.addActionListener((ActionEvent e) -> {
-            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode("Capture");
-            addStageNodeIfNotExists(newNode);
-        });
+//        JMenuItem captureMenu = new JMenuItem("Capture");
+//        captureMenu.addActionListener((ActionEvent e) -> {
+//            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode("Capture");
+//            addStageNodeIfNotExists(newNode);
+//        });
 
         JMenu addStage = new JMenu("Add Project Stage");
-        addStage.add(captureMenu);
+        
+        List<Plugin> stagePlugins = PluginRegistry.getInstance().getPluginsFor("mo.organization.StageNodeProvider");
+        System.out.println(this+" "+stagePlugins.size());
+        for (Plugin stagePlugin : stagePlugins) {
+            System.out.println("for"+stagePlugin);
+            StageNodeProvider nodeProvider = (StageNodeProvider) stagePlugin.getNewInstance();
+            JMenuItem item = nodeProvider.getMenuItem();
+            item.addActionListener((ActionEvent e) -> {
+                addStageNodeIfNotExists(((TreeOrganizationStageNode) nodeProvider.getStageNode()).getNode());
+            });
+            addStage.add(nodeProvider.getMenuItem());
+        }
+        
+        //addStage.add(captureMenu);
         addStage.add(visualizationMenu);
 
         JPopupMenu projectMenu = new JPopupMenu();
@@ -162,14 +180,14 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     @Override
     public File dockableToFile() {
         try {
-            //System.out.println("this.projectPath "+this.projectPath);
-            String relativePathToFile = "organization/config.xml";
+
+            String relativePathToFile = "organization-visualization-tree.xml";
             File file = new File(this.projectPath, relativePathToFile);
 
             if (!file.getParentFile().exists()) {
                 file.getParentFile().mkdir();
             }
-            //System.out.println(file);
+
             file.createNewFile();
 
             XElement e = new XElement("config");
@@ -211,11 +229,10 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         if (file.exists()) {
             try (InputStream in = new FileInputStream(file)) {
 
-                XElement e = XIO.read(in, "UTF-8");
-
+                XElement e = XIO.read(in, "UTF-8");;
                 OrganizationDockable d = new OrganizationDockable();
                 d.setTitleText(e.getElement("title").getString());
-                d.setProjectPath(file.getParentFile().getParentFile().getAbsolutePath());
+                d.setProjectPath(file.getParentFile().getAbsolutePath());
 
                 XElement[] ps = e.getElement("participants").getElements("participant");
                 for (XElement participant : ps) {

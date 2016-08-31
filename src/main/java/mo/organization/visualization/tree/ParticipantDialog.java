@@ -1,5 +1,6 @@
-package mo.organization.tree;
+package mo.organization.visualization.tree;
 
+import mo.organization.Participant;
 import java.awt.Color;
 import java.awt.Dialog;
 import java.awt.Dimension;

@@ -6,6 +6,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Plugin {
+    
+    public final static Logger LOGGER = Logger.getLogger(Plugin.class.getName());
 
     private String id;//classname
     private String version;
@@ -96,10 +98,22 @@ public class Plugin {
             try {
                 instance = clazz.newInstance();
             } catch (InstantiationException | IllegalAccessException ex) {
-                Logger.getLogger(Plugin.class.getName()).log(Level.SEVERE, null, ex);
+                LOGGER.log(Level.SEVERE, null, ex);
             }
         }
         return instance;
+    }
+    
+    public Object getNewInstance() {
+        Object newInstance = null;
+        
+        try {
+            newInstance = clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+        
+        return newInstance;
     }
     
     @Override

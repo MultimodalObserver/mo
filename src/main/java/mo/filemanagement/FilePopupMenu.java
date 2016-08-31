@@ -5,6 +5,11 @@ import javax.swing.JPopupMenu;
 
 public class FilePopupMenu extends JPopupMenu {
     File file;
+
+
+    FilePopupMenu() {
+        //setLightWeightPopupEnabled(false);
+    }
     
     public void setFile(File file) {
         this.file = file;

@@ -3,6 +3,7 @@ package mo.core.ui.dockables;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CGrid;
 import bibliothek.gui.dock.common.CLocation;
+import bibliothek.gui.dock.common.SingleCDockable;
 import bibliothek.gui.dock.common.intern.CDockable;
 import bibliothek.gui.dock.common.location.CBaseLocation;
 import bibliothek.gui.dock.layout.DockableProperty;
@@ -140,9 +141,14 @@ public class DockablesTreeRecreator {
     }
 
     public void createTrees(List<LocationNode> trees) {
+        control.intern().deleteAll();
+        int i =0;
         for (LocationNode tree : trees) {
+            System.out.println("tree "+i+" :");
+            tree.preOrderPrint();
             CGrid g = createGrid(control, tree);
             control.getContentArea().deploy(g);
+            i++;//break; //allow only 1 tree
         }
     }
 

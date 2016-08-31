@@ -5,6 +5,8 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.util.Enumeration;
 import java.util.List;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -83,10 +85,10 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
 
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
-        
-        r =(TreeNode) extPointsTree.getModel().getRoot();
+
+        r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
-        
+
         dockable.add(tabbedPane);
     }
 
@@ -137,7 +139,12 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     }
 
     private static class PluginCellRenderer implements TreeCellRenderer {
+
         private final DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
+
+        private Icon interfaceIcon = createImageIcon("inter.png", "");
+        
+        private Icon pluginIcon = createImageIcon("plugin.png", "");
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -150,22 +157,26 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
                     returnValue = getTreeCellRendererComponentForExtPoint(returnValue, (ExtPoint) userObject);
                 } else if (userObject instanceof Dependency) {
                     Dependency d = (Dependency) userObject;
-                    if (d.isPresent())
+                    if (d.isPresent()) {
                         returnValue = getTreeCellRendererComponentForExtPoint(returnValue, d.getExtensionPoint());
-                    else
-                        returnValue = getTreeCellRendererComponentForDependency((DefaultTreeCellRenderer)(new DefaultTreeCellRenderer()).getTreeCellRendererComponent(tree, value, leaf, expanded, leaf, row, hasFocus), d);
+                    } else {
+                        returnValue = getTreeCellRendererComponentForDependency((DefaultTreeCellRenderer) (new DefaultTreeCellRenderer()).getTreeCellRendererComponent(tree, value, leaf, expanded, leaf, row, hasFocus), d);
+                    }
                 }
             }
+
             return returnValue;
         }
 
         private DefaultTreeCellRenderer getTreeCellRendererComponentForPlugin(DefaultTreeCellRenderer c, Plugin o) {
             c.setText(o.getName());
+            c.setIcon(pluginIcon);
             return c;
         }
 
         private DefaultTreeCellRenderer getTreeCellRendererComponentForExtPoint(DefaultTreeCellRenderer c, ExtPoint o) {
             c.setText(o.getName());
+            c.setIcon(interfaceIcon);
             return c;
         }
 
@@ -174,6 +185,17 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
             c.setBackgroundSelectionColor(Color.white);
             c.setText(o.getId());
             return c;
+        }
+
+        protected ImageIcon createImageIcon(String path,
+                String description) {
+            java.net.URL imgURL = getClass().getClassLoader().getResource(path);
+            if (imgURL != null) {
+                return new ImageIcon(imgURL, description);
+            } else {
+                System.err.println("Couldn't find file: " + path);
+                return null;
+            }
         }
     }
 }
