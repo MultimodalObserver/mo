@@ -10,13 +10,14 @@ import mo.core.ui.dockables.DockablesRegistry;
 import mo.filemanagement.FilePopupMenu;
 import mo.filemanagement.project.ProjectOptionProvider;
 import mo.organization.OrganizationVisualizationMenuItemProvider;
+import mo.organization.ProjectOrganization;
 
 @Extension(
-    xtends = {
-        @Extends(
-                extensionPointId = "mo.organization.OrganizationVisualizationMenuItemProvider"
-        )
-    }
+        xtends = {
+            @Extends(
+                    extensionPointId = "mo.organization.OrganizationVisualizationMenuItemProvider"
+            )
+        }
 )
 public class ProjectOrganizationPlugin implements OrganizationVisualizationMenuItemProvider {
 
@@ -28,29 +29,31 @@ public class ProjectOrganizationPlugin implements OrganizationVisualizationMenuI
             addProjectClicked(e);
         });
     }
-    
+
     private void addProjectClicked(ActionEvent event) {
-        
+
         JComponent c = (JComponent) event.getSource();
-        System.out.println("comp "+c);
-        
+        System.out.println("comp " + c);
+
         System.out.println(c.getClientProperty("file"));
 
         File projectFolder = (File) c.getClientProperty("file");
-        
-        if (projectFolder != null) {
-            
-            File treeOrgFile = new File(projectFolder, "organization-visualization-tree.xml");
-            
-            if ( !treeOrgFile.exists() ) {
-            
-            OrganizationDockable dock = new OrganizationDockable();
-            dock.setTitleText(projectFolder.getName()+" - Organization");
-            dock.setProjectPath(projectFolder.getAbsolutePath());
 
-            DockablesRegistry.getInstance()
-                    .addDockableInProjectGroup(projectFolder.getAbsolutePath(), dock);
-        
+        if (projectFolder != null) {
+
+            File treeOrgFile = new File(projectFolder, "organization-visualization-tree.xml");
+
+            if (!treeOrgFile.exists()) {
+                
+                ProjectOrganization o = new ProjectOrganization(projectFolder.getAbsolutePath());
+
+                OrganizationDockable dock = new OrganizationDockable(o);
+                dock.setTitleText(projectFolder.getName() + " - Organization");
+                dock.setProjectPath(projectFolder.getAbsolutePath());
+
+                DockablesRegistry.getInstance()
+                        .addDockableInProjectGroup(projectFolder.getAbsolutePath(), dock);
+
             }
         }
     }

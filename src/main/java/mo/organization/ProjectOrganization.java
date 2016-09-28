@@ -1,11 +1,16 @@
 package mo.organization;
 
+import bibliothek.util.xml.XAttribute;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -18,33 +23,53 @@ import java.util.logging.Logger;
 import mo.filemanagement.project.Project;
 
 public class ProjectOrganization {
+
     public final static Logger LOGGER = Logger.getLogger(ProjectOrganization.class.getName());
-    
+
     Project project;
     List<Participant> participants;
     List<Stage> stages;
-    
+
+    public ProjectOrganization(String projectPath) {
+        this(new Project(projectPath));
+    }
+
     public ProjectOrganization(Project project) {
         participants = new ArrayList<>();
         stages = new ArrayList<>();
         this.project = project;
+        restore();
     }
-    
+
     public void addStage(Stage stage) {
         for (Stage s : stages) {
             if (s.getName().equals(stage.getName())) {
                 throw new IllegalArgumentException("Stage already exists");
             }
         }
-        
+
         stages.add(stage);
     }
     
+    public void addStageReplacingPrevious(Stage stage) {
+        ArrayList<Stage> toDelete = new ArrayList<>();
+        for (Stage s : stages) {
+            if (s.getName().equals(stage.getName())) {
+                toDelete.add(s);
+            }
+        }
+
+        stages.removeAll(toDelete);
+        
+        stages.add(stage);
+    }
+
     public List<Stage> getStages() {
         return stages;
     }
-    
+
     public void store() {
+
         File orgXml = new File(project.getFolder(), "organization.xml");
         try {
             orgXml.createNewFile();
@@ -52,6 +77,7 @@ public class ProjectOrganization {
             XElement ps = new XElement("participants");
 
             for (Participant participant : participants) {
+                System.out.println(participant);
                 XElement xParticipant = new XElement("participant");
                 xParticipant.addElement("id").setString(participant.id);
                 xParticipant.addElement("name").setString(participant.name);
@@ -63,14 +89,32 @@ public class ProjectOrganization {
                 date.addElement("month").setInt(c.get(Calendar.MONTH));
                 date.addElement("year").setInt(c.get(Calendar.YEAR));
                 xParticipant.addElement(date);
+                XAttribute locked = new XAttribute("isLocked");
+                locked.setBoolean(participant.isLocked);
+                xParticipant.addAttribute(locked);
                 ps.addElement(xParticipant);
             }
-            
+
+            root.addElement(ps);
+            System.out.println("P Org store");
+
             for (Stage stage : stages) {
                 XElement st = new XElement("stage");
-                XElement name = new XElement("name");
-                name.setString(stage.getName());
-                st.addElement(name);
+//                XElement name = new XElement("name");
+//                name.setString(stage.getName());
+//                st.addElement(name);
+
+                XAttribute clazz = new XAttribute("class");
+                clazz.setString(stage.getClass().getName());
+
+                st.addAttribute(clazz);
+
+                File file = stage.toFile(project.getFolder());
+                Path projectRoot = Paths.get(project.getFolder().getAbsolutePath());
+                Path stagePath = Paths.get(file.toURI());
+
+                Path relative = projectRoot.relativize(stagePath);
+                st.setString(relative.toString());
                 root.addElement(st);
             }
             XIO.writeUTF(root, new FileOutputStream(orgXml));
@@ -78,36 +122,106 @@ public class ProjectOrganization {
             LOGGER.log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void restore() {
         File orgXml = new File(project.getFolder(), "organization.xml");
         if (orgXml.exists()) {
             try {
                 XElement root = XIO.readUTF(new FileInputStream(orgXml));
-                XElement[] ps = root.getElement("participants").getElements("participant");
-                for (XElement participant : ps) {
-                    Participant p = new Participant();
-                    p.id = participant.getElement("id").getString();
-                    p.name = participant.getElement("name").getString();
-                    p.notes = participant.getElement("notes").getString();
+                XElement participantsXelement = root.getElement("participants");
+                if (participantsXelement != null) {
+                    XElement[] ps = root.getElement("participants").getElements("participant");
+                    for (XElement participant : ps) {
+                        Participant p = new Participant();
+                        p.id = participant.getElement("id").getString();
+                        p.name = participant.getElement("name").getString();
+                        p.notes = participant.getElement("notes").getString();
 
-                    SimpleDateFormat formatter = new SimpleDateFormat("dd MM yyyy");
-                    String day = participant.getElement("date").getElement("day").getString();
-                    String month = participant.getElement("date").getElement("month").getString();
-                    String year = participant.getElement("date").getElement("year").getString();
-                    Date date = new Date();
+                        SimpleDateFormat formatter = new SimpleDateFormat("dd MM yyyy");
+                        String day = participant.getElement("date").getElement("day").getString();
+                        String month = participant.getElement("date").getElement("month").getString();
+                        String year = participant.getElement("date").getElement("year").getString();
+                        Date date = new Date();
+                        try {
+                            date = formatter.parse(day + " " + (Integer.parseInt(month) + 1) + " " + year);
+                        } catch (ParseException ex) {
+                            LOGGER.log(Level.SEVERE, null, ex);
+                        }
+                        p.date = date;
+
+                        if (participant.attributeExists("isLocked")) {
+                            p.isLocked = participant.getAttribute("isLocked").getBoolean();
+                        }
+
+                        participants.add(p);
+                    }
+                }
+
+                XElement[] st = root.getElements("stage");
+                for (XElement xElement : st) {
                     try {
-                        date = formatter.parse(day + " " + month + " " + year);
-                    } catch (ParseException ex) {
+                        Class<?> clazz = Class.forName(
+                                xElement.getAttribute("class").getString());
+                        Object o = clazz.newInstance();
+                        String path = xElement.getString();
+                        Method method = clazz.getDeclaredMethod("fromFile", File.class);
+
+                        Stage stage;
+
+                        stage = (Stage) method.invoke(
+                                o, new File(project.getFolder(), path));
+                        if (stage != null) {
+                            stage.setOrganization(this);
+
+                            System.out.println(stage);
+                            addStageReplacingPrevious(stage);
+                            
+                        }
+                    } catch (IllegalAccessException | IllegalArgumentException |
+                            InvocationTargetException | ClassNotFoundException |
+                            InstantiationException | NoSuchMethodException |
+                            SecurityException ex) {
                         LOGGER.log(Level.SEVERE, null, ex);
                     }
-                    p.date = date;
-
-                    participants.add(p);
                 }
+
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         }
+    }
+
+    public List<Participant> getParticipants() {
+        return participants;
+    }
+
+    public void addParticipant(Participant participant) {
+        participants.add(participant);
+    }
+
+    public void updateParticipant(Participant p) {
+        for (Participant participant : participants) {
+            if (participant.id.equals(p.id)) {
+                participant.name = p.name;
+                participant.date = p.date;
+                participant.notes = p.notes;
+            }
+        }
+    }
+
+    public void deleteParticipant(Participant p) {
+        Participant toDelete = null;
+        for (Participant participant : participants) {
+            if (participant.id.equals(p.id)) {
+                toDelete = participant;
+            }
+        }
+        if (toDelete != null) {
+            participants.remove(toDelete);
+        }
+    }
+
+    public File getLocation() {
+        return this.project.getFolder();
     }
 }

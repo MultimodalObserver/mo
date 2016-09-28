@@ -17,6 +17,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.dockables.IDockableElementProvider;
@@ -142,9 +143,9 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
 
         private final DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 
-        private Icon interfaceIcon = createImageIcon("inter.png", "");
+        private Icon interfaceIcon = Utils.createImageIcon("interface.png", getClass());
         
-        private Icon pluginIcon = createImageIcon("plugin.png", "");
+        private Icon pluginIcon = Utils.createImageIcon("plugin.png", getClass());
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -185,17 +186,6 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
             c.setBackgroundSelectionColor(Color.white);
             c.setText(o.getId());
             return c;
-        }
-
-        protected ImageIcon createImageIcon(String path,
-                String description) {
-            java.net.URL imgURL = getClass().getClassLoader().getResource(path);
-            if (imgURL != null) {
-                return new ImageIcon(imgURL, description);
-            } else {
-                System.err.println("Couldn't find file: " + path);
-                return null;
-            }
         }
     }
 }

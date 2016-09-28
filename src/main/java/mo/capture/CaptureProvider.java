@@ -1,10 +1,9 @@
 package mo.capture;
 
-import javax.swing.JMenuItem;
 import mo.core.plugin.ExtensionPoint;
+import mo.organization.StagePlugin;
 
 @ExtensionPoint
-public interface CaptureProvider {
-    JMenuItem getMenu();
-    
+public interface CaptureProvider extends StagePlugin {
+
 }

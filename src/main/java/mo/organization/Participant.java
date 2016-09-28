@@ -7,4 +7,5 @@ public class Participant {
     public String name;
     public Date date;
     public String notes;
+    public boolean isLocked;
 }

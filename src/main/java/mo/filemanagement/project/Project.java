@@ -2,7 +2,6 @@ package mo.filemanagement.project;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -31,10 +30,6 @@ public class Project {
         if (!xml.exists()){
             createProjectXml();
         }
-        
-        organization = new ProjectOrganization(this);
-        
-        organization.store();
     }
 
     public File getFolder() {
@@ -62,18 +57,7 @@ public class Project {
             //System.out.println("\nXML DOM Created Successfully..");
  
         } catch (ParserConfigurationException | DOMException | IllegalArgumentException | TransformerException e) {
-            LOGGER.log(Level.SEVERE, (Supplier<String>) e);
-        }
-    }
-
-    private void createProjectOrganizationFile(File organizationXml) {
-        try {
-            organizationXml.createNewFile();
-            
-            
-            
-        } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            LOGGER.log(Level.SEVERE, null, e);
         }
     }
 }

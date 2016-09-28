@@ -1,140 +1,262 @@
 package mo.organization.visualization.tree;
 
-import mo.organization.Participant;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
-import java.awt.Color;
 import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.*;
-
-import mo.core.plugin.Dependency;
-import mo.core.plugin.ExtPoint;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
+import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.StorableDockable;
-import mo.organization.StageNodeProvider;
+import mo.organization.*;
 
 public class OrganizationDockable extends DockableElement implements StorableDockable {
 
     private static final Logger LOGGER = Logger.getLogger(OrganizationDockable.class.getName());
 
     private String projectPath;
-    private List<Participant> participants;
-    private JTree tree;
-    
+
     private List<DefaultMutableTreeNode> stageNodes;
 
-    public static void printDescendants(TreeNode root, String indent) {
-        System.out.println(indent + root);
-        Enumeration children = root.children();
-        if (children != null) {
-            indent += " ";
-            while (children.hasMoreElements()) {
-                printDescendants((TreeNode) children.nextElement(), indent);
-            }
-        }
-    }
+    private ProjectOrganization organization;
+
+    private JTree tree;
 
     public OrganizationDockable() {
-        participants = new ArrayList<>();
+
+    }
+
+    public OrganizationDockable(ProjectOrganization org) {
+        organization = org;
         stageNodes = new ArrayList<>();
+
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Project ");
+
+        tree = new JTree(root);
+        tree.setRootVisible(false);
+        tree.setCellRenderer(new OrganizationCellRenderer());
+        tree.setRowHeight(20);
+
         DefaultMutableTreeNode participantsNode = new DefaultMutableTreeNode("Participants");
+        insertNodeInParent(root, participantsNode);
 
-        root.add(participantsNode);
+        for (Participant participant : organization.getParticipants()) {
+            insertNodeInParent(participantsNode, participant);
+        }
 
-        JMenuItem addParticipantMenu = new JMenuItem("add participant");
+        for (Stage s : organization.getStages()) {
+
+            DefaultMutableTreeNode newStageNode = new DefaultMutableTreeNode(s);
+            insertNodeInParent(root, newStageNode);
+            stageNodes.add(newStageNode);
+
+            for (StagePlugin plugin : s.getPlugins()) {
+                for (Configuration configuration : plugin.getConfigurations()) {
+                    PluginConfigPair pair = new PluginConfigPair(plugin, configuration);
+                    insertNodeInParent(newStageNode, pair);
+                }
+            }
+        }
+
+        JMenuItem addParticipantMenu = new JMenuItem("Add Participant");
         addParticipantMenu.addActionListener((ActionEvent e) -> {
-            ParticipantDialog dialog = new ParticipantDialog(this);
+            ParticipantDialog dialog = new ParticipantDialog(organization);
             Participant participant = dialog.showDialog();
             if (participant != null) {
-                participants.add(participant);
-                DefaultMutableTreeNode newParticipant = new DefaultMutableTreeNode(participant);
-
-                participantsNode.add(newParticipant);
-                DefaultTreeModel m = (DefaultTreeModel) tree.getModel();
-                m.nodesWereInserted(participantsNode, new int[]{m.getIndexOfChild(participantsNode, newParticipant)});
-                
-                tree.expandPath(tree.getSelectionPath());
+                organization.addParticipant(participant);
+                organization.store();
+                insertNodeInParent(participantsNode, participant);
             }
         });
 
         JPopupMenu participantsMenu = new JPopupMenu();
         participantsMenu.add(addParticipantMenu);
 
-        JMenuItem visualizationMenu = new JMenuItem("Visualization");
-        visualizationMenu.addActionListener((ActionEvent e) -> {
-            System.out.println(e);
-            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode("Visualization");
-            addStageNodeIfNotExists(newNode);
-            //printDescendants(root, "");
-        });
-
-//        JMenuItem captureMenu = new JMenuItem("Capture");
-//        captureMenu.addActionListener((ActionEvent e) -> {
-//            DefaultMutableTreeNode newNode = new DefaultMutableTreeNode("Capture");
-//            addStageNodeIfNotExists(newNode);
-//        });
-
         JMenu addStage = new JMenu("Add Project Stage");
-        
-        List<Plugin> stagePlugins = PluginRegistry.getInstance().getPluginsFor("mo.organization.StageNodeProvider");
-        System.out.println(this+" "+stagePlugins.size());
+        List<Plugin> stagePlugins = PluginRegistry.getInstance().getPluginsFor("mo.organization.Stage");
         for (Plugin stagePlugin : stagePlugins) {
-            System.out.println("for"+stagePlugin);
-            StageNodeProvider nodeProvider = (StageNodeProvider) stagePlugin.getNewInstance();
-            JMenuItem item = nodeProvider.getMenuItem();
+            Stage nodeProvider = (Stage) stagePlugin.getNewInstance();
+            JMenuItem item = new JMenuItem(nodeProvider.getName());
             item.addActionListener((ActionEvent e) -> {
-                addStageNodeIfNotExists(((TreeOrganizationStageNode) nodeProvider.getStageNode()).getNode());
+                addStageNodeIfNotExists((Stage) nodeProvider);
             });
-            addStage.add(nodeProvider.getMenuItem());
+            addStage.add(item);
         }
-        
-        //addStage.add(captureMenu);
-        addStage.add(visualizationMenu);
 
         JPopupMenu projectMenu = new JPopupMenu();
         projectMenu.add(addStage);
 
-        tree = new JTree(root);
-        tree.setCellRenderer(new OrganizationCellRenderer());
-        tree.setRowHeight(20);
+        JMenuItem viewOrEditParticipant = new JMenuItem("View/Edit");
+        viewOrEditParticipant.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                editParticipant();
+            }
+        });
+
+        JMenuItem deleteParticipant = new JMenuItem("Delete");
+        deleteParticipant.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultMutableTreeNode selected
+                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                Participant p = (Participant) selected.getUserObject();
+                String message = "Attempting to delete participant {" + p.id
+                        + "}. Delete files associated to this partipant too?";
+                Object[] options = {"Yes, delete files too", "No, just delete participant", "Cancel"};
+                int r = JOptionPane.showOptionDialog(null, message, "Delete Participant",
+                        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+                        null, options, options[2]);
+
+                if (r == JOptionPane.YES_OPTION) {
+                    //TODO
+                } else if (r == JOptionPane.NO_OPTION) {
+                    organization.deleteParticipant(p);
+                    organization.store();
+
+                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) selected.getParent();
+                    int index = parent.getIndex(selected);
+                    selected.removeFromParent();
+                    DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                    model.nodesWereRemoved(parent, new int[]{index}, new Object[]{selected});
+                }
+            }
+        });
+
+        JMenuItem lockItem = new JMenuItem("Lock");
+        lockItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultMutableTreeNode selected
+                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                Participant p = (Participant) selected.getUserObject();
+
+                if (p.isLocked) {
+                    p.isLocked = false;
+                } else {
+                    p.isLocked = true;
+                }
+
+                organization.updateParticipant(p);
+                organization.store();
+
+                if (lockItem.getText().equals("Lock")) {
+                    lockItem.setText("Unlock");
+                } else {
+                    lockItem.setText("Lock");
+                }
+
+                selected.setUserObject(p);
+                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                model.nodeChanged(selected);
+
+            }
+        });
+
+        JPopupMenu participantMenu = new JPopupMenu();
+        participantMenu.add(viewOrEditParticipant);
+        participantMenu.add(deleteParticipant);
+        participantMenu.add(new JSeparator());
+        participantMenu.add(lockItem);
+        
+        for (Stage stage : organization.getStages()) {
+            JMenu stageActions = new JMenu(stage.getName());
+            for (StageAction action : stage.getActions()) {
+                JMenuItem actionItem = new JMenuItem(action.getName());
+                actionItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        DefaultMutableTreeNode selected
+                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                        Participant p = (Participant) selected.getUserObject();
+                        action.init(organization, p, stage);
+                    }
+                });
+                stageActions.add(actionItem);
+            }
+            participantMenu.add(stageActions);
+        }
+
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent event) {
                 if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
+                    
+                    JComponent source = (JComponent) event.getSource();
+                    int x = event.getX();
+                    int y = event.getY();
+                    
+                    int row = tree.getRowForLocation(event.getX(), event.getY());
+                    
+                    
+                    tree.setSelectionRow(row);
+                    DefaultMutableTreeNode selected
+                            = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+
+                    
+                    if (row == -1) {
+                        projectMenu.show(source, x, y);
+                    } else if (selected.equals(participantsNode)) {
+                        participantsMenu.show(source, x, y);
+                    } else if (selected.equals(root)) {
+                        projectMenu.show(source, x, y);
+                    } else if (selected.getUserObject() instanceof Participant) {
+                        Participant p = (Participant) selected.getUserObject();
+                        if (p.isLocked) {                            
+                            lockItem.setText("Unlock");
+                        } else {
+                            lockItem.setText("Lock");
+                        }
+                        participantMenu.show(source, x, y);
+                    } else if (selected.getUserObject() instanceof Stage) {
+                        JPopupMenu menu = new JPopupMenu("stage");
+                        Stage s = (Stage) selected.getUserObject();
+                        for (StagePlugin sp : s.getPlugins()) {
+                            JMenuItem item = new JMenuItem(sp.getName());
+                            item.addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    Configuration c = sp.initNewConfiguration(organization);
+                                    if (c != null) {
+                                        insertNodeInParent(
+                                                selected, new PluginConfigPair(sp, c));
+                                        organization.store();
+                                    }
+                                }
+                            });
+                            menu.add(item);
+                        }
+                        System.out.println("stage click D:");
+                        menu.show(source, x, y);
+                    } else if (selected.getUserObject() instanceof PluginConfigPair) {
+                        JPopupMenu menu = new JPopupMenu("Config");
+
+                    } 
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent event) {
+                if (SwingUtilities.isLeftMouseButton(event) && event.getClickCount() == 2) {
                     int row = tree.getRowForLocation(event.getX(), event.getY());
                     if (row == -1) {
                         return;
                     }
                     tree.setSelectionRow(row);
-                    DefaultMutableTreeNode selected = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                    System.out.println("selected " + selected);
-                    if (selected.equals(participantsNode)) {
-                        participantsMenu.show((JComponent) event.getSource(), event.getX(), event.getY());
-                    } else if (selected.equals(root)) {
-                        projectMenu.show((JComponent) event.getSource(), event.getX(), event.getY());
+                    DefaultMutableTreeNode selected
+                            = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                    
+                    if (selected.getUserObject() instanceof Participant) {
+                        editParticipant();
                     }
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount()==2) {
-                    System.out.println("holi");
                 }
             }
         });
@@ -142,31 +264,69 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         JScrollPane scroll = new JScrollPane(tree);
         add(scroll);
     }
-    
-    private void addStageNodeIfNotExists(DefaultMutableTreeNode stageNode) {
-        String newNodeName = "";
-        if (stageNode.getUserObject() instanceof String) {
-            newNodeName = (String) stageNode.getUserObject();
-        } else {
-            return;
-        }
-        
-        for (DefaultMutableTreeNode node : stageNodes) {
-            
-            if (node.getUserObject() instanceof String) {
-               String name = (String) node.getUserObject();
-               if (name.equals(newNodeName)) {
-                   System.out.println("Node already exists");
-                   return;
-               }
+
+    private void insertNodeInParent(DefaultMutableTreeNode parent, Object userObjectToInsert) {
+        DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(userObjectToInsert);
+        insertNodeInParent(parent, newNode);
+    }
+
+    private void insertNodeInParent(DefaultMutableTreeNode parent, DefaultMutableTreeNode node) {
+        parent.add(node);
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        model.nodesWereInserted(parent, new int[]{ model.getIndexOfChild(parent, node) });
+        TreePath p = new TreePath(model.getPathToRoot(node));
+        tree.expandPath(p.getParentPath());
+    }
+
+    private void editParticipant() {
+
+        DefaultMutableTreeNode selectedNode
+                = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+
+        if (selectedNode.getUserObject() != null && 
+                selectedNode.getUserObject() instanceof Participant) {
+
+            Participant selected = (Participant) selectedNode.getUserObject();
+            ParticipantDialog dialog = new ParticipantDialog(organization, selected);
+            Participant editedParticipant = dialog.showDialog();
+
+            if (editedParticipant != null) {
+
+                organization.updateParticipant(editedParticipant);
+                organization.store();
+
+                selectedNode.setUserObject(editedParticipant);
+                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                model.nodeChanged(selectedNode);
             }
         }
+    }
+
+    private void addStageNodeIfNotExists(Stage stage) {
+        String newNodeName = stage.getName();
+
+        for (DefaultMutableTreeNode node : stageNodes) {
+
+            if (node.getUserObject() instanceof Stage) {
+                String name = ((Stage) node.getUserObject()).getName();
+                if (name.equals(newNodeName)) {
+                    System.out.println("Node already exists");
+                    return;
+                }
+            }
+        }
+        DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(stage);
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) tree.getModel().getRoot();
-        root.add(stageNode);
+        root.add(newNode);
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodesWereInserted(root, new int[]{root.getIndex(stageNode)});
-        //printDescendants(root, "");
-        stageNodes.add(stageNode);
+        model.nodesWereInserted(root, new int[]{root.getIndex(newNode)});
+
+        stage.setOrganization(organization);
+
+        organization.addStage(stage);
+        organization.store();
+
+        stageNodes.add(newNode);
     }
 
     public String getProjectPath() {
@@ -179,6 +339,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
     @Override
     public File dockableToFile() {
+
         try {
 
             String relativePathToFile = "organization-visualization-tree.xml";
@@ -195,25 +356,6 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             b.setString(this.getTitleText());
             e.addElement(b);
 
-            XElement p = new XElement("participants");
-            for (Participant participant : participants) {
-                XElement xParticipant = new XElement("participant");
-                xParticipant.addElement("id").setString(participant.id);
-                xParticipant.addElement("name").setString(participant.name);
-                xParticipant.addElement("notes").setString(participant.notes);
-                XElement date = new XElement("date");
-                Calendar c = Calendar.getInstance();
-                c.setTime(participant.date);
-                date.addElement("day").setInt(c.get(Calendar.DAY_OF_MONTH));
-                date.addElement("month").setInt(c.get(Calendar.MONTH));
-                date.addElement("year").setInt(c.get(Calendar.YEAR));
-                xParticipant.addElement(date);
-                p.addElement(xParticipant);
-            }
-            e.addElement(p);
-            
-            
-
             XIO.writeUTF(e, new FileOutputStream(file));
 
             return file;
@@ -221,6 +363,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             LOGGER.log(Level.SEVERE, null, ex);
             return null;
         }
+
     }
 
     @Override
@@ -229,37 +372,12 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         if (file.exists()) {
             try (InputStream in = new FileInputStream(file)) {
 
-                XElement e = XIO.read(in, "UTF-8");;
-                OrganizationDockable d = new OrganizationDockable();
+                XElement e = XIO.readUTF(in);
+                String projectFolder = file.getParentFile().getAbsolutePath();
+                ProjectOrganization po = new ProjectOrganization(projectFolder);
+                OrganizationDockable d = new OrganizationDockable(po);
                 d.setTitleText(e.getElement("title").getString());
-                d.setProjectPath(file.getParentFile().getAbsolutePath());
-
-                XElement[] ps = e.getElement("participants").getElements("participant");
-                for (XElement participant : ps) {
-                    Participant p = new Participant();
-                    p.id = participant.getElement("id").getString();
-                    p.name = participant.getElement("name").getString();
-                    p.notes = participant.getElement("notes").getString();
-
-                    SimpleDateFormat formatter = new SimpleDateFormat("dd MM yyyy");
-                    String day = participant.getElement("date").getElement("day").getString();
-                    String month = participant.getElement("date").getElement("month").getString();
-                    String year = participant.getElement("date").getElement("year").getString();
-                    Date date = new Date();
-                    try {
-                        date = formatter.parse(day + " " + month + " " + year);
-                    } catch (ParseException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
-                    }
-                    p.date = date;
-                    d.participants.add(p);
-
-                    DefaultMutableTreeNode root = (DefaultMutableTreeNode) d.tree.getModel().getRoot();
-                    DefaultMutableTreeNode parts = (DefaultMutableTreeNode) root.getFirstChild();
-                    parts.add(new DefaultMutableTreeNode(p));
-                    d.tree.expandRow(2);
-
-                }
+                d.setProjectPath(projectFolder);
 
                 return d;
             } catch (IOException ex) {
@@ -271,7 +389,19 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     }
 
     List<Participant> getParticipants() {
-        return this.participants;
+        return this.organization.getParticipants();
+    }
+
+    private class PluginConfigPair {
+
+        StagePlugin plugin;
+        Configuration configuration;
+
+        public PluginConfigPair(StagePlugin plugin, Configuration configuration) {
+            this.plugin = plugin;
+            this.configuration = configuration;
+        }
+
     }
 
     private static class OrganizationCellRenderer implements TreeCellRenderer {
@@ -280,39 +410,48 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            DefaultTreeCellRenderer returnValue = (DefaultTreeCellRenderer) defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+            DefaultTreeCellRenderer returnValue
+                    = (DefaultTreeCellRenderer) defaultRenderer.
+                    getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
             if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
                 Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
                 if (userObject instanceof Participant) {
-                    returnValue = getTreeCellRendererComponentForParticipant(returnValue, (Participant) userObject);
-                } else if (userObject instanceof ExtPoint) {
-                    returnValue = getTreeCellRendererComponentForExtPoint(returnValue, (ExtPoint) userObject);
-                } else if (userObject instanceof Dependency) {
-                    Dependency d = (Dependency) userObject;
-                    if (d.isPresent()) {
-                        returnValue = getTreeCellRendererComponentForExtPoint(returnValue, d.getExtensionPoint());
-                    } else {
-                        returnValue = getTreeCellRendererComponentForDependency((DefaultTreeCellRenderer) (new DefaultTreeCellRenderer()).getTreeCellRendererComponent(tree, value, leaf, expanded, leaf, row, hasFocus), d);
-                    }
+                    returnValue = getRendererForParticipant(returnValue, (Participant) userObject);
+                } else if (userObject instanceof String && ((String) userObject).equals("Participants")) {
+                    returnValue = getRendererForParticipants(returnValue);
+                } else if (userObject instanceof Stage) {
+                    returnValue = getRendererForStage(returnValue, (Stage) userObject);
+                } else if (userObject instanceof PluginConfigPair) {
+                    returnValue = getRendererForConfig(returnValue, (PluginConfigPair) userObject);
                 }
             }
             return returnValue;
         }
 
-        private DefaultTreeCellRenderer getTreeCellRendererComponentForParticipant(DefaultTreeCellRenderer c, Participant o) {
-            c.setText(o.id + " " + o.name);
+        private DefaultTreeCellRenderer getRendererForParticipant(DefaultTreeCellRenderer c, Participant p) {
+            if (p.isLocked) {
+                c.setIcon(Utils.createImageIcon("locked.png", getClass()));
+            } else {
+                c.setIcon(Utils.createImageIcon("unlocked.png", getClass()));
+            }
+            c.setText(p.id + " " + p.name);
             return c;
         }
 
-        private DefaultTreeCellRenderer getTreeCellRendererComponentForExtPoint(DefaultTreeCellRenderer c, ExtPoint o) {
-            c.setText(o.getName());
+        private DefaultTreeCellRenderer getRendererForParticipants(DefaultTreeCellRenderer c) {
+            c.setIcon(Utils.createImageIcon("participants.png", getClass()));
             return c;
         }
 
-        private DefaultTreeCellRenderer getTreeCellRendererComponentForDependency(DefaultTreeCellRenderer c, Dependency o) {
-            c.setForeground(Color.red);
-            c.setBackgroundSelectionColor(Color.white);
-            c.setText(o.getId());
+        private DefaultTreeCellRenderer getRendererForStage(DefaultTreeCellRenderer c, Stage s) {
+            c.setText(s.getName());
+            return c;
+        }
+
+        private DefaultTreeCellRenderer getRendererForConfig(
+                DefaultTreeCellRenderer c, PluginConfigPair p) {
+
+            c.setText(p.plugin.getName() + " (" + p.configuration.getId() + ")");
             return c;
         }
     }

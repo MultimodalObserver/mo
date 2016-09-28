@@ -27,11 +27,8 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
-import mo.core.plugin.Plugin;
-import mo.core.plugin.PluginRegistry;
 import mo.core.ui.menubar.IMenuBarItemProvider;
 import static mo.core.utils.Utils.getBaseFolder;
-import mo.filemanagement.FilesPane;
 
 @Extension(
         xtends = {
@@ -205,7 +202,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                     Path docksRoot = Paths.get(dir);
                     Path dockFilePath = Paths.get(sd.dockableToFile().toURI());
-                    
+
                     Path relative = docksRoot.relativize(dockFilePath);
                     data.setString(relative.toString());
 
@@ -263,8 +260,12 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                         XElement location = dock.getElement("location");
                         XElement property = location.getElement("property");
-                        XElement leaf = property.getElement("leaf");
-
+                        
+                        XElement leaf = null;
+                        if (property != null) {
+                           leaf = property.getElement("leaf");
+                        }
+                        
                         if (leaf == null) {
                             control.addDockable(element);
                             element.setLocationFromXml(control, location);
@@ -289,22 +290,20 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                 List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
                 treeRecreator.createTrees(trees);
-                
-                //System.out.println(">>>"+trees);
 
+                //System.out.println(">>>"+trees);
             } catch (IOException | SecurityException | IllegalArgumentException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         } else {
-
-                LOGGER.log(Level.INFO, "No dockables config file found <"+file+">");
-            
+            LOGGER.log(Level.INFO, "No dockables config file found <" + file + ">");
         }
     }
 
     private DockableElement createDockableInstance(File file, XElement dockableXData, String className) {
         DockableElement sd = null;
         try {
+
             Class<?> clazz = Class.forName(className);
             Object o = clazz.newInstance();
             String dataStr = dockableXData.getElement("data").getString();

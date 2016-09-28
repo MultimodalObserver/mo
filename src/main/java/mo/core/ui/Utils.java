@@ -3,6 +3,7 @@ package mo.core.ui;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import javax.swing.ImageIcon;
 
 public class Utils {
 
@@ -14,4 +15,14 @@ public class Utils {
         int y = (screenSize.height / 2) - (height / 2);
         c.setLocation(x, y);
     }
+    
+    public static ImageIcon createImageIcon(String path, Class clazz) {
+            java.net.URL imgURL = clazz.getClassLoader().getResource(path);
+            if (imgURL != null) {
+                return new ImageIcon(imgURL);
+            } else {
+                System.err.println("Couldn't find file: " + path);
+                return null;
+            }
+        }
 }

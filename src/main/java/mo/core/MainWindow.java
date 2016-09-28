@@ -16,7 +16,7 @@ import mo.filemanagement.FilesPane;
 public class MainWindow extends JFrame {
 
     public MainWindow() {
-        setLookAndFeel();
+        //setLookAndFeel();
     }
 
     public void createAndShowGUI() {

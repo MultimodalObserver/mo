@@ -15,12 +15,13 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import mo.core.ui.GridBConstraints;
 import static mo.core.ui.Utils.centerOnScreen;
+import mo.organization.ProjectOrganization;
 import org.jdatepicker.impl.DateComponentFormatter;
 import org.jdatepicker.impl.JDatePanelImpl;
 import org.jdatepicker.impl.JDatePickerImpl;
 import org.jdatepicker.impl.UtilDateModel;
 
-public class ParticipantDialog extends JDialog {
+public class ParticipantDialog extends JDialog implements DocumentListener {
 
     private Participant participant;
 
@@ -30,10 +31,24 @@ public class ParticipantDialog extends JDialog {
     JButton accept;
     List<Participant> orgParticipants;
 
-    public ParticipantDialog(OrganizationDockable organization) {
-        super(null, "New participant", Dialog.ModalityType.APPLICATION_MODAL);
-        orgParticipants = organization.getParticipants();
-        participant = new Participant();
+    boolean isParticipantUpdate = false;
+
+    public ParticipantDialog(ProjectOrganization org) {
+        this(org, null);
+    }
+
+    public ParticipantDialog(ProjectOrganization org, Participant part) {
+        super(null, "New Participant", Dialog.ModalityType.APPLICATION_MODAL);
+
+        orgParticipants = org.getParticipants();
+
+        if (part == null) {
+            participant = new Participant();
+        } else {
+            setTitle("Edit Participant");
+            participant = part;
+            isParticipantUpdate = true;
+        }
 
         setLayout(new GridBagLayout());
         GridBConstraints g = new GridBConstraints();
@@ -41,55 +56,40 @@ public class ParticipantDialog extends JDialog {
                 .f(GridBConstraints.BOTH)
                 .i(new Insets(5, 5, 5, 5));
 
-        add(new JLabel("Id"), g.gx(0).gy(0));
+        add(new JLabel("Id*"), g.gx(0).gy(0));
         add(new JLabel("Name"), g.gy(1));
         add(new JLabel("Date"), g.gy(2));
         add(new JLabel("Notes"), g.gy(3));
 
         idField = new JTextField();
-        idField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateState();
-            }
 
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateState();
-            }
+        if (participant.id != null) {
+            idField.setText(participant.id);
+            idField.setEnabled(false);
+        }
 
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateState();
-            }
-        });
         nameField = new JTextField();
-        nameField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                updateState();
-            }
 
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                updateState();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                updateState();
-            }
-        });
+        if (participant.name != null) {
+            nameField.setText(participant.name);
+        }
 
         JTextArea notesArea = new JTextArea();
+        if (participant.notes != null) {
+            notesArea.setText(participant.notes);
+        }
         notesArea.setRows(7);
         JScrollPane scroll = new JScrollPane(notesArea);
 
-        Properties p = toProperties(ResourceBundle.getBundle("org.jdatepicker.i18n.Text", Locale.getDefault()));
+        Properties prop = toProperties(ResourceBundle.getBundle("org.jdatepicker.i18n.Text", Locale.getDefault()));
 
         UtilDateModel model = new UtilDateModel();
-        model.setValue(new Date());
-        JDatePanelImpl datePanel = new JDatePanelImpl(model, p);
+        if (participant.date != null) {
+            model.setValue(participant.date);
+        } else {
+            model.setValue(new Date());
+        }
+        JDatePanelImpl datePanel = new JDatePanelImpl(model, prop);
         JDatePickerImpl datePicker = new JDatePickerImpl(datePanel, new DateComponentFormatter());
 
         add(idField, g.gx(1).gy(0).wx(1.0));
@@ -97,7 +97,12 @@ public class ParticipantDialog extends JDialog {
         add(datePicker, g.gy(2));
         add(scroll, g.gx(0).gy(4).gw(2));
 
-        errorLabel = new JLabel("An ID and name must be specified");
+        if (participant.id == null) {
+            errorLabel = new JLabel("An ID and name must be specified");
+        } else {
+            errorLabel = new JLabel();
+        }
+
         errorLabel.setForeground(Color.red);
         add(errorLabel, g.gx(0).gy(5).gw(2));
 
@@ -105,7 +110,7 @@ public class ParticipantDialog extends JDialog {
 
         accept = new JButton("Accept");
         accept.addActionListener((ActionEvent e) -> {
-            if (!idField.getText().isEmpty() && !nameField.getText().isEmpty()) {
+            if (!idField.getText().isEmpty()) {
                 participant.id = idField.getText();
                 participant.name = nameField.getText();
                 participant.date = (Date) datePanel.getModel().getValue();
@@ -113,7 +118,7 @@ public class ParticipantDialog extends JDialog {
                 setVisible(false);
                 dispose();
             } else {
-                
+
             }
         });
         accept.setEnabled(false);
@@ -144,9 +149,12 @@ public class ParticipantDialog extends JDialog {
             }
 
         });
+
+        idField.getDocument().addDocumentListener(this);
+        updateState();
     }
 
-    public Properties toProperties(ResourceBundle resource) {
+    public static Properties toProperties(ResourceBundle resource) {
         Properties result = new Properties();
         Enumeration<String> keys = resource.getKeys();
         while (keys.hasMoreElements()) {
@@ -162,25 +170,41 @@ public class ParticipantDialog extends JDialog {
     }
 
     private void updateState() {
-        if (idField.getText().isEmpty() || nameField.getText().isEmpty()) {
-            errorLabel.setText("An ID and name must be specified");
+        if (idField.getText().isEmpty()) {
+            errorLabel.setText("An ID must be specified");
             accept.setEnabled(false);
+        } else if (isParticipantUpdate || isParticipantIdUnique(idField.getText())) {
+            errorLabel.setText("");
+            accept.setEnabled(true);
+            SwingUtilities.getRootPane(accept).setDefaultButton(accept);
         } else {
-            if (isParticipantIdUnique(idField.getText())){
-                errorLabel.setText("");
-                accept.setEnabled(true);
-            } else {
-                errorLabel.setText("ID must be unique");
-                accept.setEnabled(false);
-            }
+            errorLabel.setText("ID must be unique");
+            accept.setEnabled(false);
+
         }
     }
-    
+
     private boolean isParticipantIdUnique(String id) {
         for (Participant p : orgParticipants) {
-            if (p.id.equals(id))
+            if (p.id.equals(id)) {
                 return false;
+            }
         }
         return true;
+    }
+
+    @Override
+    public void insertUpdate(DocumentEvent e) {
+        updateState();
+    }
+
+    @Override
+    public void removeUpdate(DocumentEvent e) {
+        updateState();
+    }
+
+    @Override
+    public void changedUpdate(DocumentEvent e) {
+        updateState();
     }
 }

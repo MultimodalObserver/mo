@@ -10,6 +10,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -163,8 +165,11 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
                 XElement openedProjects = x.getElement("openedProjects");
                 for (XElement project : openedProjects.getElements("project")) {
                    
+                    File p = new File(project.getString());
+                    if (p.exists()){
                     //d.addFile(new File(project.getString()));
-                    FileRegistry.getInstance().addOpenedProject(new Project(project.getString()));
+                        FileRegistry.getInstance().addOpenedProject(new Project(project.getString()));
+                    }
                 }
 
                 

@@ -1,15 +1,11 @@
 package mo.filemanagement;
 
-import mo.core.utils.Utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TreeSet;
-import javax.swing.JFrame;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
@@ -33,8 +29,6 @@ public class FilesTreeModel implements TreeModel {
         dirWatcher.addWatchHandler(new WatchHandler() {
             @Override
             public void onCreate(File file) {
-                //System.out.println("create");
-                updateTree(file);
                 
                 List<Object> path = pathToNode(root, file, new ArrayList<>());
                 path.remove(path.size() - 1);
@@ -49,9 +43,7 @@ public class FilesTreeModel implements TreeModel {
 
             @Override
             public void onDelete(File file) {
-                //System.out.println("del");
-                updateTree(file);
-        
+       
                 List<Object> path = pathToNode(root, file.getParentFile(), new ArrayList<>());
 
                 TreeModelEvent removeEvent = new TreeModelEvent(
@@ -69,8 +61,6 @@ public class FilesTreeModel implements TreeModel {
 
             @Override
             public void onModify(File file) {
-                //System.out.println("mod");
-                updateTree(file);
                 
                 List<Object> path = pathToNode(root, file, new ArrayList<>());
                 if (path != null) {
@@ -109,6 +99,11 @@ public class FilesTreeModel implements TreeModel {
     }
     
     private List<Object> pathToNode(File parent, File node, List<Object> path) {
+        
+        if (parent == null || node == null || path == null) {
+            return null;
+        }
+        
         path.add(parent);
         
         if (parent.equals(root)) {
@@ -142,10 +137,6 @@ public class FilesTreeModel implements TreeModel {
         for (TreeModelListener listener : listeners) {
             listener.treeNodesChanged(eventToNotify);
         }
-    }
-
-    private void updateTree(File file) {
-        //System.out.println(file);
     }
 
     public void addFile(File f) {
@@ -223,7 +214,11 @@ public class FilesTreeModel implements TreeModel {
         }
         File p = (File) parent;
         String[] list = p.list();
-        return new File(p, list[index]);
+        
+        if (index > -1 && index < list.length)
+            return new File(p, list[index]);
+        
+        return null;
     }
 
     @Override

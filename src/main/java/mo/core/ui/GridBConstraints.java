@@ -73,4 +73,12 @@ public class GridBConstraints extends GridBagConstraints {
         this.weighty = weighty;
         return this;
     }
+
+    @Override
+    public String toString() {
+        String s = "[anchor:"+anchor+" fill:"+fill+" x:"+gridx+" y:"+gridy+
+                " w:"+gridwidth+" h:"+gridheight+" insets:"+insets+" ipadx:"+ipadx+
+                " ipady:"+ipady+" wx:"+weightx+" wy:"+weighty+"]";
+        return s;
+    }
 }
