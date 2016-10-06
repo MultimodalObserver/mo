@@ -1,4 +1,4 @@
-package mo.visualization.mouse;
+package mo.visualization.test;
 
 import java.awt.Color;
 

@@ -2,42 +2,12 @@ package mo.visualization.test;
 
 import com.theeyetribe.clientsdk.data.GazeData;
 import com.theeyetribe.clientsdk.data.Point2D;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Stroke;
+import java.awt.*;
 import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import javax.swing.JPanel;
-import mo.visualization.mouse.Gradient;
-import org.omg.CORBA.FixedHolder;
-
-//fixation
-//saccades
-//
-//area
-//
-//tiempo
-//
-//promedio de puntos
-//
-//circulo
-//	numero
-//	radio max
-//
-//lineas
-//
-//numero de fijaciones
 
 public class FixationPanel extends JPanel {
-    long timeRatioMillis;
-    long areaRatio; //?
 
     int fixationsLimit = 50;
     
@@ -46,11 +16,9 @@ public class FixationPanel extends JPanel {
     
     boolean prevWasFixated = false;
     
-    Point saccadeToDrawStart;
-    Point saccadeToDrawEnd;
-    
     Fixation first;
     Fixation last;
+    
     int globalFixationsCount = 0;
     int fixationsCount;
     
@@ -87,11 +55,7 @@ public class FixationPanel extends JPanel {
             addNewFixation(data);
             prevWasFixated = true;
             
-        } else if (!data.isFixated && prevWasFixated) {
-
-            prevWasFixated = false;
-            
-        } else { //-> !data.isFixated && !prevWasFixated
+        } else {
 
             prevWasFixated = false;
             
@@ -250,7 +214,7 @@ public class FixationPanel extends JPanel {
 
     }
 
-    class Fixation {
+    private class Fixation {
         Ellipse2D circle;
         int number;
         

@@ -1,5 +1,8 @@
-package mo.visualization.mouse;
+package mo.visualization.test;
 
+import com.google.gson.Gson;
+import com.theeyetribe.clientsdk.data.GazeData;
+import com.theeyetribe.clientsdk.response.Response;
 import com.theeyetribe.clientsdk.response.TrackerGetResponse;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -13,15 +16,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
+import java.util.Formatter;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,78 +31,61 @@ import javax.swing.SwingUtilities;
 import mo.visualization.Playable;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
-public class EEGPlayer implements Playable {
+public class EyeTribePlayer implements Playable {
 
-    private double speed = 01;
-    private long currentTime, start, end;
+    private double speed = 1000;
+    private long currentTime, start, end = -1;
     private boolean isPlaying = false;
 
     private RandomAccessFile raf;
 
     private TestPane pane;
+    LiveHeatMap hmap;
+    
+    TrackerGetResponse current;
+    Gson gson = new Gson();
+    
+    private static final Logger logger = Logger.getLogger(EyeTribePlayer.class.getName());
+    private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+    
+    int linesCount = 0;
 
-    private EEGData current;
-
-    private static final Logger logger = Logger.getLogger(EEGPlayer.class.getName());
-
-    public EEGPlayer(File file) {
+    public EyeTribePlayer(File file) {
         try {
-            readLastTime(file);
-//            EEGData last = parse
-//            if (trackerRes.category.equals("tracker")) {
-//                end = dateStringToMillis(trackerRes.values.frame.timeStampString);
-//            }
-//
-             raf = new RandomAccessFile(file, "r");
-
-        } catch (FileNotFoundException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        } 
-    }
-
-    void readLastTime(File file) {
-        try {
+            Gson g = new Gson();
+            
+            
             ReversedLinesFileReader rev = new ReversedLinesFileReader(file, Charset.defaultCharset());
             String lastLine = null;
             do {
                 lastLine = rev.readLine();
-            } while (lastLine == null && lastLine.trim().isEmpty());
+            } while ( lastLine == null && lastLine.trim().isEmpty() );
             rev.close();
+            TrackerGetResponse trackerRes = g.fromJson(lastLine, TrackerGetResponse.class);
+            if (trackerRes.category.equals("tracker")) {
+                end = dateStringToMillis(trackerRes.values.frame.timeStampString);
+            }
             
-            int index = lastLine.indexOf("#Time:");
-            System.out.println(lastLine+ " " +index);
             
-            end = Long.parseLong(
-                    lastLine.substring(index+6, lastLine.indexOf(",", index)));
-            end = end * 1000;
-            
-            double d = Double.parseDouble(lastLine.substring(lastLine.indexOf(",", index)+1, lastLine.lastIndexOf("#")));
-            d /= 1000;
-            System.out.println("end:"+end+" ddd:"+d);
-            
-            end = (long) (end+ d);
-            System.out.println("end:"+end+" ddd:"+d);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(end);
+            raf = new RandomAccessFile(file, "r");
+            String line;
 
-            int year = calendar.get(Calendar.YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            int day = calendar.get(Calendar.DAY_OF_MONTH);
-            int hour = calendar.get(Calendar.HOUR);
-            int mins = calendar.get(Calendar.MINUTE);
-            int secs = calendar.get(Calendar.SECOND);
-            int millis = calendar.get(Calendar.MILLISECOND);
-            
-            System.out.println("end "+end + " " + year + " " + month + " " + day + " " + hour + " " + mins + " " + secs +" "+ millis);
-            System.out.println(DateFormat.getDateInstance(DateFormat.LONG).format(end));
-            System.out.println(Instant.ofEpochMilli(end).atOffset(ZoneOffset.ofHours(-4)));
+            pane = new TestPane();
+            hmap = new LiveHeatMap(1080, 1920);
+
+            line = raf.readLine();
+            if (line != null) {
+                current = g.fromJson(line, TrackerGetResponse.class);
+                start = dateStringToMillis(current.values.frame.timeStampString);
+            }
+        } catch (FileNotFoundException ex) {
+            logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(EEGPlayer.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
     
     private static long dateStringToMillis(String dateStr) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
         Date date;
         try {
             date = dateFormat.parse(dateStr);
@@ -113,31 +95,25 @@ public class EEGPlayer implements Playable {
         }
         return -1;
     }
-    int parseMeditation(String line) {
-        return 0;
+    
+    String responseToString(Response r) {
+        String result = r.request + " " + r.statuscode + " " + r.category;
+        if (r.category.equals("tracker")) {
+            return result + " " + tgrToStr((TrackerGetResponse) r);
+        }
+        return result;
     }
-
-    public static void main(String[] args) throws InterruptedException {
-        System.out.println();
-        File f = new File("C:\\Users\\Celso\\Desktop\\log_2016_6_7_11_43_3.txt");
-
-        EEGPlayer p = new EEGPlayer(f);
-
-        JFrame fr = new JFrame();
-
-        fr.add(p.pane);
-        fr.setPreferredSize(new Dimension(400, 400));
-        fr.setSize(400, 400);
-        fr.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        //fr.setVisible(true);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fr.setVisible(true);
-            }
-        });
-
-
+    
+    String tgrToStr(TrackerGetResponse r) {
+        return GazeDataToString(r.values.frame);
+    }
+    
+    String GazeDataToString(GazeData g) {
+        String result = "";
+        result += g.timeStamp + " " + g.timeStampString + " " + g.state + " "
+                + g.stateToString() + " " + g.isFixated + " " + g.rawCoordinates + " "
+                + g.smoothedCoordinates + " " +g.leftEye + " " + g.rightEye;
+        return result;
     }
 
     @Override
@@ -157,7 +133,7 @@ public class EEGPlayer implements Playable {
         if (isPlaying) {
             isPlaying = false;
         }
-
+//
 //        if (millis < currentEvent.time) {
 //            try {
 //                raf.seek(0);
@@ -205,50 +181,68 @@ public class EEGPlayer implements Playable {
 //                }
 //            }
 //        }
-//
-//        isPlaying = playing;
+
+        isPlaying = playing;
     }
 
     @Override
     public void play() {
         isPlaying = true;
-        EEGData next = null;
+        TrackerGetResponse next = null;
         while (isPlaying) {
-//            try {
-//                if (currentEvent == null) {
-//                    String line = raf.readLine();
-//                    if (line != null) {
-//                        currentEvent = parseEventFromLine(line);
-//                    }
-//                }
-//
-//                String line2 = raf.readLine();
-//                if (line2 != null) {
-//                    nextEvent = parseEventFromLine(line2);
-//                } else {
-//                    System.exit(0);
-//                }
-//
-//                pane.display(currentEvent);
-//                long sleep = (long) ((nextEvent.time - currentEvent.time) / speed);
-//                currentEvent = nextEvent;
-//                try {
-//                    Thread.sleep(sleep);
-//                } catch (InterruptedException ex) {
-//                    logger.log(Level.SEVERE, null, ex);
-//                }
-//
-//            } catch (IOException ex) {
-//                logger.log(Level.SEVERE, null, ex);
-//            }
+            if (current == null) {
+                current = getNext();
+            }
+            next = getNext();
+            
+//            pane.display(new Point(
+//                    (int) current.values.frame.smoothedCoordinates.x,
+//                    (int) current.values.frame.smoothedCoordinates.y));
+
+            double x = current.values.frame.smoothedCoordinates.x;
+            double y = current.values.frame.smoothedCoordinates.y;
+
+            if (current.values.frame.state != GazeData.STATE_TRACKING_FAIL &&
+                    current.values.frame.state != GazeData.STATE_TRACKING_LOST
+                    && !(x == 0 && y==0) ) {
+                hmap.update((int) x, (int) y);
+            }
+            
+            if (linesCount % 1000 == 0) {
+                System.out.println(linesCount);
+                if (linesCount > 118000) {
+                    isPlaying = false;
+                    System.out.println("end");
+                    System.exit(0);
+                }
+            }
+            
+            long sleep = (long) ((dateStringToMillis(next.values.frame.timeStampString) - dateStringToMillis(current.values.frame.timeStampString)) / speed);
+            current = next;
+            try {
+                Thread.sleep(sleep);
+            } catch (InterruptedException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
 
         }
     }
-
-    class EEGData {
-
-        long time;
-        int poorSignal, delta, theta, alpha1, alpha2, beta1, beta2, gamma1, gamma2, attention, meditation;
+    
+    TrackerGetResponse getNext() {
+        TrackerGetResponse r = null;
+        try {
+            do {
+                String line = raf.readLine();
+                linesCount++;
+                if (line != null) {
+                    r = gson.fromJson(line, TrackerGetResponse.class);
+                }
+            } while (r == null || !r.category.equals("tracker"));
+            return r;
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
@@ -258,58 +252,31 @@ public class EEGPlayer implements Playable {
 
     @Override
     public long getEnd() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return end;
     }
 
-    private static List<Rectangle> parseScreens(String line) {
-        ArrayList<Rectangle> screens = new ArrayList<>();
-        if (line.contains(";")) {
-            String screensStrs[] = line.split(";");
-            for (String screenStr : screensStrs) {
-                Rectangle r = parseRectangle(screenStr);
-                if (r != null) {
-                    screens.add(r);
-                }
+    public static void main(String[] args) throws InterruptedException {
+        System.out.println();
+        File f = new File("C:\\Users\\Celso\\Desktop\\06.txt");
+        EyeTribePlayer p = new EyeTribePlayer(f);
+
+        JFrame fr = new JFrame();
+        
+
+        fr.add(p.hmap);
+        fr.setPreferredSize(new Dimension(400, 400));
+        fr.setSize(400, 400);
+        fr.setDefaultCloseOperation(EXIT_ON_CLOSE);
+        //fr.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                fr.setVisible(true);
             }
-        } else {
-            Rectangle r = parseRectangle(line);
-            if (r != null) {
-                screens.add(r);
-            }
-        }
-        return screens;
-    }
+        });
 
-    private static Rectangle parseRectangle(String str) {
-        int x, y, w, h, i;
+        p.play();
 
-        if (str.contains("x=")) {
-            i = str.indexOf(",");
-            x = Integer.parseInt(str.substring(str.indexOf("x=") + 2, i));
-        } else {
-            return null;
-        }
-
-        if (str.contains("y=")) {
-            i = str.indexOf(",", i + 1);
-            y = Integer.parseInt(str.substring(str.indexOf("y=") + 2, i));
-        } else {
-            return null;
-        }
-
-        if (str.contains("width=")) {
-            i = str.indexOf(",", i + 1);
-            w = Integer.parseInt(str.substring(str.indexOf("width=") + 6, i));
-        } else {
-            return null;
-        }
-
-        if (str.contains("height=")) {
-            h = Integer.parseInt(str.substring(str.indexOf("height=") + 7, str.length()));
-        } else {
-            return null;
-        }
-        return new Rectangle(x, y, w, h);
     }
 
     public static class TestPane extends JPanel {
@@ -322,35 +289,13 @@ public class EEGPlayer implements Playable {
 
         private Rectangle virtualBounds = new Rectangle(0, 0, 0, 0);
 
-        public TestPane(List<Rectangle> screens) {
+        public TestPane() {
+            ArrayList<Rectangle> screens = new ArrayList<>();
+            screens.add(new Rectangle(1920, 1080));
             screenBounds = screens;
             for (Rectangle screen : screens) {
                 virtualBounds.add(screen);
             }
-//            Timer timer = new Timer(20, new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-////                    PointerInfo pi = MouseInfo.getPointerInfo();
-////
-////                    Point mp = pi.getLocation();
-////
-////                    Rectangle bounds = getDeviceBounds(pi.getDevice());
-////
-////                    screenPoint = new Point(mp);
-////                    virtualPoint = screenPoint;
-////                    virtualPoint.x -= bounds.x;
-////                    virtualPoint.y -= bounds.y;
-////                    if (virtualPoint.x < 0) {
-////                        virtualPoint.x *= -1;
-////                    }
-////                    if (virtualPoint.y < 0) {
-////                        virtualPoint.y *= -1;
-////                    }
-//                    repaint();
-//
-//                }
-//            });
-//            timer.start();
         }
 
         @Override
@@ -405,7 +350,7 @@ public class EEGPlayer implements Playable {
                 int x = 0;
                 int y = fm.getAscent();
 
-                g2d.drawString(screenPoint.x + "," + screenPoint.y, x, y);
+                g2d.drawString(screenPoint.x+","+screenPoint.y, x, y);
                 screenPoint.x += xOffset;
                 screenPoint.y += yOffset;
                 screenPoint.x *= scale;
@@ -432,8 +377,8 @@ public class EEGPlayer implements Playable {
             return scaled;
         }
 
-        private void display(Point event) {
-            screenPoint = event;
+        private void display(Point p) {
+            screenPoint = p;
             repaint();
         }
 

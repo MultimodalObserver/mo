@@ -1,4 +1,4 @@
-package mo.visualization.mouse;
+package mo.visualization.test;
 
 import com.google.gson.Gson;
 import com.theeyetribe.clientsdk.data.GazeData;
@@ -29,28 +29,29 @@ import static javax.swing.JFrame.EXIT_ON_CLOSE;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import mo.visualization.Playable;
+import mo.visualization.test.FixationPanel;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
-public class EyeTribePlayer implements Playable {
+public class EyeTribeFixPlayer implements Playable {
 
-    private double speed = 1000;
+    private double speed = 1;
     private long currentTime, start, end = -1;
     private boolean isPlaying = false;
 
     private RandomAccessFile raf;
 
-    private TestPane pane;
-    LiveHeatMap hmap;
     
     TrackerGetResponse current;
     Gson gson = new Gson();
     
-    private static final Logger logger = Logger.getLogger(EyeTribePlayer.class.getName());
+    private static final Logger logger = Logger.getLogger(EyeTribeFixPlayer.class.getName());
     private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
     
     int linesCount = 0;
+    
+    FixationPanel panel;
 
-    public EyeTribePlayer(File file) {
+    public EyeTribeFixPlayer(File file) {
         try {
             Gson g = new Gson();
             
@@ -70,8 +71,7 @@ public class EyeTribePlayer implements Playable {
             raf = new RandomAccessFile(file, "r");
             String line;
 
-            pane = new TestPane();
-            hmap = new LiveHeatMap(1080, 1920);
+            panel = new FixationPanel(1920, 1080);
 
             line = raf.readLine();
             if (line != null) {
@@ -205,7 +205,7 @@ public class EyeTribePlayer implements Playable {
             if (current.values.frame.state != GazeData.STATE_TRACKING_FAIL &&
                     current.values.frame.state != GazeData.STATE_TRACKING_LOST
                     && !(x == 0 && y==0) ) {
-                hmap.update((int) x, (int) y);
+                panel.addGazeData(current.values.frame);
             }
             
             if (linesCount % 1000 == 0) {
@@ -258,12 +258,12 @@ public class EyeTribePlayer implements Playable {
     public static void main(String[] args) throws InterruptedException {
         System.out.println();
         File f = new File("C:\\Users\\Celso\\Desktop\\06.txt");
-        EyeTribePlayer p = new EyeTribePlayer(f);
+        EyeTribeFixPlayer p = new EyeTribeFixPlayer(f);
 
         JFrame fr = new JFrame();
         
 
-        fr.add(p.hmap);
+        fr.add(p.panel);
         fr.setPreferredSize(new Dimension(400, 400));
         fr.setSize(400, 400);
         fr.setDefaultCloseOperation(EXIT_ON_CLOSE);
