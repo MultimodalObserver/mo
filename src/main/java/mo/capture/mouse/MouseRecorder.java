@@ -155,7 +155,7 @@ public class MouseRecorder
         }
     }
 
-    private void write(NativeInputEvent event) {
+    private void write(NativeMouseEvent event) {
         try {
             buffOutStream.write((event.getWhen() + "," + event.paramString() + "\n").getBytes());
         } catch (IOException ex) {

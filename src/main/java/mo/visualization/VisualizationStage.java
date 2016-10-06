@@ -13,6 +13,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.organization.ProjectOrganization;
 import mo.organization.Stage;
 import mo.organization.StageAction;
@@ -37,6 +39,11 @@ public class VisualizationStage implements Stage {
     public VisualizationStage() {
         plugins = new ArrayList<>();
         actions = new ArrayList<>();
+        
+        for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.visualization.VisualizationProvider")) {
+            VisualizationProvider p = (VisualizationProvider) plugin.getNewInstance();
+            plugins.add(p);
+        }
     }
     
     @Override

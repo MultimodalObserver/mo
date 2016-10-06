@@ -63,7 +63,7 @@ public class RecordAction implements StageAction {
     private void startRecording() {
         JFrame frame = DockablesRegistry.getInstance().getMainFrame();
 
-        if (false/*SystemTray.isSupported()*/) {
+        if (SystemTray.isSupported()) {
             try {
                 createAndShowTray();
             } catch (AWTException ex) {
