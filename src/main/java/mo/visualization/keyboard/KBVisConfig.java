@@ -1,40 +1,72 @@
-package mo.visualization.mouse;
+package mo.visualization.keyboard;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mo.capture.mouse.MouseCaptureConfiguration;
 import mo.organization.Configuration;
 import mo.visualization.VisualizableConfiguration;
 
-public class MouseVisConfiguration implements VisualizableConfiguration {
-    
-    String id;
-    List<String> compatibleCreators;
-    List<File> files;
-    MousePlayer player;
+public class KBVisConfig implements VisualizableConfiguration {
 
-    public MouseVisConfiguration() {
-        compatibleCreators = new ArrayList<>();
-        compatibleCreators.add("mo.capture.mouse.MouseRecorder");
+    
+    private final String[] creators = {"mo.capture.keyboard.KeyboardRecorder"};
+    
+    private List<File> files;
+    private String id;
+    private KeyboardPlayer player;
+    
+    private static final Logger logger = Logger.getLogger(KBVisConfig.class.getName());
+
+    public KBVisConfig() {
         files = new ArrayList<>();
+    }
+    
+    public void setId(String id) {
+        this.id = id;
+    }
+    
+    @Override
+    public List<String> getCompatibleCreators() {
+        return Arrays.asList(creators);
+    }
+
+    @Override
+    public void addFile(File file) {
+        if (!files.contains(file)) {
+            files.add(file);
+        }
+    }
+
+    @Override
+    public void removeFile(File file) {
+        File toRemove = null;
+        for (File f : files) {
+            if (f.equals(file)) {
+                toRemove = f;
+            }
+        }
+        
+        if (toRemove != null) {
+            files.remove(toRemove);
+        }
     }
 
     @Override
     public String getId() {
-        return id;
+        return this.id;
     }
 
     @Override
     public File toFile(File parent) {
-        File f = new File(parent, "mouse-visualization_"+id+".xml");
+        File f = new File(parent, "keyboard-visualization_"+id+".xml");
         try {
             f.createNewFile();
         } catch (IOException ex) {
-            Logger.getLogger(MouseVisConfiguration.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return f;
     }
@@ -45,20 +77,17 @@ public class MouseVisConfiguration implements VisualizableConfiguration {
 
         if (fileName.contains("_") && fileName.contains(".")) {
             String name = fileName.substring(fileName.indexOf("_")+1, fileName.lastIndexOf("."));
-            MouseVisConfiguration config = new MouseVisConfiguration();
+            KBVisConfig config = new KBVisConfig();
             config.id = name;
             return config;
         }
         return null;
     }
-
-    @Override
-    public List<String> getCompatibleCreators() {
-       return compatibleCreators;
-    }
     
-    public void setId(String id) {
-        this.id = id;
+    private void ensurePlayerCreated() {
+        if (player == null && !files.isEmpty()) {
+            player = new KeyboardPlayer(files.get(0));
+        }
     }
 
     @Override
@@ -97,33 +126,4 @@ public class MouseVisConfiguration implements VisualizableConfiguration {
         player.play();
     }
     
-    private void ensurePlayerCreated() {
-        if (player == null && !files.isEmpty()) {
-            player = new MousePlayer(files.get(0));
-        }
-    }
-
-    @Override
-    public void addFile(File file) {
-        if ( !files.contains(file) ) {
-            this.files.add(file);
-        }
-    }
-
-    @Override
-    public void removeFile(File file) {
-        File toRemove = null;
-        
-        for (File f : files) {
-            if (f.equals(file)) {
-                toRemove = f;
-                break;
-            }
-        }
-        
-        if (toRemove != null) {
-            files.remove(toRemove);
-        }
-    }
-
 }

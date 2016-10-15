@@ -1,12 +1,15 @@
 package mo.visualization;
 
+import bibliothek.util.xml.XAttribute;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -44,6 +47,12 @@ public class VisualizationStage implements Stage {
             VisualizationProvider p = (VisualizationProvider) plugin.getNewInstance();
             plugins.add(p);
         }
+        
+        VisualizeAction va = new VisualizeAction();
+        actions.add(va);
+        
+        //TODO make actions plugables
+        //for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.visualization."))
     }
     
     @Override
@@ -80,8 +89,8 @@ public class VisualizationStage implements Stage {
                     VisualizationProvider p 
                             = (VisualizationProvider) method.invoke(o, ff);
                     if (p != null) {
-                        //System.out.println(p.getName());
-                        //cs.addOrReplaceStagePlugin(p);
+
+                        visStage.addOrReplaceStagePlugin(p);
                     }
                     System.out.println(ff);
                 }
@@ -97,10 +106,56 @@ public class VisualizationStage implements Stage {
         }
         return null;
     }
+    
+    private void addOrReplaceStagePlugin(StagePlugin p) {
+        ArrayList<StagePlugin> pluginsToReplace = new ArrayList<>();
+        for (StagePlugin plugin : plugins) {
+            if (plugin.getName().equals(p.getName())) {
+                pluginsToReplace.add(plugin);
+            }
+        }
+        plugins.removeAll(pluginsToReplace);
+        plugins.add(p);
+    }
 
     @Override
     public File toFile(File parent) {
-        return new File("example");
+        try {
+            File visStageFile = new File(parent, "visualization.xml");
+            visStageFile.createNewFile();
+            
+            XElement xElem = new XElement("visualization");
+            
+            for (StagePlugin plugin : plugins) {
+                if ( !plugin.getConfigurations().isEmpty()) {
+                    File p = new File(parent, "visualization");
+                    if (!p.isDirectory()) {
+                        p.mkdirs();
+                    }
+                    File f = plugin.toFile(p);
+                    if (f != null) {
+                        XElement pluginX = new XElement("plugin");
+                        XAttribute clazz = new XAttribute("class");
+                        clazz.setString(plugin.getClass().getName());
+                        pluginX.addAttribute(clazz);
+                        Path filePath = parent.toPath();
+                        Path selfPath = f.toPath();
+                        Path relative = filePath.relativize(selfPath);
+                        XElement path = new XElement("path");
+                        path.setString(relative.toString());
+                        pluginX.addElement(path);
+                        xElem.addElement(pluginX);
+                    }
+                }
+            }
+            
+            XIO.writeUTF(xElem, new FileOutputStream(visStageFile));
+            
+            return visStageFile;
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override

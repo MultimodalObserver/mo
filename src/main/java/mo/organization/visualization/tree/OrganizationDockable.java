@@ -166,7 +166,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         participantMenu.add(deleteParticipant);
         participantMenu.add(new JSeparator());
         participantMenu.add(lockItem);
-        
+
+        // TODO add actions menu items dynamically
         for (Stage stage : organization.getStages()) {
             JMenu stageActions = new JMenu(stage.getName());
             for (StageAction action : stage.getActions()) {
@@ -175,7 +176,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         DefaultMutableTreeNode selected
-                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                                = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
                         Participant p = (Participant) selected.getUserObject();
                         action.init(organization, p, stage);
                     }
@@ -189,19 +190,17 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             @Override
             public void mouseReleased(MouseEvent event) {
                 if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
-                    
+
                     JComponent source = (JComponent) event.getSource();
                     int x = event.getX();
                     int y = event.getY();
-                    
+
                     int row = tree.getRowForLocation(event.getX(), event.getY());
-                    
-                    
+
                     tree.setSelectionRow(row);
                     DefaultMutableTreeNode selected
                             = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-                    
                     if (row == -1) {
                         projectMenu.show(source, x, y);
                     } else if (selected.equals(participantsNode)) {
@@ -210,7 +209,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                         projectMenu.show(source, x, y);
                     } else if (selected.getUserObject() instanceof Participant) {
                         Participant p = (Participant) selected.getUserObject();
-                        if (p.isLocked) {                            
+                        if (p.isLocked) {
                             lockItem.setText("Unlock");
                         } else {
                             lockItem.setText("Lock");
@@ -239,7 +238,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                     } else if (selected.getUserObject() instanceof PluginConfigPair) {
                         JPopupMenu menu = new JPopupMenu("Config");
 
-                    } 
+                    }
                 }
             }
 
@@ -253,7 +252,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                     tree.setSelectionRow(row);
                     DefaultMutableTreeNode selected
                             = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                    
+
                     if (selected.getUserObject() instanceof Participant) {
                         editParticipant();
                     }
@@ -273,7 +272,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     private void insertNodeInParent(DefaultMutableTreeNode parent, DefaultMutableTreeNode node) {
         parent.add(node);
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        model.nodesWereInserted(parent, new int[]{ model.getIndexOfChild(parent, node) });
+        model.nodesWereInserted(parent, new int[]{model.getIndexOfChild(parent, node)});
         TreePath p = new TreePath(model.getPathToRoot(node));
         tree.expandPath(p.getParentPath());
     }
@@ -283,8 +282,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         DefaultMutableTreeNode selectedNode
                 = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-        if (selectedNode.getUserObject() != null && 
-                selectedNode.getUserObject() instanceof Participant) {
+        if (selectedNode.getUserObject() != null
+                && selectedNode.getUserObject() instanceof Participant) {
 
             Participant selected = (Participant) selectedNode.getUserObject();
             ParticipantDialog dialog = new ParticipantDialog(organization, selected);
@@ -327,6 +326,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         organization.store();
 
         stageNodes.add(newNode);
+        System.out.println(stage);
     }
 
     public String getProjectPath() {

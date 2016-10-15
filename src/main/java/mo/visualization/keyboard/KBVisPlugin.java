@@ -1,4 +1,4 @@
-package mo.visualization.mouse;
+package mo.visualization.keyboard;
 
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
@@ -20,23 +20,22 @@ import mo.visualization.VisualizationProvider;
 
 @Extension(
         xtends = {
-            @Extends(extensionPointId = "mo.visualization.VisualizationProvider")
+            @Extends(
+                    extensionPointId = "mo.visualization.VisualizationProvider"
+            )
         }
 )
-public class MouseVisPlugin implements VisualizationProvider {
-    
-    private final static String PLUGIN_NAME = "Mouse Visualization";
-    
-    private List<Configuration> configurations;
-    
-    private static final Logger logger = Logger.getLogger(MouseVisPlugin.class.getName());
+public class KBVisPlugin implements VisualizationProvider {
 
-    public MouseVisPlugin() {
-        configurations = new ArrayList<>();
+    private final static String PLUGIN_NAME = "Keyboard Visualization";
+    
+    List<Configuration> configs;
+    private static final Logger logger = Logger.getLogger(KBVisPlugin.class.getCanonicalName());
+
+    public KBVisPlugin() {
+        configs = new ArrayList<>();
     }
     
-    
-
     @Override
     public String getName() {
         return PLUGIN_NAME;
@@ -44,12 +43,12 @@ public class MouseVisPlugin implements VisualizationProvider {
 
     @Override
     public Configuration initNewConfiguration(ProjectOrganization organization) {
-        MouseVisConfigDialog d = new MouseVisConfigDialog(organization);
+        KBDialog d = new KBDialog(organization);
         
         if (d.showDialog()) {
-            MouseVisConfiguration c = new MouseVisConfiguration();
-            c.id = d.getConfigurationName();
-            configurations.add(c);
+            KBVisConfig c = new KBVisConfig();
+            c.setId(d.getConfigurationName());
+            configs.add(c);
             return c;
         }
         
@@ -58,22 +57,22 @@ public class MouseVisPlugin implements VisualizationProvider {
 
     @Override
     public List<Configuration> getConfigurations() {
-        return configurations;
+        return configs;
     }
 
     @Override
     public StagePlugin fromFile(File file) {
         if (file.isFile()) {
             try {
-                MouseVisPlugin mc = new MouseVisPlugin();
+                KBVisPlugin mc = new KBVisPlugin();
                 XElement root = XIO.readUTF(new FileInputStream(file));
                 XElement[] pathsX = root.getElements("path");
                 for (XElement pathX : pathsX) {
                     String path = pathX.getString();
-                    MouseVisConfiguration c = new MouseVisConfiguration();
+                    KBVisConfig c = new KBVisConfig();
                     Configuration config = c.fromFile(new File(file.getParentFile(), path));
                     if (config != null) {
-                        mc.configurations.add(config);
+                        mc.configs.add(config);
                     }
                 }
                 return mc;
@@ -86,7 +85,7 @@ public class MouseVisPlugin implements VisualizationProvider {
 
     @Override
     public File toFile(File parent) {
-        File file = new File(parent, "mouse-visualization.xml");
+        File file = new File(parent, "keyboard-visualization.xml");
         if (!file.isFile()) {
             try {
                 file.createNewFile();
@@ -95,8 +94,8 @@ public class MouseVisPlugin implements VisualizationProvider {
             }
         }
         XElement root = new XElement("vis");
-        for (Configuration config : configurations) {
-            File p = new File(parent, "mouse-visualization");
+        for (Configuration config : configs) {
+            File p = new File(parent, "keyboard-visualization");
             p.mkdirs();
             File f = config.toFile(p);
 

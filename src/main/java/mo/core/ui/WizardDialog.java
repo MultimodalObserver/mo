@@ -6,11 +6,13 @@ import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -35,6 +37,8 @@ public class WizardDialog extends JDialog {
     private final JLabel stepTitleLabel;
     private int currentStepIndex = 0;
 
+    private List<WizardListener> listeners;
+
     Font defFont = (new JLabel()).getFont();
     Font boldFont = new Font(defFont.getName(), Font.BOLD, defFont.getSize());
 
@@ -44,6 +48,7 @@ public class WizardDialog extends JDialog {
         this.panels = new ArrayList<>();
         result = new HashMap<>();
         stepsLabels = new ArrayList<>();
+        listeners = new ArrayList<>();
 
         //setLayout(new BoxLayout(dialogPanel, BoxLayout.LINE_AXIS));
         JLabel stepsLabel = new JLabel("Steps", JLabel.LEFT);
@@ -150,6 +155,12 @@ public class WizardDialog extends JDialog {
                 result = null;
             }
         });
+    }
+
+    private void notifyListeners() {
+        for (WizardListener listener : listeners) {
+            listener.onStepChanged();
+        }
     }
 
     public void addPanel(JPanel panel) {
@@ -263,13 +274,21 @@ public class WizardDialog extends JDialog {
     }
 
     public void showNextPanel() {
+        int old = currentStepIndex;
         incrementCurrentStepIndex();
         showPanel(currentStepIndex);
+        if (old != currentStepIndex) {
+            notifyListeners();
+        }
     }
 
     public void showPrevPanel() {
+        int old = currentStepIndex;
         decrementCurrentStepIndex();
         showPanel(currentStepIndex);
+        if (old != currentStepIndex) {
+            notifyListeners();
+        }
     }
 
     public void setWarningMessage(String message) {
@@ -292,5 +311,19 @@ public class WizardDialog extends JDialog {
         if (currentStepIndex < 0) {
             currentStepIndex = 0;
         }
+    }
+
+    public int getCurrentStep() {
+        return currentStepIndex;
+    }
+
+    public void addActionListener(WizardListener listener) {
+        listeners.add(listener);
+
+    }
+
+    public interface WizardListener {
+
+        void onStepChanged();
     }
 }

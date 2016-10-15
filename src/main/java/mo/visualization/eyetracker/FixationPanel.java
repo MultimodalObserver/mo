@@ -1,4 +1,4 @@
-package mo.visualization.test;
+package mo.visualization.eyetracker;
 
 import com.theeyetribe.clientsdk.data.GazeData;
 import com.theeyetribe.clientsdk.data.Point2D;
@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
+import mo.visualization.test.Gradient;
 
 public class FixationPanel extends JPanel {
 

@@ -269,7 +269,7 @@ public class EEGPlayer implements Playable {
             long sleep = (long) ((next.time - current.time) / speed);
 
             current = next;
-            if (sleep >= 0) {
+            if (sleep > 0) {
                 try {
                     Thread.sleep(sleep);
                 } catch (InterruptedException ex) {

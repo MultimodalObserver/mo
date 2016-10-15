@@ -20,6 +20,8 @@ import javax.swing.JFrame;
 import static javax.swing.JFrame.EXIT_ON_CLOSE;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
 import mo.visualization.Playable;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
@@ -29,44 +31,74 @@ public class MousePlayer implements Playable {
     private long currentTime, start, end;
     private boolean isPlaying = false;
 
-    private RandomAccessFile raf;
+    private RandomAccessFile file;
 
     private TestPane pane;
 
     private MouseEvent currentEvent;
-    
+
+    private Thread thread;
+
     private static final Logger logger = Logger.getLogger(MousePlayer.class.getName());
+    private long timeToSleep;
 
     public MousePlayer(File file) {
         try {
-            raf = new RandomAccessFile(file, "r");
-            String line = raf.readLine();
+            this.file = new RandomAccessFile(file, "r");
 
+            String line = this.file.readLine();
             List<Rectangle> bounds = parseScreens(line);
-            pane = new TestPane(bounds);
-            
+
             ReversedLinesFileReader rev = new ReversedLinesFileReader(file, Charset.defaultCharset());
             String lastLine = null;
             do {
                 lastLine = rev.readLine();
-            } while ( lastLine == null && lastLine.trim().isEmpty() );
+                if (lastLine == null) {
+                    break;
+                }
+            } while (lastLine.trim().isEmpty());
             rev.close();
+
             MouseEvent lastEvent = parseEventFromLine(lastLine);
             if (lastEvent != null) {
                 end = lastEvent.time;
             }
-            
 
-            line = raf.readLine();
-            if (line != null) {
-                currentEvent = parseEventFromLine(line);
+            currentEvent = readNextEventFromFile();
+            if (currentEvent != null) {
                 start = currentEvent.time;
             }
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    pane = new TestPane(bounds);
+                    DockableElement e = new DockableElement();
+                    e.add(pane);
+                    DockablesRegistry.getInstance().addAppWideDockable(e);
+
+                    System.out.println(start + " " + end + " " + currentEvent);
+                }
+            });
+
         } catch (FileNotFoundException ex) {
             logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+    }
+
+    private MouseEvent readNextEventFromFile() {
+        String line;
+        try {
+            line = file.readLine();
+            if (line != null) {
+                return parseEventFromLine(line);
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
@@ -80,102 +112,125 @@ public class MousePlayer implements Playable {
     }
 
     @Override
-    public void seek(long millis) {
+    public void seek(long desiredMillis) {
+        if (desiredMillis < start) {
+            seek(start);
+            timeToSleep = start - desiredMillis;
+            if (isPlaying) {
+                play();
+            }
+            return;
+        }
+
+        if (desiredMillis > end) {
+            seek(end);
+            isPlaying = false;
+            return;
+        }
+
         boolean playing = isPlaying;
 
         if (isPlaying) {
             isPlaying = false;
         }
 
-        if (millis < currentEvent.time) {
+        MouseEvent event = currentEvent;
+
+        if (desiredMillis < currentEvent.time) {
             try {
-                raf.seek(0);
-                raf.readLine();
-                String line = raf.readLine();
-                if (line != null) {
-                    currentEvent = parseEventFromLine(line);
-                }
-                while (!(currentEvent.time <= millis)) {
-                    try {
-                        String line2 = raf.readLine();
-                        MouseEvent next;
-                        if (line2 != null) {
-                            next = parseEventFromLine(line);
-                            if (next.time < millis) {
-                                currentEvent = next;
-                            } else if (next.time >= millis) {
-                                break;
-                            }
-                        }
-                    } catch (IOException ex) {
-                        logger.log(Level.SEVERE, null, ex);
-                    }
-                }
+                file.seek(0);
+                file.readLine(); // first line contains screens
+
+                event = readNextEventFromFile();
+
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
-        } else if (currentEvent.time < millis) {
-            System.out.println("mayor");
-            while (!(currentEvent.time > millis)) {
-                System.out.println("while");
-                try {
-                    String line = raf.readLine();
-                    MouseEvent next;
-                    if (line != null) {
-                        next = parseEventFromLine(line);
-                        if (next.time <= millis) {
-                            currentEvent = next;
-                        } else if (next.time > millis) {
-                            break;
-                        }
-                    }
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-            }
         }
 
-        isPlaying = playing;
+        long marker;
+        try {
+            marker = file.getFilePointer();
+
+            MouseEvent next = readNextEventFromFile();
+            if (next == null) {
+                return;
+            }
+
+            while (!(next.time > desiredMillis)) {
+                event = next;
+
+                marker = file.getFilePointer();
+                next = readNextEventFromFile();
+            }
+
+            file.seek(marker);
+            currentEvent = event;
+            timeToSleep = desiredMillis - currentEvent.time;
+            //return;
+
+            isPlaying = playing;
+            if (isPlaying) {
+                play();
+            }
+
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
     public void play() {
         isPlaying = true;
-        MouseEvent nextEvent = null;
-        while (isPlaying) {
-            try {
-                if (currentEvent == null) {
-                    String line = raf.readLine();
-                    if (line != null) {
-                        currentEvent = parseEventFromLine(line);
+
+        thread = new Thread() {
+            @Override
+            public void run() {
+                if (timeToSleep > 0) {
+                    try {
+                        sleep(timeToSleep);
+                    } catch (InterruptedException ex) {
+                        logger.log(Level.SEVERE, null, ex);
                     }
                 }
+                timeToSleep = 0;
 
-                String line2 = raf.readLine();
-                if (line2 != null) {
-                    nextEvent = parseEventFromLine(line2);
-                } else {
-                    System.exit(0);
+                MouseEvent nextEvent = null;
+                while (isPlaying) {
+                    nextEvent = readNextEventFromFile();
+                    if (currentEvent == null || nextEvent == null) {
+                        isPlaying = false;
+                        interrupt();
+
+                        System.out.println("No more data in file");
+                        return;
+                    }
+                    
+                    SwingUtilities.invokeLater(new Runnable(){
+                        @Override
+                        public void run() {
+                            pane.display(currentEvent);
+                        }
+                    });
+                    
+                    long sleepTime = (long) ((nextEvent.time - currentEvent.time) / speed);
+                    currentEvent = nextEvent;
+                    if (sleepTime > 0) {
+                        try {
+                            sleep(sleepTime);
+                        } catch (InterruptedException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    }
                 }
-
-                pane.display(currentEvent);
-                long sleep = (long) ((nextEvent.time - currentEvent.time) / speed);
-                currentEvent = nextEvent;
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
-
-            } catch (IOException ex) {
-                logger.log(Level.SEVERE, null, ex);
             }
 
-        }
+        };
+        thread.start();
     }
 
     private MouseEvent parseEventFromLine(String line) {
-        if (line.contains(",")) {
+        if (line != null && line.contains(",")) {
             MouseEvent e = new MouseEvent();
             int index = line.indexOf(",");
             String when = line.substring(0, index);
@@ -243,6 +298,12 @@ public class MousePlayer implements Playable {
         int x, y, clickCount, button;
         long time;
         MouseEventType type;
+
+        @Override
+        public String toString() {
+            return time + " (" + x + "," + y + ") " + type.name() + " " + button;
+        }
+
     }
 
     @Override
@@ -346,30 +407,6 @@ public class MousePlayer implements Playable {
             for (Rectangle screen : screens) {
                 virtualBounds.add(screen);
             }
-//            Timer timer = new Timer(20, new ActionListener() {
-//                @Override
-//                public void actionPerformed(ActionEvent e) {
-////                    PointerInfo pi = MouseInfo.getPointerInfo();
-////
-////                    Point mp = pi.getLocation();
-////
-////                    Rectangle bounds = getDeviceBounds(pi.getDevice());
-////
-////                    screenPoint = new Point(mp);
-////                    virtualPoint = screenPoint;
-////                    virtualPoint.x -= bounds.x;
-////                    virtualPoint.y -= bounds.y;
-////                    if (virtualPoint.x < 0) {
-////                        virtualPoint.x *= -1;
-////                    }
-////                    if (virtualPoint.y < 0) {
-////                        virtualPoint.y *= -1;
-////                    }
-//                    repaint();
-//
-//                }
-//            });
-//            timer.start();
         }
 
         @Override
@@ -424,7 +461,7 @@ public class MousePlayer implements Playable {
                 int x = 0;
                 int y = fm.getAscent();
 
-                g2d.drawString(screenPoint.x+","+screenPoint.y, x, y);
+                g2d.drawString(screenPoint.x + "," + screenPoint.y, x, y);
                 screenPoint.x += xOffset;
                 screenPoint.y += yOffset;
                 screenPoint.x *= scale;
