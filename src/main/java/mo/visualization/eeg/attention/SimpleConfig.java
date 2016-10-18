@@ -1,4 +1,4 @@
-package mo.visualization.eyetracker;
+package mo.visualization.eeg.attention;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,20 +9,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
 import mo.visualization.VisualizableConfiguration;
-import mo.visualization.keyboard.KBVisConfig;
+import mo.visualization.eyetracker.FixationConfig;
 
-public class FixationConfig implements VisualizableConfiguration {
-    private final String[] creators = {"mo.capture.eyetribe.EyeTribeRecorder"};
-    private List<File> files;
-    private String id;
-    private EyeTribeFixPlayer player;
+public class SimpleConfig implements VisualizableConfiguration {
     
-    private static final Logger logger = Logger.getLogger(FixationConfig.class.getName());
+    private String id;
+    private String[] creators;
+    private List<File> files;
 
-    public FixationConfig() {
-        files = new ArrayList<>();
+    private static final Logger logger 
+            = Logger.getLogger(SimpleConfig.class.getName());
+
+    public SimpleConfig(String id, String[] creators) {
+        this.id = id;
+        this.creators = creators;
+        this.files = new ArrayList<>();
     }
-
+    
     @Override
     public List<String> getCompatibleCreators() {
         return Arrays.asList(creators);
@@ -41,14 +44,20 @@ public class FixationConfig implements VisualizableConfiguration {
             files.remove(file);
         }
     }
-    
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
     @Override
     public File toFile(File parent) {
-        File f = new File(parent, "eyeFixation-visualization_"+id+".xml");
+        File f = new File(parent, ""+"_"+id+".xml");
         try {
             f.createNewFile();
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
+            return null;
         }
         return f;
     }
@@ -59,61 +68,41 @@ public class FixationConfig implements VisualizableConfiguration {
 
         if (fileName.contains("_") && fileName.contains(".")) {
             String name = fileName.substring(fileName.indexOf("_")+1, fileName.lastIndexOf("."));
-            FixationConfig config = new FixationConfig();
-            config.id = name;
-            return config;
+//            SimpleConfig config = new SimpleConfig();
+//            config.id = name;
+//            return config;
         }
         return null;
     }
 
-    private void ensurePlayerExistence() {
-        if (player == null) {
-            player = new EyeTribeFixPlayer(files.get(0));
-        }
-    }
-    
-    public void setId(String id) {
-        this.id = id;
-    }
-    
-    @Override
-    public String getId() {
-        return id;
-    }
-
     @Override
     public void setSpeed(double factor) {
-        ensurePlayerExistence();
-        player.setSpeed(factor);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void pause() {
-        ensurePlayerExistence();
-        player.pause();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void seek(long millis) {
-        ensurePlayerExistence();
-        player.seek(millis);
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public long getStart() {
-        ensurePlayerExistence();
-        return player.getStart();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public long getEnd() {
-        ensurePlayerExistence();
-        return player.getEnd();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public void play() {
-        ensurePlayerExistence();
-        player.play();
+        throw new UnsupportedOperationException("Not supported yet.");
     }
+    
 }

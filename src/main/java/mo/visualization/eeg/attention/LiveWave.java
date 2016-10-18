@@ -1,4 +1,4 @@
-package mo.visualization.test;
+package mo.visualization.eeg.attention;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -61,7 +61,7 @@ public class LiveWave extends JPanel {
         });
         
         int start = randInt(0,100);
-        long sleep = 0;
+        long sleep = 500;
         while(true) {
             
             //w.addData("test", next(start));
@@ -119,11 +119,7 @@ public class LiveWave extends JPanel {
         int inverted = height - mappedValue;
         
         graphics.setColor(v.color);
-        
-        
 
-        
-        
         int x = width-whiteSpaceWidth;
         int y = inverted;
         
@@ -147,8 +143,7 @@ public class LiveWave extends JPanel {
         if (timeWidth < whiteSpaceWidth) {
             graphics.drawString(time, width - timeWidth, height - 20);
         } 
-        
-        
+
         repaint();
     }
 
@@ -175,13 +170,13 @@ public class LiveWave extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         
-        int width = this.getWidth();
-        int height = this.getHeight();
+        int w = this.getWidth();
+        int h = this.getHeight();
         
         g.drawImage(image,
                 1, 1,
-                width - 0,
-                height - 0,
+                w - 0,
+                h - 0,
                 0, 0,
                 image.getWidth(), image.getHeight(),
                 null);

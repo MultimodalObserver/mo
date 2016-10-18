@@ -206,9 +206,9 @@ public class FixationPanel extends JPanel {
         // is very fast, and is much faster than the previous version, which 
         // redrew the data plot each time we had to repaint the screen.
         g2d.drawImage(image,
-                31, 31,
-                width - 30,
-                height - 30,
+                1, 1,
+                width ,
+                height ,
                 0, 0,
                 image.getWidth(), image.getHeight(),
                 null);

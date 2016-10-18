@@ -1,4 +1,5 @@
-package mo.visualization.eyetracker;
+package mo.visualization.eeg.attention;
+
 
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
@@ -17,6 +18,8 @@ import mo.organization.Configuration;
 import mo.organization.ProjectOrganization;
 import mo.organization.StagePlugin;
 import mo.visualization.VisualizationProvider;
+import mo.visualization.eyetracker.EyeTribeFixPlugin;
+import mo.visualization.eyetracker.FixationConfig;
 
 @Extension(
         xtends = {
@@ -25,30 +28,33 @@ import mo.visualization.VisualizationProvider;
             )
         }
 )
-public class EyeTribeFixPlugin implements VisualizationProvider {
+public class EEGAttPlugin implements VisualizationProvider {
 
-    private final static String PLUGIN_NAME = "Eye Fixation Visualization";
+    private static final String NAME = "EEG Att Visualization";
     
-    List<Configuration> configs;
-    private static final Logger logger = Logger.getLogger(EyeTribeFixPlugin.class.getName());
+    private List<Configuration> configurations;
+    
+    private final static Logger logger = Logger.getLogger(EEGAttPlugin.class.getName());
 
-    public EyeTribeFixPlugin() {
-        configs = new ArrayList<>();
+    public EEGAttPlugin() {
+        configurations = new ArrayList<>();
     }
+    
+    
     
     @Override
     public String getName() {
-        return PLUGIN_NAME;
+        return NAME;
     }
 
     @Override
     public Configuration initNewConfiguration(ProjectOrganization organization) {
-        ConfigDialog d = new ConfigDialog(organization);
+        AttConfigDialog d = new AttConfigDialog(organization);
         
         if (d.showDialog()) {
-            FixationConfig c = new FixationConfig();
+            AttConfig c = new AttConfig();
             c.setId(d.getConfigurationName());
-            configs.add(c);
+            configurations.add(c);
             return c;
         }
         
@@ -57,22 +63,22 @@ public class EyeTribeFixPlugin implements VisualizationProvider {
 
     @Override
     public List<Configuration> getConfigurations() {
-        return configs;
+        return configurations;
     }
 
     @Override
     public StagePlugin fromFile(File file) {
         if (file.isFile()) {
             try {
-                EyeTribeFixPlugin mc = new EyeTribeFixPlugin();
+                EEGAttPlugin mc = new EEGAttPlugin();
                 XElement root = XIO.readUTF(new FileInputStream(file));
                 XElement[] pathsX = root.getElements("path");
                 for (XElement pathX : pathsX) {
                     String path = pathX.getString();
-                    FixationConfig c = new FixationConfig();
+                    AttConfig c = new AttConfig();
                     Configuration config = c.fromFile(new File(file.getParentFile(), path));
                     if (config != null) {
-                        mc.configs.add(config);
+                        mc.configurations.add(config);
                     }
                 }
                 return mc;
@@ -85,7 +91,7 @@ public class EyeTribeFixPlugin implements VisualizationProvider {
 
     @Override
     public File toFile(File parent) {
-        File file = new File(parent, "fixation-visualization.xml");
+        File file = new File(parent, "attention-visualization.xml");
         if (!file.isFile()) {
             try {
                 file.createNewFile();
@@ -94,8 +100,8 @@ public class EyeTribeFixPlugin implements VisualizationProvider {
             }
         }
         XElement root = new XElement("vis");
-        for (Configuration config : configs) {
-            File p = new File(parent, "fixation-visualization");
+        for (Configuration config : configurations) {
+            File p = new File(parent, "attention-visualization");
             p.mkdirs();
             File f = config.toFile(p);
 

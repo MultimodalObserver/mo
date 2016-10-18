@@ -1,4 +1,4 @@
-package mo.visualization.test;
+package mo.visualization.eeg.attention;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -14,32 +14,49 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
 import mo.visualization.Playable;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 public class EEGPlayer implements Playable {
 
-    private double speed = 2;
-    private long currentTime, start, end;
+    private double speed = 1;
+    private long timeToSleep, start, end;
     private boolean isPlaying = false;
 
-    private RandomAccessFile raf;
+    private RandomAccessFile file;
 
     private EEGData current;
     LiveWave wave;
     
     int count = 0;
+    
+    private Thread thread;
 
     private static final Logger logger = Logger.getLogger(EEGPlayer.class.getName());
 
     public EEGPlayer(File file) {
         try {
             readLastTime(file);
-            raf = new RandomAccessFile(file, "r");
+            this.file = new RandomAccessFile(file, "r");
             current = next();
             start = current.time;
-            wave = new LiveWave();
-            wave.addVariable("Att", 0, 100, Color.blue);
+            
+            SwingUtilities.invokeLater(new Runnable() {
+            @Override
+                public void run() {
+                    wave = new LiveWave();
+                    wave.addVariable("Att", 0, 100, Color.blue);
+                    DockableElement d = new DockableElement();
+                    d.add(wave);
+                    DockablesRegistry.getInstance().addDockableInProjectGroup("", d);                
+                }
+            });
+            
+//            wave = new LiveWave();
+//            wave.addVariable("Att", 0, 100, Color.blue);
+
 
         } catch (FileNotFoundException ex) {
             logger.log(Level.SEVERE, null, ex);
@@ -50,9 +67,9 @@ public class EEGPlayer implements Playable {
         try {
             EEGData data = new EEGData();
 
-            String line = raf.readLine();          
+            String line = file.readLine();          
             while (line.contains("Eyeblink")) { //ignore eyeblink records
-                line = raf.readLine();
+                line = file.readLine();
             }
 
             int ind = line.lastIndexOf("#");
@@ -60,34 +77,34 @@ public class EEGPlayer implements Playable {
 
             data.poorSignal = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.delta = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.theta = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.alpha1 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.alpha2 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.beta1 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.beta2 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.gamma1 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.gamma2 = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.attention = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
 
-            line = raf.readLine();
+            line = file.readLine();
             data.meditation = Integer.parseInt(line.substring(line.lastIndexOf(":") + 1).trim());
             
             count++;
@@ -191,92 +208,126 @@ public class EEGPlayer implements Playable {
     }
 
     @Override
-    public void seek(long millis) {
+    public void seek(long requestedMillis) {
+        if (requestedMillis < start) {
+            seek(start);
+            timeToSleep = start - requestedMillis;
+            if (isPlaying) {
+                play();
+            }
+            return;
+        }
+
+        if (requestedMillis > end) {
+            seek(end);
+            isPlaying = false;
+            return;
+        }
+
         boolean playing = isPlaying;
 
         if (isPlaying) {
             isPlaying = false;
         }
 
-//        if (millis < currentEvent.time) {
-//            try {
-//                raf.seek(0);
-//                raf.readLine();
-//                String line = raf.readLine();
-//                if (line != null) {
-//                    currentEvent = parseEventFromLine(line);
-//                }
-//                while (!(currentEvent.time <= millis)) {
-//                    try {
-//                        String line2 = raf.readLine();
-//                        MouseEvent next;
-//                        if (line2 != null) {
-//                            next = parseEventFromLine(line);
-//                            if (next.time < millis) {
-//                                currentEvent = next;
-//                            } else if (next.time >= millis) {
-//                                break;
-//                            }
-//                        }
-//                    } catch (IOException ex) {
-//                        logger.log(Level.SEVERE, null, ex);
-//                    }
-//                }
-//            } catch (IOException ex) {
-//                logger.log(Level.SEVERE, null, ex);
-//            }
-//        } else if (currentEvent.time < millis) {
-//            System.out.println("mayor");
-//            while (!(currentEvent.time > millis)) {
-//                System.out.println("while");
-//                try {
-//                    String line = raf.readLine();
-//                    MouseEvent next;
-//                    if (line != null) {
-//                        next = parseEventFromLine(line);
-//                        if (next.time <= millis) {
-//                            currentEvent = next;
-//                        } else if (next.time > millis) {
-//                            break;
-//                        }
-//                    }
-//                } catch (IOException ex) {
-//                    logger.log(Level.SEVERE, null, ex);
-//                }
-//            }
-//        }
-//
-//        isPlaying = playing;
+        EEGData res = current;
+
+        if (requestedMillis < res.time) {
+            try {
+                file.seek(0);
+                res = next();
+
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+
+        long marker;
+        try {
+            marker = file.getFilePointer();
+
+            EEGData next = next();
+            if (next == null) {
+                return;
+            }
+
+            while (!(next.time > requestedMillis)) {
+                res = next;
+
+                marker = file.getFilePointer();
+                next = next();
+            }
+
+            file.seek(marker);
+            current = res;
+            timeToSleep = requestedMillis - current.time;
+
+            isPlaying = playing;
+            if (isPlaying) {
+                play();
+            }
+
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
     public void play() {
         isPlaying = true;
-        EEGData next = null;
-        while (isPlaying) {
-
-            if (current == null) {
-                current = next();
-            }
-
-            next = next();
-            if (next == null) {
-                System.exit(0);
-            }
-
-            wave.addData("Att", current.time, current.attention);
-
-            long sleep = (long) ((next.time - current.time) / speed);
-
-            current = next;
-            if (sleep > 0) {
-                try {
-                    Thread.sleep(sleep);
-                } catch (InterruptedException ex) {
-                    logger.log(Level.SEVERE, null, ex);
+        
+        thread = new Thread() {
+            @Override
+            public void run() {
+                
+                if (timeToSleep > 0) {
+                    try {
+                        sleep(timeToSleep);
+                    } catch (InterruptedException ex) {
+                        logger.log(Level.SEVERE, null, ex);
+                    }
                 }
-            }
-        }
+                timeToSleep = 0;
+                
+                EEGData next = null;
+                while (isPlaying) {
+
+                    if (current == null) {
+                        current = next();
+                    }
+
+                    next = next();
+                    
+                    if (current == null || next == null) {
+                        System.out.println("no more KB events");
+                        isPlaying = false;
+                        interrupt();
+                        return;
+                    }
+                    
+                    SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                wave.addData("Att", current.time, current.attention);
+                            }
+                        });
+
+                    long sleep = (long) ((next.time - current.time) / speed);
+
+                    current = next;
+                    if (sleep > 0) {
+                        try {
+                            Thread.sleep(sleep);
+                        } catch (InterruptedException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }  
+        };
+        
+        thread.start();
+        
     }
 
     class EEGData {
