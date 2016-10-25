@@ -2,19 +2,11 @@ package mo.core.plugin;
 
 import com.github.zafarkhaja.semver.Version;
 import mo.core.utils.Utils;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
@@ -31,7 +23,7 @@ public class PluginRegistry {
 
     private final List<Plugin> plugins;
 
-    private final static String PLUGINS_FOLDER
+    private final static String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
 
     private final static String APP_PACKAGE = "mo/";
@@ -44,30 +36,39 @@ public class PluginRegistry {
 
     //private final Map<String, Listeners>;
     private final List<ExtPoint> extensionPoints;
+    
+    private final HashMap<String, List<PluginListener>> pluginListeners;
 
-    private final static Logger LOGGER
+    private final static Logger logger
             = Logger.getLogger(PluginRegistry.class.getName());
 
     private PluginRegistry() {
         plugins = new ArrayList<>();
         pluginFolders = new ArrayList<>();
         extensionPoints = new ArrayList<>();
-        File file = new File(PLUGINS_FOLDER);
-        if (!file.isDirectory()) {
-            if (file.mkdir()) {
-                pluginFolders.add(PLUGINS_FOLDER);
+        pluginListeners = new HashMap<>();
+        dirWatcher = new DirectoryWatcher();
+        File folder = new File(pluginsFolder);
+        if (!folder.isDirectory()) {
+            if (!folder.mkdir()) {
+                logger.log(
+                        Level.WARNING, 
+                        "Can not create plugins folder \"{0}\"", pluginsFolder);
             }
         }
-
-        dirWatcher = new DirectoryWatcher();
-        dirWatcher.addDirectory((new File(PLUGINS_FOLDER)).toPath(), true);
+        
+        pluginFolders.add(pluginsFolder);
+        dirWatcher.addDirectory(folder.toPath(), true);
+        
     }
 
     public synchronized static PluginRegistry getInstance() {
         if (pg == null) {
             pg = new PluginRegistry();
+            
             //look for plugins in app jar
             pg.processAppJar();
+            
             //look for plugins in folders
             pg.processPluginFolders();
 
@@ -79,7 +80,7 @@ public class PluginRegistry {
                             try (FileInputStream in = new FileInputStream(file)) {
                                 pg.processClassAsInputStream(in);
                             } catch (IOException ex) {
-                                LOGGER.log(Level.SEVERE, null, ex);
+                                logger.log(Level.SEVERE, null, ex);
                             }
                         } else if (file.getName().endsWith(".jar")) {
                             pg.processJarFile(file);
@@ -117,7 +118,7 @@ public class PluginRegistry {
         if (jarFile.getName().endsWith(".jar")) {
             processJarFile(jarFile, packages);
         } else {
-            // working only with classes (Netbeans)
+            // working only with classes (development)(Netbeans)
             pluginFolders.add(0, jarFile.getAbsolutePath());
         }
     }
@@ -136,19 +137,19 @@ public class PluginRegistry {
             }
 
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
-    public void processJarFile(String jarFilePath) {
+    private void processJarFile(String jarFilePath) {
         processJarFile(new File(jarFilePath));
     }
 
-    public void processJarFile(File jar) {
+    private void processJarFile(File jar) {
         processJarFile(jar, null);
     }
 
-    public void processJarFile(File jar, String[] packages) {
+    private void processJarFile(File jar, String[] packages) {
 
         try (JarFile jarFile = new JarFile(jar)) {
             Enumeration entries = jarFile.entries();
@@ -172,7 +173,7 @@ public class PluginRegistry {
                 }
             }
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
 
     }
@@ -186,7 +187,7 @@ public class PluginRegistry {
 
             Version v = Version.valueOf(plugins.get(i).getVersion());
 
-            if (newId.compareTo(plugins.get(i).getId()) == 0
+            if (newId.equals(plugins.get(i).getId())
                     && newVersion.getMajorVersion() == v.getMajorVersion()
                     && newVersion.getMinorVersion() == v.getMinorVersion()) {
                 toReplace = i;
@@ -196,13 +197,29 @@ public class PluginRegistry {
 
         if (toReplace > -1) {
             plugins.set(toReplace, plugin);
+            for (Dependency dependency : plugin.getDependencies()) {
+                if (pluginListeners.containsKey(dependency.getId())) {
+                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
+                        pluginListener.pluginUpdated(plugin);
+                    }
+                }
+            }
         } else {
             plugins.add(plugin);
+            for (Dependency dependency : plugin.getDependencies()) {
+                if (pluginListeners.containsKey(dependency.getId())) {
+                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
+                        pluginListener.pluginAdded(plugin);
+                    }
+                }
+            }
         }
+        
+        //logger.log(Level.INFO,"Plugin added: {0}", plugin);
     }
 
     public List<Plugin> getPluginsFor(String extensionPointId) {
-        return getPluginsFor(extensionPointId, ">=0");
+        return getPluginsFor(extensionPointId, ">=0.0.0");
     }
 
     public List<Plugin> getPluginsFor(String extensionPointId, String version) {
@@ -210,25 +227,31 @@ public class PluginRegistry {
         
         String xpId = null;
         for (ExtPoint extensionPoint : extensionPoints) {
-            if (extensionPoint.getId().equals(extensionPointId))
-                xpId = extensionPoint.getId();
+            if (extensionPoint.getId().equals(extensionPointId)) {
+                Version v = Version.valueOf(extensionPoint.getVersion());
+                if (v.satisfies(version)) {
+                    xpId = extensionPoint.getId();
+                }
+            }
         }
         
         if (xpId == null) {
-            System.out.println("Id for extension point <"+extensionPointId+"> not found");
+            logger.log(Level.INFO, 
+                    "Id for extension point <{0}> not found", 
+                    extensionPointId );
             return result;
         }
             
         
         for (Plugin plugin : plugins) {
             for (Dependency dependency : plugin.getDependencies()) {
-                if (dependency.getId().compareTo(extensionPointId) == 0) {
+                if (dependency.getId().equals(extensionPointId)) {
                     result.add(plugin);
                     break;
                 }
             }
         }
-        System.out.println(result);
+
         return result;
     }
 
@@ -237,9 +260,9 @@ public class PluginRegistry {
     }
 
     private void processPluginFolders() {
-        pluginFolders.stream().forEach((pluginFolder) -> {
+        for (String pluginFolder : pluginFolders) {
             processFolder(pluginFolder);
-        });
+        }
     }
 
     private void processFolder(String pluginFolder) {
@@ -257,7 +280,7 @@ public class PluginRegistry {
                     urls.add(f.toURI().toURL());
                 }
             } catch (MalformedURLException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
 
@@ -272,7 +295,7 @@ public class PluginRegistry {
                     processClassAsInputStream(
                             new FileInputStream(file));
                 } catch (FileNotFoundException ex) {
-                    LOGGER.log(Level.SEVERE, null, ex);
+                    logger.log(Level.SEVERE, null, ex);
                 }
             } else if (file.getName().endsWith(".jar")) {
                 processJarFile(file);
@@ -302,19 +325,25 @@ public class PluginRegistry {
         return extensionPoints;
     }
 
-    public void suscribeToExtensioPoint(String extensionPointId) {
-
+    public void addPluginListener(String extensionPointId, PluginListener listener) {
+        if (!pluginListeners.containsKey(extensionPointId)) {
+            ArrayList<PluginListener> xpListeners = new ArrayList<>();
+            xpListeners.add(listener);
+            pluginListeners.put(extensionPointId, xpListeners);
+        } else {
+            pluginListeners.get(extensionPointId).add(listener);
+        }       
     }
 
-    public void suscribeToPlugin(String pluginId) {
-
+    public void removePluginListener(String extensionPointId, PluginListener listener) {
+        if (pluginListeners.containsKey(extensionPointId)) {
+            List l = pluginListeners.get(extensionPointId);
+            if (l.contains(listener)) {
+                l.remove(l);
+            }
+        }
     }
-
-    public static void main(String[] args) {
-        //iterateJars("");
-        //test();
-    }
-
+    
     private void addExtensionPoint(ExtPoint extPoint) {
         extensionPoints.add(extPoint);
     }

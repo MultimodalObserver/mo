@@ -31,7 +31,8 @@ repositories {
     }
     
     maven {
-        url  "http://dl.bintray.com/eyetribe/maven" 
+        url  "http://dl.bintray.com/eyetribe/maven"
+        url  "http://artifactory.autocrm.net/artifactory/repo"
     }
 }
 
@@ -83,6 +84,8 @@ dependencies {
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     
     compile 'com.theeyetribe:eyetribe-java:0.9.77'
+    
+    compile 'es.e-ucm:i18n:1.1.2-SNAPSHOT'
 }
 
 jar {
@@ -94,6 +97,7 @@ jar {
             //"Class-Path": "plugins${File.separator}"
         )
     }
+    
     from (configurations.compile.collect 
         { it.isDirectory() ? it : zipTree(it) }){
         // remove all signature files
@@ -101,12 +105,14 @@ jar {
         exclude "META-INF/*.DSA"
         exclude "META-INF/*.RSA"
     }
+    
     doLast{
-    project.file('build/libs/plugins').mkdirs()
-    copy{
-        from 'src/main/resources'
-        into 'build/libs'
-    }}
+        project.file('build/libs/plugins').mkdirs()
+        copy{
+            from 'src/main/resources'
+            into 'build/libs'
+        }
+    }
 }
 
 

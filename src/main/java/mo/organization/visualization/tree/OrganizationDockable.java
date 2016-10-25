@@ -430,16 +430,16 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         private DefaultTreeCellRenderer getRendererForParticipant(DefaultTreeCellRenderer c, Participant p) {
             if (p.isLocked) {
-                c.setIcon(Utils.createImageIcon("locked.png", getClass()));
+                c.setIcon(Utils.createImageIcon("images/locked.png", getClass()));
             } else {
-                c.setIcon(Utils.createImageIcon("unlocked.png", getClass()));
+                c.setIcon(Utils.createImageIcon("images/unlocked.png", getClass()));
             }
             c.setText(p.id + " " + p.name);
             return c;
         }
 
         private DefaultTreeCellRenderer getRendererForParticipants(DefaultTreeCellRenderer c) {
-            c.setIcon(Utils.createImageIcon("participants.png", getClass()));
+            c.setIcon(Utils.createImageIcon("images/participants.png", getClass()));
             return c;
         }
 

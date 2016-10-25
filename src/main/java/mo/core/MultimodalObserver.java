@@ -2,6 +2,7 @@ package mo.core;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static mo.core.Language.loadLocale;
 import mo.core.plugin.PluginRegistry;
 import mo.core.utils.Utils;
 
@@ -10,6 +11,8 @@ public class MultimodalObserver {
             Utils.getBaseFolder()+"/preferences.xml";
     
     private void nonStaticMain(String args[]){
+        loadLocale();
+        
         PluginRegistry.getInstance();
 
         MainWindow window = new MainWindow();

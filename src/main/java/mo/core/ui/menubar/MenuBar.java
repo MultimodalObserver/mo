@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import mo.core.I18n;
 
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
@@ -19,20 +20,32 @@ public class MenuBar extends JMenuBar {
     
     private final List<JMenuItem> menuItems;
     
+    private I18n inter;
+    
     private MenuBar() {
         super();
         menuItems = new ArrayList<>();
+        inter = new I18n(MenuBar.class);
     }
     
     private void init() {
-        JMenu m = new JMenu("File");
+        JMenu m = new JMenu();
+        m.setName("file");
+        m.setText(inter.s("MenuBar.fileMenu"));
         addItem(m, 0, null);
         
         //m = new JMenu("Window");
         //addItem(m, 1, null);
         
-        m = new JMenu("Plugins");
+        m = new JMenu();
+        m.setName("plugins");
+        m.setText(inter.s("MenuBar.pluginsMenu"));
         addItem(m, 2, null);
+        
+        m = new JMenu();
+        m.setName("options");
+        m.setText(inter.s("MenuBar.optionsMenu"));
+        addItem(m, 3, null);
     }
     
     public void setup() {

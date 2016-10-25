@@ -5,11 +5,8 @@ import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.annotations.XStreamAlias;
 import java.io.File;
 import java.util.HashSet;
+import java.util.Locale;
 
-/**
- *
- * @author Celso
- */
 @XStreamAlias("preferences")
 public class AppPreferencesWrapper {
     
@@ -27,7 +24,11 @@ public class AppPreferencesWrapper {
     
     private int frameHeight = 300;
     
+    private String localeCountry = Locale.getDefault().getCountry();
     
+    private String localeLanguage = Locale.getDefault().getLanguage();
+    
+    private String localeVariant = Locale.getDefault().getVariant();
     //@XStreamAlias("")
     
     public AppPreferencesWrapper(){
@@ -117,8 +118,31 @@ public class AppPreferencesWrapper {
     public void setFrameHeight(int frameHeight) {
         this.frameHeight = frameHeight;
     }
-    
-    
+
+    public String getLocaleCountry() {
+        return localeCountry;
+    }
+
+    public String getLocaleLanguage() {
+        return localeLanguage;
+    }
+
+    public void setLocaleCountry(String localeCountry) {
+        this.localeCountry = localeCountry;
+    }
+
+    public void setLocaleLanguage(String localeLanguage) {
+        this.localeLanguage = localeLanguage;
+    }
+
+    public void setLocaleVariant(String localeVariant) {
+        this.localeVariant = localeVariant;
+    }
+
+    public String getLocaleVariant() {
+        return localeVariant;
+    }
+     
     
     public static void main(String [] args){
         XStream x = new XStream();

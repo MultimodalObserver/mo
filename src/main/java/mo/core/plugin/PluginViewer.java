@@ -143,9 +143,9 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
 
         private final DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 
-        private Icon interfaceIcon = Utils.createImageIcon("interface.png", getClass());
+        private Icon interfaceIcon = Utils.createImageIcon("images/interface.png", getClass());
         
-        private Icon pluginIcon = Utils.createImageIcon("plugin.png", getClass());
+        private Icon pluginIcon = Utils.createImageIcon("images/plugin.png", getClass());
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {

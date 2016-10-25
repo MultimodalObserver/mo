@@ -22,6 +22,12 @@ public class RecordAction implements StageAction {
     private RecordDialog dialog;
     File storageFolder;
     boolean isPaused = false;
+    
+    private static final Image recImage
+            = Utils.createImageIcon("images/rec.png", RecordAction.class).getImage();
+    
+    private static final Image pausedImage
+            = Utils.createImageIcon("images/rec-paused.png", RecordAction.class).getImage();
 
     public RecordAction() {
         configurations = new ArrayList<>();
@@ -85,11 +91,9 @@ public class RecordAction implements StageAction {
     }
 
     private void createAndShowTray() throws AWTException {
-
+        
         final PopupMenu popup = new PopupMenu();
-        final TrayIcon trayIcon
-                = new TrayIcon(Utils.createImageIcon("rec.png",
-                        RecordAction.class).getImage());
+        final TrayIcon trayIcon = new TrayIcon(recImage);
         final SystemTray tray = SystemTray.getSystemTray();
 
         MenuItem pauseResume = new MenuItem("Pause Recording");
@@ -108,13 +112,11 @@ public class RecordAction implements StageAction {
             public void actionPerformed(ActionEvent e) {
                 if (isPaused) {
                     resumeRecording();
-                    trayIcon.setImage(Utils.createImageIcon("rec.png",
-                            RecordAction.class).getImage());
+                    trayIcon.setImage(recImage);
                     pauseResume.setLabel("Pause Recording");
                 } else {
                     pauseRecording();
-                    trayIcon.setImage(Utils.createImageIcon("rec-paused.png",
-                            RecordAction.class).getImage());
+                    trayIcon.setImage(pausedImage);
                     pauseResume.setLabel("Resume Recording");
                 }
             }
@@ -142,8 +144,7 @@ public class RecordAction implements StageAction {
         JDialog controlsDialog
                 = new JDialog((JFrame) null, "Recording Controls");
 
-        controlsDialog.setIconImage(Utils.createImageIcon("rec.png",
-                RecordAction.class).getImage());
+        controlsDialog.setIconImage(recImage);
         controlsDialog.setLayout(new GridBagLayout());
 
         GridBConstraints gbc = new GridBConstraints();
@@ -164,13 +165,11 @@ public class RecordAction implements StageAction {
                 if (isPaused) {
                     resumeRecording();
                     pauseButton.setText("|| Pause");
-                    controlsDialog.setIconImage(Utils.createImageIcon("rec.png",
-                            RecordAction.class).getImage());
+                    controlsDialog.setIconImage(recImage);
                 } else {
                     pauseRecording();
                     pauseButton.setText("> Resume");
-                    controlsDialog.setIconImage(Utils.createImageIcon("rec-paused.png",
-                            RecordAction.class).getImage());
+                    controlsDialog.setIconImage(pausedImage);
                 }
             }
         });

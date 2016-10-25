@@ -3,9 +3,13 @@ package mo.core.ui;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 
 public class Utils {
+    
+    private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
     public static void centerOnScreen(final Component c) {
         final int width = c.getWidth();
@@ -21,7 +25,7 @@ public class Utils {
             if (imgURL != null) {
                 return new ImageIcon(imgURL);
             } else {
-                System.err.println("Couldn't find file: " + path);
+                logger.log(Level.WARNING, String.format("Couldn't find file: %s", path));
                 return null;
             }
         }

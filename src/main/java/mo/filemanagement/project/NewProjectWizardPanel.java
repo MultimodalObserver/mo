@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import mo.core.I18n;
 import mo.core.ui.WizardDialog;
 
 public class NewProjectWizardPanel extends JPanel {
@@ -21,10 +22,12 @@ public class NewProjectWizardPanel extends JPanel {
     private final JTextField locationField;
     private final JTextField nameField;
     private final JTextField folderField;
+    private I18n inter;
     
     public NewProjectWizardPanel(WizardDialog wizard) {
         this.wizard = wizard;
-        super.setName("Name and Location");
+        inter = new I18n(NewProjectWizardPanel.class);
+        super.setName(inter.s("NewProjectWizardPanel.newProjectWizardStep"));
         super.setLayout(new GridBagLayout());
         
         fileChooser = new JFileChooser();
@@ -32,7 +35,7 @@ public class NewProjectWizardPanel extends JPanel {
         
         GridBagConstraints c = new GridBagConstraints();
         
-        JLabel nameLabel = new JLabel("Project Name:");
+        JLabel nameLabel = new JLabel(inter.s("NewProjectWizardPanel.projectNameLabel"));
         nameField = new JTextField();
         nameField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -51,7 +54,7 @@ public class NewProjectWizardPanel extends JPanel {
             }
         });
         
-        JLabel locationLabel = new JLabel("Project Location:");
+        JLabel locationLabel = new JLabel(inter.s("NewProjectWizardPanel.projectLocationLabel"));
         locationField = new JTextField();
         locationField.setText(System.getProperty("user.dir"));
         locationField.getDocument().addDocumentListener(new DocumentListener() {
@@ -71,11 +74,11 @@ public class NewProjectWizardPanel extends JPanel {
             }
         });
         
-        JLabel folderLabel = new JLabel("Project Folder:");
+        JLabel folderLabel = new JLabel(inter.s("NewProjectWizardPanel.projectFolderLabel"));
         folderField = new JTextField(locationField.getText());
         folderField.setEditable(false);
         
-        JButton browseBtn = new JButton("Browse...");
+        JButton browseBtn = new JButton(inter.s("NewProjectWizardPanel.browseLabel"));
         browseBtn.addActionListener(this::selectLocation);
         
         c.gridx = 0;
@@ -130,7 +133,7 @@ public class NewProjectWizardPanel extends JPanel {
         c.ipady = 150;
         super.add(new JLabel(""), c);
         
-        wizard.setWarningMessage("A project name must be specified.");
+        wizard.setWarningMessage(inter.s("NewProjectWizardPanel.warningName"));
     }
     
     
@@ -154,20 +157,20 @@ public class NewProjectWizardPanel extends JPanel {
         File newFolder = new File(locationField.getText()+"/"+nameField.getText());
         folderField.setText(newFolder.getPath());
         if (nameField.getText().isEmpty()){
-            wizard.setWarningMessage("A project name must be specified.");
+            wizard.setWarningMessage(inter.s("NewProjectWizardPanel.warningName"));
             wizard.nullResult();
             wizard.disableFinish();
         } else if (locationField.getText().isEmpty()) {
-            wizard.setWarningMessage("A project location must be specified.");
+            wizard.setWarningMessage(inter.s("NewProjectWizardPanel.warningLocation"));
             wizard.nullResult();
             wizard.disableFinish();
         } else if (!folder.isDirectory()) {
-            wizard.setWarningMessage("Project location doesn't exists.");
+            wizard.setWarningMessage(inter.s("NewProjectWizardPanel.warningLocationExistence"));
             wizard.nullResult();
             wizard.disableFinish();
         } else if (newFolder.exists()){
             wizard.disableFinish();
-            wizard.setWarningMessage("Directory already exists.");
+            wizard.setWarningMessage(inter.s("NewProjectWizardPanel.warningLocationExists"));
             wizard.nullResult();
         } else {
             wizard.addResult("projectFolder", newFolder.getPath());
