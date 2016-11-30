@@ -1,7 +1,7 @@
 package mo.core.plugin;
 
 import com.github.zafarkhaja.semver.Version;
-import mo.core.utils.Utils;
+import mo.core.Utils;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;

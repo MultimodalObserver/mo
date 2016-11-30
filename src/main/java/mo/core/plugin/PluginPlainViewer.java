@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import javax.swing.JMenuItem;
 import mo.core.ui.menubar.IMenuBarItemProvider;
+import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
 
 @Extension(
@@ -36,7 +37,7 @@ public class PluginPlainViewer implements IMenuBarItemProvider {
 
     @Override
     public int getRelativePosition() {
-        return IMenuBarItemProvider.UNDER;
+        return UNDER;
     }
 
     @Override

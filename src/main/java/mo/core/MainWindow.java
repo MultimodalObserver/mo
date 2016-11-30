@@ -8,10 +8,9 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.menubar.MenuBar;
-import mo.core.utils.Utils;
-import static mo.core.utils.Utils.getBaseFolder;
-import mo.filemanagement.FileRegistry;
-import mo.filemanagement.FilesPane;
+import static mo.core.Utils.getBaseFolder;
+import mo.core.filemanagement.FileRegistry;
+import mo.core.filemanagement.FilesPane;
 
 public class MainWindow extends JFrame {
 

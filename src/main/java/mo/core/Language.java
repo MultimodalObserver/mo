@@ -20,6 +20,7 @@ import mo.core.plugin.PluginRegistry;
 import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.menubar.IMenuBarItemProvider;
+import mo.core.ui.menubar.MenuItemLocations;
 import org.apache.commons.io.FileUtils;
 
 @Extension(
@@ -47,11 +48,11 @@ public class Language implements IMenuBarItemProvider {
         menu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String defaultLocale = "Default";
+                String defaultLocale = i18n.s("Language.default");
                 String selected = (String) JOptionPane.showInputDialog(
                         null,
-                        "Select language (changes need to restart app)",
-                        i18n.s("Language.selectionTitle"),
+                        i18n.s("Language.dialog.message"),
+                        i18n.s("Language.dialog.selectionTitle"),
                         JOptionPane.QUESTION_MESSAGE,
                         null,
                         listLocales(defaultLocale),
@@ -91,7 +92,7 @@ public class Language implements IMenuBarItemProvider {
     private Object[] listLocales(String defaultStr) {
         LinkedHashSet<String> locales = new LinkedHashSet<>();
         locales.add(defaultStr);
-        File source = new File(PluginRegistry.class.getProtectionDomain()
+        File source = new File(Language.class.getProtectionDomain()
                 .getCodeSource().getLocation().getFile());
 
         if (source.getName().endsWith(".jar")) {
@@ -103,9 +104,9 @@ public class Language implements IMenuBarItemProvider {
                     JarEntry jarEntry = (JarEntry) entries.nextElement();
                     String entryName = jarEntry.getName();
 
-                    if (entryName.contains("I18n_")) {
+                    if (entryName.contains("Translations_")) {
                         String localeStr = entryName.substring(
-                                entryName.indexOf("I18n_") + 5,
+                                entryName.indexOf("Translations_") + 5,
                                 entryName.lastIndexOf('.'));
                         locales.add(localeStr);
                     }
@@ -122,9 +123,12 @@ public class Language implements IMenuBarItemProvider {
                     .listFiles(source, extensions, true);
             
             for (File file : files) {
-                if (file.getName().contains("I18n_")) {
+                if (file.getName().contains("Translations_")) {
                     String fileName = file.getName();
-                        String localeStr = fileName.substring(fileName.indexOf("I18n_") + 5, fileName.lastIndexOf('.'));
+                        String localeStr = fileName.substring(
+                                fileName.indexOf("Translations_")
+                                        + "Translations_".length(),
+                                fileName.lastIndexOf('.'));
                         locales.add(localeStr);
                     }
             }
@@ -140,7 +144,7 @@ public class Language implements IMenuBarItemProvider {
 
     @Override
     public int getRelativePosition() {
-        return IMenuBarItemProvider.UNDER;
+        return MenuItemLocations.UNDER;
     }
 
     @Override

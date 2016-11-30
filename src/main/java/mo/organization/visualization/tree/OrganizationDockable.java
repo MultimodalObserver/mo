@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.*;
+import mo.core.I18n;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 import mo.core.ui.Utils;
@@ -30,6 +31,10 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
     private JTree tree;
 
+    private I18n i18n;
+
+    private JPopupMenu participantMenu;
+
     public OrganizationDockable() {
 
     }
@@ -37,6 +42,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     public OrganizationDockable(ProjectOrganization org) {
         organization = org;
         stageNodes = new ArrayList<>();
+        i18n = new I18n(OrganizationDockable.class);
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Project ");
 
@@ -45,7 +51,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         tree.setCellRenderer(new OrganizationCellRenderer());
         tree.setRowHeight(20);
 
-        DefaultMutableTreeNode participantsNode = new DefaultMutableTreeNode("Participants");
+        DefaultMutableTreeNode participantsNode
+                = new DefaultMutableTreeNode(i18n.s("OrganizationDockable.participants"));
         insertNodeInParent(root, participantsNode);
 
         for (Participant participant : organization.getParticipants()) {
@@ -66,7 +73,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             }
         }
 
-        JMenuItem addParticipantMenu = new JMenuItem("Add Participant");
+        JMenuItem addParticipantMenu
+                = new JMenuItem(i18n.s("OrganizationDockable.addParticipant"));
         addParticipantMenu.addActionListener((ActionEvent e) -> {
             ParticipantDialog dialog = new ParticipantDialog(organization);
             Participant participant = dialog.showDialog();
@@ -80,8 +88,9 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         JPopupMenu participantsMenu = new JPopupMenu();
         participantsMenu.add(addParticipantMenu);
 
-        JMenu addStage = new JMenu("Add Project Stage");
-        List<Plugin> stagePlugins = PluginRegistry.getInstance().getPluginsFor("mo.organization.Stage");
+        JMenu addStage = new JMenu(i18n.s("OrganizationDockable.addStage"));
+        List<Plugin> stagePlugins
+                = PluginRegistry.getInstance().getPluginsFor("mo.organization.Stage");
         for (Plugin stagePlugin : stagePlugins) {
             Stage nodeProvider = (Stage) stagePlugin.getNewInstance();
             JMenuItem item = new JMenuItem(nodeProvider.getName());
@@ -94,7 +103,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         JPopupMenu projectMenu = new JPopupMenu();
         projectMenu.add(addStage);
 
-        JMenuItem viewOrEditParticipant = new JMenuItem("View/Edit");
+        JMenuItem viewOrEditParticipant
+                = new JMenuItem(i18n.s("OrganizationDockable.viewEditParticipant"));
         viewOrEditParticipant.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -102,17 +112,30 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             }
         });
 
-        JMenuItem deleteParticipant = new JMenuItem("Delete");
+        JMenuItem deleteParticipant
+                = new JMenuItem(i18n.s("OrganizationDockable.deleteParticipant"));
         deleteParticipant.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 DefaultMutableTreeNode selected
                         = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+
                 Participant p = (Participant) selected.getUserObject();
-                String message = "Attempting to delete participant {" + p.id
-                        + "}. Delete files associated to this partipant too?";
-                Object[] options = {"Yes, delete files too", "No, just delete participant", "Cancel"};
-                int r = JOptionPane.showOptionDialog(null, message, "Delete Participant",
+
+                String message = i18n.s(
+                        "OrganizationDockable.participantDeletionMesssage",
+                        p.id);
+
+                Object[] options = {
+                    i18n.s("OrganizationDockable.participantDeletionYes"),
+                    i18n.s("OrganizationDockable.participantDeletionNo"),
+                    i18n.s("OrganizationDockable.participantDeletionCancel")};
+
+                int r = JOptionPane.showOptionDialog(
+                        null,
+                        message,
+                        i18n.s("OrganizationDockable.participantDeletionTitle"),
                         JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
                         null, options, options[2]);
 
@@ -131,7 +154,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             }
         });
 
-        JMenuItem lockItem = new JMenuItem("Lock");
+        JMenuItem lockItem = new JMenuItem(i18n.s("OrganizationDockable.lock"));
         lockItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -148,10 +171,10 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                 organization.updateParticipant(p);
                 organization.store();
 
-                if (lockItem.getText().equals("Lock")) {
-                    lockItem.setText("Unlock");
+                if (lockItem.getText().equals(i18n.s("OrganizationDockable.lock"))) {
+                    lockItem.setText(i18n.s("OrganizationDockable.unlock"));
                 } else {
-                    lockItem.setText("Lock");
+                    lockItem.setText(i18n.s("OrganizationDockable.lock"));
                 }
 
                 selected.setUserObject(p);
@@ -161,7 +184,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             }
         });
 
-        JPopupMenu participantMenu = new JPopupMenu();
+        participantMenu = new JPopupMenu();
         participantMenu.add(viewOrEditParticipant);
         participantMenu.add(deleteParticipant);
         participantMenu.add(new JSeparator());
@@ -169,21 +192,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         // TODO add actions menu items dynamically
         for (Stage stage : organization.getStages()) {
-            JMenu stageActions = new JMenu(stage.getName());
-            for (StageAction action : stage.getActions()) {
-                JMenuItem actionItem = new JMenuItem(action.getName());
-                actionItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        DefaultMutableTreeNode selected
-                                = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                        Participant p = (Participant) selected.getUserObject();
-                        action.init(organization, p, stage);
-                    }
-                });
-                stageActions.add(actionItem);
-            }
-            participantMenu.add(stageActions);
+            addStageMenuToParticipantMenu(stage);
         }
 
         tree.addMouseListener(new MouseAdapter() {
@@ -210,9 +219,9 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                     } else if (selected.getUserObject() instanceof Participant) {
                         Participant p = (Participant) selected.getUserObject();
                         if (p.isLocked) {
-                            lockItem.setText("Unlock");
+                            lockItem.setText(i18n.s("OrganizationDockable.unlock"));
                         } else {
-                            lockItem.setText("Lock");
+                            lockItem.setText(i18n.s("OrganizationDockable.lock"));
                         }
                         participantMenu.show(source, x, y);
                     } else if (selected.getUserObject() instanceof Stage) {
@@ -233,7 +242,6 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                             });
                             menu.add(item);
                         }
-                        System.out.println("stage click D:");
                         menu.show(source, x, y);
                     } else if (selected.getUserObject() instanceof PluginConfigPair) {
                         JPopupMenu menu = new JPopupMenu("Config");
@@ -326,7 +334,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         organization.store();
 
         stageNodes.add(newNode);
-        System.out.println(stage);
+
+        addStageMenuToParticipantMenu(stage);
     }
 
     public String getProjectPath() {
@@ -392,6 +401,24 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         return this.organization.getParticipants();
     }
 
+    private void addStageMenuToParticipantMenu(Stage stage) {
+        JMenu stageActions = new JMenu(stage.getName());
+        for (StageAction action : stage.getActions()) {
+            JMenuItem actionItem = new JMenuItem(action.getName());
+            actionItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    DefaultMutableTreeNode selected
+                            = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                    Participant p = (Participant) selected.getUserObject();
+                    action.init(organization, p, stage);
+                }
+            });
+            stageActions.add(actionItem);
+        }
+        participantMenu.add(stageActions);
+    }
+
     private class PluginConfigPair {
 
         StagePlugin plugin;
@@ -413,11 +440,12 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             DefaultTreeCellRenderer returnValue
                     = (DefaultTreeCellRenderer) defaultRenderer.
                     getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+            I18n i18n = new I18n(OrganizationDockable.class);
             if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
                 Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
                 if (userObject instanceof Participant) {
                     returnValue = getRendererForParticipant(returnValue, (Participant) userObject);
-                } else if (userObject instanceof String && ((String) userObject).equals("Participants")) {
+                } else if (userObject instanceof String && ((String) userObject).equals(i18n.s("OrganizationDockable.participants"))) {
                     returnValue = getRendererForParticipants(returnValue);
                 } else if (userObject instanceof Stage) {
                     returnValue = getRendererForStage(returnValue, (Stage) userObject);

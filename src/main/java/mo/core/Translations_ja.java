@@ -2,7 +2,7 @@ package mo.core;
 
 import java.util.ListResourceBundle;
 
-public class I18n_ja extends ListResourceBundle {
+public class Translations_ja extends ListResourceBundle {
 
     @Override
     protected Object[][] getContents() {
@@ -10,7 +10,7 @@ public class I18n_ja extends ListResourceBundle {
     }
     
     private Object[][] contents = {
-        {"Language.selectionTitle" , "wan tan"}
+        {"Language.dialog.selectionTitle" , "wan tan"}
     };
     
 }

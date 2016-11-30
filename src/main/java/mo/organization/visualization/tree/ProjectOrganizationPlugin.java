@@ -7,8 +7,8 @@ import javax.swing.JMenuItem;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.ui.dockables.DockablesRegistry;
-import mo.filemanagement.FilePopupMenu;
-import mo.filemanagement.project.ProjectOptionProvider;
+import mo.core.filemanagement.FilePopupMenu;
+import mo.core.filemanagement.project.ProjectOptionProvider;
 import mo.organization.OrganizationVisualizationMenuItemProvider;
 import mo.organization.ProjectOrganization;
 

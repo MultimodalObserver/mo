@@ -1,6 +1,6 @@
-package mo.filemanagement;
+package mo.core.filemanagement;
 
-import mo.filemanagement.project.Project;
+import mo.core.filemanagement.project.Project;
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
 import java.awt.event.MouseAdapter;
@@ -10,8 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -21,13 +19,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.TreeSelectionModel;
+import mo.core.I18n;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.IDockableElementProvider;
 import mo.core.ui.dockables.StartupDockableProvider;
 import mo.core.ui.dockables.StorableDockable;
-import static mo.core.utils.Utils.getBaseFolder;
+import static mo.core.Utils.getBaseFolder;
 
 @Extension(
         xtends = {
@@ -37,13 +36,13 @@ import static mo.core.utils.Utils.getBaseFolder;
 )
 public class FilesPane extends DockableElement implements IDockableElementProvider, StorableDockable, StartupDockableProvider {
 
-    private final static Logger LOGGER = Logger.getLogger(FilesPane.class.getName());
+    private final static Logger logger = Logger.getLogger(FilesPane.class.getName());
     private final FilesTreeModel filesTreeModel;
     private final JTree filesTree;
-    
+    private I18n i18n;
     public FilesPane() {
-        
-        setTitleText("Files");
+        i18n = new I18n(FilesPane.class);
+        setTitleText(i18n.s("FilesPane.files"));
         filesTreeModel = new FilesTreeModel();
         
         JPopupMenu popup = new JPopupMenu();
@@ -147,7 +146,7 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
             
             XIO.writeUTF(xmlContent, new FileOutputStream(result));
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
         return result;
     }
@@ -175,10 +174,10 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
                 
                 return d;
             } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         } else {
-            LOGGER.log(Level.INFO, "File <"+file.getAbsolutePath()+"> does not exists");
+            logger.log(Level.INFO, "File <"+file.getAbsolutePath()+"> does not exists");
         }
         return d;
     }

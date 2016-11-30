@@ -25,10 +25,12 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import mo.core.I18n;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.ui.menubar.IMenuBarItemProvider;
-import static mo.core.utils.Utils.getBaseFolder;
+import static mo.core.Utils.getBaseFolder;
+import static mo.core.ui.menubar.MenuItemLocations.AFTER;
 
 @Extension(
         xtends = {
@@ -48,12 +50,19 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     private final CControl control;
 
     private final JMenu windowMenu = new JMenu("Window");
+    
+    private I18n i18n;
 
     public DockablesRegistry() {
         registry = this;
         dockables = new HashMap<>();
+        
+        i18n = new I18n(DockablesRegistry.class);
 
         control = new CControl();
+        
+        windowMenu.setName("window");
+        windowMenu.setText(i18n.s("DockablesRegistry.menuItem"));
 
         JMenuItem test = new JMenuItem("test");
         windowMenu.add(test);

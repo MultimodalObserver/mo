@@ -1,6 +1,6 @@
-package mo.filemanagement;
+package mo.core.filemanagement;
 
-import mo.filemanagement.project.Project;
+import mo.core.filemanagement.project.Project;
 import java.io.File;
 import java.util.TreeMap;
 import mo.core.ui.dockables.DockablesRegistry;

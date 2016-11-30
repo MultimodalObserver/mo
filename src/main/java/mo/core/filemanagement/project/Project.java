@@ -1,4 +1,4 @@
-package mo.filemanagement.project;
+package mo.core.filemanagement.project;
 
 import java.io.File;
 import java.io.IOException;

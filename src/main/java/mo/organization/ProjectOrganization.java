@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import mo.filemanagement.project.Project;
+import mo.core.filemanagement.project.Project;
 
 public class ProjectOrganization {
 

@@ -7,13 +7,12 @@ import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
-import mo.filemanagement.FilePopupMenu;
-import mo.filemanagement.project.ProjectOptionProvider;
+import mo.core.filemanagement.project.ProjectOptionProvider;
 
 @Extension(
     xtends = {
         @Extends(
-                extensionPointId = "mo.filemanagement.project.ProjectOptionProvider"
+                extensionPointId = "mo.core.filemanagement.project.ProjectOptionProvider"
         )
     }
 )

@@ -1,6 +1,6 @@
-package mo.filemanagement.project;
+package mo.core.filemanagement.project;
 
-import mo.core.utils.Utils;
+import mo.core.Utils;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;

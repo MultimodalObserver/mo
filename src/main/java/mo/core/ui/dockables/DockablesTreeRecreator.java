@@ -1,5 +1,6 @@
 package mo.core.ui.dockables;
 
+import bibliothek.gui.Dockable;
 import bibliothek.gui.dock.common.CControl;
 import bibliothek.gui.dock.common.CGrid;
 import bibliothek.gui.dock.common.CLocation;
@@ -127,7 +128,9 @@ public class DockablesTreeRecreator {
                                 added = true;
                             }
                         } else {
-                            currentMain.docks.addAll(currentNew.docks);
+                            if (!currentMain.docks.contains(currentNew.docks.get(0))) {
+                                currentMain.docks.add(currentNew.docks.get(0));
+                            }
                             added = true;
                         }
                     }
@@ -139,9 +142,7 @@ public class DockablesTreeRecreator {
     }
 
     public void createTrees(List<LocationNode> trees) {
-        control.intern().deleteAll();
         for (LocationNode tree : trees) {
-            //tree.preOrderPrint();
             CGrid g = createGrid(control, tree);
             control.getContentArea().deploy(g);
         }
@@ -331,7 +332,7 @@ public class DockablesTreeRecreator {
         @Override
         public String toString() {
             return "[ " + id + " " + location + " " + size + " " + childrenOrientation + " "
-                    + ((firstChild != null && secondChild != null) ? "leaf" : "node")
+                    + ((firstChild == null && secondChild == null) ? "leaf" : "node")
                     + " " + docks + "]";
         }
     }

@@ -1,4 +1,4 @@
-package mo.filemanagement.project;
+package mo.core.filemanagement.project;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -15,7 +15,8 @@ import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.WizardDialog;
 import mo.core.ui.menubar.IMenuBarItemProvider;
-import mo.filemanagement.FileRegistry;
+import mo.core.filemanagement.FileRegistry;
+import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
 @Extension(
         xtends = {
@@ -119,7 +120,7 @@ public class ProjectManagement implements IMenuBarItemProvider {
 
     @Override
     public int getRelativePosition() {
-        return IMenuBarItemProvider.UNDER;
+        return UNDER;
     }
 
     @Override

@@ -1,7 +1,7 @@
 package mo.core.preferences;
 
 import com.thoughtworks.xstream.XStream;
-import mo.core.utils.Utils;
+import mo.core.Utils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;

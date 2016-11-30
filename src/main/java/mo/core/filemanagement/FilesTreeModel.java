@@ -1,4 +1,4 @@
-package mo.filemanagement;
+package mo.core.filemanagement;
 
 import java.io.File;
 import java.util.ArrayList;

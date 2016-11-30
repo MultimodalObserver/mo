@@ -10,9 +10,7 @@ import mo.core.I18n;
 
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
-import static mo.core.ui.menubar.IMenuBarItemProvider.AFTER;
-import static mo.core.ui.menubar.IMenuBarItemProvider.BEFORE;
-import static mo.core.ui.menubar.IMenuBarItemProvider.UNDER;
+import static mo.core.ui.menubar.MenuItemLocations.*;
 
 public class MenuBar extends JMenuBar {
     

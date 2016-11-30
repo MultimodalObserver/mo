@@ -5,11 +5,11 @@ import java.util.List;
 
 public class ExtPoint {
     
-    String id;
-    String version;
+    private String id;
+    private String version;
     
-    String name;
-    String description;
+    private String name;
+    private String description;
     
     List<Plugin> plugins;
 

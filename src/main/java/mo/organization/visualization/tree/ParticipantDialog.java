@@ -13,6 +13,7 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import mo.core.I18n;
 import mo.core.ui.GridBConstraints;
 import static mo.core.ui.Utils.centerOnScreen;
 import mo.organization.ProjectOrganization;
@@ -32,20 +33,24 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
     List<Participant> orgParticipants;
 
     boolean isParticipantUpdate = false;
+    
+    private I18n i18n;
 
     public ParticipantDialog(ProjectOrganization org) {
         this(org, null);
     }
 
     public ParticipantDialog(ProjectOrganization org, Participant part) {
-        super(null, "New Participant", Dialog.ModalityType.APPLICATION_MODAL);
-
+        
+        super(null, "", Dialog.ModalityType.APPLICATION_MODAL);
+        i18n = new I18n(ParticipantDialog.class);
+        setTitle(i18n.s("ParticipantDialog.titleNew"));
         orgParticipants = org.getParticipants();
 
         if (part == null) {
             participant = new Participant();
         } else {
-            setTitle("Edit Participant");
+            setTitle(i18n.s("ParticipantDialog.titleEdit"));
             participant = part;
             isParticipantUpdate = true;
         }
@@ -56,10 +61,10 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
                 .f(GridBConstraints.BOTH)
                 .i(new Insets(5, 5, 5, 5));
 
-        add(new JLabel("Id*"), g.gx(0).gy(0));
-        add(new JLabel("Name"), g.gy(1));
-        add(new JLabel("Date"), g.gy(2));
-        add(new JLabel("Notes"), g.gy(3));
+        add(new JLabel(i18n.s("ParticipantDialog.id")), g.gx(0).gy(0));
+        add(new JLabel(i18n.s("ParticipantDialog.name")), g.gy(1));
+        add(new JLabel(i18n.s("ParticipantDialog.date")), g.gy(2));
+        add(new JLabel(i18n.s("ParticipantDialog.notes")), g.gy(3));
 
         idField = new JTextField();
 
@@ -98,7 +103,7 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
         add(scroll, g.gx(0).gy(4).gw(2));
 
         if (participant.id == null) {
-            errorLabel = new JLabel("An ID and name must be specified");
+            errorLabel = new JLabel(i18n.s("ParticipantDialog.idNameExistence"));
         } else {
             errorLabel = new JLabel();
         }
@@ -108,7 +113,7 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
 
         JPanel buttonsPanel = new JPanel(new GridBagLayout());
 
-        accept = new JButton("Accept");
+        accept = new JButton(i18n.s("ParticipantDialog.accept"));
         accept.addActionListener((ActionEvent e) -> {
             if (!idField.getText().isEmpty()) {
                 participant.id = idField.getText();
@@ -123,7 +128,7 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
         });
         accept.setEnabled(false);
 
-        JButton cancel = new JButton("Cancel");
+        JButton cancel = new JButton(i18n.s("ParticipantDialog.cancel"));
         cancel.addActionListener((ActionEvent e) -> {
             participant = null;
             setVisible(false);
@@ -171,14 +176,14 @@ public class ParticipantDialog extends JDialog implements DocumentListener {
 
     private void updateState() {
         if (idField.getText().isEmpty()) {
-            errorLabel.setText("An ID must be specified");
+            errorLabel.setText(i18n.s("ParticipantDialog.idExistence"));
             accept.setEnabled(false);
         } else if (isParticipantUpdate || isParticipantIdUnique(idField.getText())) {
             errorLabel.setText("");
             accept.setEnabled(true);
             SwingUtilities.getRootPane(accept).setDefaultButton(accept);
         } else {
-            errorLabel.setText("ID must be unique");
+            errorLabel.setText(i18n.s("ParticipantDialog.idUniqueness"));
             accept.setEnabled(false);
 
         }

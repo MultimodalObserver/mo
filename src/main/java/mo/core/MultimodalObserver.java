@@ -4,7 +4,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import static mo.core.Language.loadLocale;
 import mo.core.plugin.PluginRegistry;
-import mo.core.utils.Utils;
 
 public class MultimodalObserver {
     public static final String APP_PREFERENCES_FILE = 

@@ -1,8 +1,8 @@
-package mo.filemanagement;
+package mo.core.filemanagement;
 
 import java.awt.Component;
 import java.awt.Container;
-import mo.filemanagement.project.ProjectOptionProvider;
+import mo.core.filemanagement.project.ProjectOptionProvider;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.MenuElement;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
-import static mo.filemanagement.project.ProjectUtils.isProjectFolder;
+import static mo.core.filemanagement.project.ProjectUtils.isProjectFolder;
 
 public final class PopupRegistry {
     private static PopupRegistry popupRegistry;
@@ -27,11 +27,11 @@ public final class PopupRegistry {
         projectOptions = new ArrayList<>();
         projectPopup = new FilePopupMenu();
         
-        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.filemanagement.PopupOptionProvider")) {
+        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.PopupOptionProvider")) {
             addPopupOptionFor(((PopupOptionProvider) p.getInstance()).getPopupItem(), null);
         }
         
-        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.filemanagement.project.ProjectOptionProvider")) {
+        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.project.ProjectOptionProvider")) {
             addPopupOptionForProjects(((ProjectOptionProvider) p.getInstance()).getOption());
         }
     }

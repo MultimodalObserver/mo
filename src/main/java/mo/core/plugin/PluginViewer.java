@@ -22,6 +22,7 @@ import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.core.ui.dockables.IDockableElementProvider;
 import mo.core.ui.menubar.IMenuBarItemProvider;
+import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
 @Extension(
         xtends = {
@@ -108,7 +109,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
 
     @Override
     public int getRelativePosition() {
-        return IMenuBarItemProvider.UNDER;
+        return UNDER;
     }
 
     @Override
