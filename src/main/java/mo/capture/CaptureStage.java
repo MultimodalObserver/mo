@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mo.core.I18n;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.plugin.Plugin;
@@ -34,11 +35,14 @@ public class CaptureStage implements Stage {
 
     private final static Logger logger = Logger.getLogger(CaptureStage.class.getName());
 
-    List<StagePlugin> plugins;
-    ProjectOrganization organization;
-    List<StageAction> actions;
+    private List<StagePlugin> plugins;
+    private ProjectOrganization organization;
+    private List<StageAction> actions;
+    private I18n i18n;
 
     public CaptureStage() {
+        
+        i18n = new I18n(CaptureStage.class);
 
         plugins = new ArrayList<>();
         for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.capture.CaptureProvider")) {
@@ -59,7 +63,7 @@ public class CaptureStage implements Stage {
 
     @Override
     public String getName() {
-        return "Capture";
+        return i18n.s("CaptureStage.capture");
     }
 
     public void setPlugins(List<StagePlugin> plugins) {

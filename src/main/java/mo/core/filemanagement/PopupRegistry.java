@@ -17,18 +17,19 @@ import static mo.core.filemanagement.project.ProjectUtils.isProjectFolder;
 
 public final class PopupRegistry {
     private static PopupRegistry popupRegistry;
-    HashMap <String, FilePopupMenu> popups; //by extension
+    
     private final List<JMenuItem> projectOptions;
-    private final FilePopupMenu projectPopup;
-    private FilePopupMenu folderPopup;
+    
+    private HashMap <String, List<JMenuItem>> options; //by extension
+
     
     private PopupRegistry() {
-        popups = new HashMap<>();
+        options = new HashMap<>();
         projectOptions = new ArrayList<>();
-        projectPopup = new FilePopupMenu();
         
         for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.PopupOptionProvider")) {
-            addPopupOptionFor(((PopupOptionProvider) p.getInstance()).getPopupItem(), null);
+            PopupOptionProvider option = (PopupOptionProvider) p.getInstance();
+            addPopupOptionFor(option.getPopupItem(), option.getExtension());
         }
         
         for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.project.ProjectOptionProvider")) {
@@ -36,15 +37,8 @@ public final class PopupRegistry {
         }
     }
     
-    public void addPopupOptionForFolders(PopupItem item) {
-        
-    }
-    
     public void addPopupOptionForProjects(JMenuItem item) {
         projectOptions.add(item);
-        projectPopup.add(item);
-        printJMenuItem(item, "");
-        
     }
     
     private void printJMenuItem(JMenuItem i, String indent) {
@@ -56,14 +50,14 @@ public final class PopupRegistry {
     }
     
     public void addPopupOptionFor(JMenuItem itemToAdd, String fileExtension) {
-        if (!popups.containsKey(fileExtension))
-            popups.put(fileExtension, new FilePopupMenu());
+        if (!options.containsKey(fileExtension))
+            options.put(fileExtension, new ArrayList());
         
-        //FilePopupMenu popup = popups.get(fileExtension);
-        //JMenuItem item = itemToAdd.getItem();
-        //int position = itemToAdd.getPosition();
+        List<JMenuItem> items = options.get(fileExtension);
         
-        //popup.add(itemToAdd);
+        if (items != null) {
+            items.add(itemToAdd);
+        }
     }
     
     private void putPropertyInChildrenComponents(MenuElement[] menus, Object key, Object value) {
@@ -109,27 +103,32 @@ public final class PopupRegistry {
         }
     }
     
-    FilePopupMenu getPopupFor(File file) {
-        System.out.println("file: "+file);
-        if (file.isDirectory()) {
-            if (isProjectFolder(file)) {
-                //putPropertyInChildrenComponents( projectPopup.getSubElements(), "file", file);
-                //projectPopup.get
-                projectPopup.setFile(file);
-                System.out.println(projectPopup);
-                setFileProperty(projectPopup, "file", file);
-                return projectPopup;
-            } else {
-                return folderPopup;
-            }
+    JPopupMenu getPopupFor(File file) {
+        JPopupMenu popup = new JPopupMenu();
+
+        if (isProjectFolder(file)) {
+            addOptionsToPopup(popup, projectOptions);
+        } else if (file.isDirectory()) {
+            addOptionsToPopup(popup, options.get(null));
         } else {
-            String extension = null;
-        
+            String extension = "";
             if (file.getName().contains(".")) {
                 extension = file.getName().substring(file.getName().lastIndexOf(".")+1);
             }
-            
-            return popups.get(extension);
+            addOptionsToPopup(popup, options.get(extension));
+        }
+        
+        addOptionsToPopup(popup, options.get("/"));
+        
+        setFileProperty(popup, "file", file);
+        return popup;
+    }
+    
+    private void addOptionsToPopup(JPopupMenu popup, List<JMenuItem> options) {
+        if (popup != null && options != null) {
+            for (JMenuItem option : options) {
+                popup.add(option);
+            }
         }
     }
     

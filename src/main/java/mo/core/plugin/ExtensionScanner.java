@@ -189,11 +189,14 @@ public class ExtensionScanner extends ClassVisitor {
                 plugin.setClazz(c);
             } catch (NoClassDefFoundError | ClassNotFoundException | IllegalAccessError ex) {
                 try {
-                    //Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex);
+                    //System.out.println(plugin.getId());
+                    //cl.loadClass(plugin.getId());
+                    //cl.
                     //ClassLoader cl = ExtensionScanner.class.getClassLoader();
-
+                    //System.out.println(cl.getParent());
                     plugin.setClazz(cl.loadClass(plugin.getId()));
                     //URLClassLoader u = 
+                    //Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (ClassNotFoundException ex1) {
                     LOGGER.log(Level.SEVERE, null, ex1);
                 }

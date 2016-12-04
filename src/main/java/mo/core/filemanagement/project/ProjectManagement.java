@@ -28,7 +28,7 @@ import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 public class ProjectManagement implements IMenuBarItemProvider {
 
     private JMenu projectMenu;
-    private JMenuItem newProject, openProject;
+    private JMenuItem newProject, openProject, closeProject;
     private I18n inter;
 
     public ProjectManagement() {

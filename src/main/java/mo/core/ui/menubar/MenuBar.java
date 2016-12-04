@@ -9,6 +9,7 @@ import javax.swing.JMenuItem;
 import mo.core.I18n;
 
 import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginListener;
 import mo.core.plugin.PluginRegistry;
 import static mo.core.ui.menubar.MenuItemLocations.*;
 
@@ -61,6 +62,29 @@ public class MenuBar extends JMenuBar {
                     i.getRelativePosition(),
                     i.getRelativeTo().toLowerCase());
             
+        });
+        
+        PluginRegistry.getInstance()
+                .addPluginListener("mo.core.ui.menubar.IMenuBarItemProvider", 
+                        new PluginListener() {
+            @Override
+            public void pluginAdded(Plugin plugin) {
+                IMenuBarItemProvider i;
+                i = (IMenuBarItemProvider) plugin.getInstance();
+                addItem(i.getItem(),
+                        i.getRelativePosition(),
+                        i.getRelativeTo().toLowerCase());
+            }
+
+            @Override
+            public void pluginUpdated(Plugin plugin) {
+                //
+            }
+
+            @Override
+            public void pluginRemoved(Plugin plugin) {
+                //
+            }
         });
         
     }

@@ -44,6 +44,13 @@ public class FileRegistry {
             }
         }
     }
+    
+    public void closeProject(File projectFolder) {
+        if (openedFiles.containsKey(projectFolder.getAbsolutePath())) {
+            openedFiles.remove(projectFolder.getAbsolutePath());
+            filesPane.closeFile(projectFolder);
+        }
+    }
 
     public FilesPane getFilesPane() {
         return filesPane;

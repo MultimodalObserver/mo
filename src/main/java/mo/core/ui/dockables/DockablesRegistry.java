@@ -46,6 +46,8 @@ public class DockablesRegistry implements IMenuBarItemProvider {
     private static DockablesRegistry registry;
 
     private final HashMap<String, List<DockableElement>> dockables; //<directory, list>
+    
+    private final HashMap<String, List<JMenuItem>> dockablesASd = null; //<directory, list>
 
     private final CControl control;
 
@@ -64,13 +66,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         windowMenu.setName("window");
         windowMenu.setText(i18n.s("DockablesRegistry.menuItem"));
 
-        JMenuItem test = new JMenuItem("test");
-        windowMenu.add(test);
-
-        test.addActionListener((ActionEvent e) -> {
-            //System.out.println("saving...");
-            saveDockables();
-        });
     }
 
     public synchronized static DockablesRegistry getInstance() {
@@ -329,6 +324,30 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         return sd;
     }
 
+    public void closeDockableByGroup(String group) {
+        
+        List<DockableElement> docks = dockables.get(group);
+        if (docks != null) {
+            for (DockableElement dock : docks) {
+                control.removeDockable(dock);
+            }
+            dockables.remove(group);
+            docks = null;
+        }
+        
+        JMenu groupMenu = null;
+        for (Component c : windowMenu.getMenuComponents()) {
+            if ((c.getName() != null) && c.getName().equals(group) && (c instanceof JMenu)) {
+                groupMenu = (JMenu) c;
+            }
+        }
+        
+        if (groupMenu != null) {
+            windowMenu.remove(groupMenu);
+            groupMenu = null;
+        }
+    }
+    
     public void setJFrame(JFrame frame) {
         getInstance();
         control.setRootWindow(new DirectWindowProvider(frame));
@@ -369,4 +388,5 @@ public class DockablesRegistry implements IMenuBarItemProvider {
             return this.dockable;
         }
     }
+
 }

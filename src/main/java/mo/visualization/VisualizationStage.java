@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mo.core.I18n;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
 import mo.core.plugin.Plugin;
@@ -32,14 +33,17 @@ import mo.organization.StagePlugin;
 )
 public class VisualizationStage implements Stage {
     
-    List<StagePlugin> plugins;
-    List<StageAction> actions;
-    ProjectOrganization organization;
+    private List<StagePlugin> plugins;
+    private List<StageAction> actions;
+    private ProjectOrganization organization;
+    private I18n i18n;
     
     private static final Logger logger 
             = Logger.getLogger(VisualizationStage.class.getName());
 
     public VisualizationStage() {
+        i18n = new I18n(VisualizationStage.class);
+        
         plugins = new ArrayList<>();
         actions = new ArrayList<>();
         
@@ -62,7 +66,7 @@ public class VisualizationStage implements Stage {
 
     @Override
     public String getName() {
-        return "Visualization";
+        return i18n.s("VisualizationStage.visualization");
     }
 
     @Override

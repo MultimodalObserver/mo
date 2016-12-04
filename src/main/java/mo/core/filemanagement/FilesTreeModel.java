@@ -168,10 +168,12 @@ public class FilesTreeModel implements TreeModel {
         TreeModelEvent removeEvent;
 
         for (File next : files) {
-            if (f.getAbsolutePath().compareTo(next.getAbsolutePath()) == 0) {
+            if (f.getAbsolutePath().equals(next.getAbsolutePath())) {
                 toRemove = next;
             }
         }
+        
+        System.out.println(toRemove);
 
         if (null != toRemove) {
             removeEvent = new TreeModelEvent(
@@ -193,6 +195,10 @@ public class FilesTreeModel implements TreeModel {
 
     public TreeSet<File> getFiles() {
         return files;
+    }
+    
+    public boolean contains(File file) {
+        return files.contains(file);
     }
 
     @Override
@@ -280,6 +286,10 @@ public class FilesTreeModel implements TreeModel {
         File p = (File) parent;
         File c = (File) child;
         String[] list = p.list();
+        
+        if (list == null) {
+            return -1;
+        }
 
         for (int i = 0; i < list.length; i++) {
             if (c.getName().compareTo(list[i]) == 0) {

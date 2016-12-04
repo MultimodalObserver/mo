@@ -12,12 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.tree.TreeSelectionModel;
 import mo.core.I18n;
 import mo.core.plugin.Extends;
@@ -72,14 +67,16 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
                 if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
                     int row = filesTree.getRowForLocation(event.getX(), event.getY());
                     
-                    if (row == -1) {
+                    if (row == -1 || row == 0) {
                         return;
                     }
+                    
+                    
                     
                     filesTree.setSelectionRow(row);
                     File selected = (File) filesTree.getLastSelectedPathComponent();
                     
-                    FilePopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
+                    JPopupMenu pop = PopupRegistry.getInstance().getPopupFor(selected);
 
                     if (pop != null) {
                         pop.show((JComponent) event.getSource(),
@@ -118,6 +115,14 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
             
         } else {
             System.out.println("File <" + file + "> does not exists");
+        }
+    }
+    
+    public void closeFile(File file) {
+        if (file.exists()) {
+            if (filesTreeModel.contains(file)) {
+                filesTreeModel.removeFile(file);
+            }
         }
     }
     

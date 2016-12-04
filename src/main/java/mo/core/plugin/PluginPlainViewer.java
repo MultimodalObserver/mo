@@ -8,13 +8,13 @@ import mo.core.ui.menubar.IMenuBarItemProvider;
 import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
 
-@Extension(
-        xtends = {
-            @Extends(
-                    extensionPointId = "mo.core.ui.menubar.IMenuBarItemProvider"
-            )
-        }
-)
+//@Extension(
+//        xtends = {
+//            @Extends(
+//                    extensionPointId = "mo.core.ui.menubar.IMenuBarItemProvider"
+//            )
+//        }
+//)
 public class PluginPlainViewer implements IMenuBarItemProvider {
     
     JMenuItem menuLauncher;

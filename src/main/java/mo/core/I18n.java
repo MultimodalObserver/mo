@@ -31,13 +31,13 @@ public class I18n {
     private final String i18nFolder = "i18n";
 
     private final List<String> baseNames;
-    
+
     private static final Logger logger = Logger.getLogger(I18n.class.getName());
 
     public I18n(Class clazz) {
         //System.out.println("-----------i18n "+clazz.getName()+" ----------------");
         Locale locale = Locale.getDefault();
-        
+
         //System.out.println("Def locale : "+locale);
         baseNames = Arrays.asList(new String[]{BASE_NAME});
         _i18n = new I18N();
@@ -67,12 +67,18 @@ public class I18n {
                         String entryName = jarEntry.getName();
 
                         if (entryName.contains(baseFileName)) {
-                            //System.out.println("EntryName " + entryName);
 
-                            LocalizablePropertyResourceBundle b = new LocalizablePropertyResourceBundle(jarFile.getInputStream(jarEntry));
-                            String localeStr = entryName.substring(
-                                entryName.lastIndexOf(baseFileName) + baseFileName.length() + 1,
-                                entryName.lastIndexOf('.'));
+                            LocalizablePropertyResourceBundle b
+                                    = new LocalizablePropertyResourceBundle(jarFile.getInputStream(jarEntry));
+                            String localeStr = "";
+                            int startOfLocaleStr = entryName.lastIndexOf(baseFileName) + baseFileName.length();
+                            int indexOfPointAndExtension = entryName.lastIndexOf('.');
+
+                            if (startOfLocaleStr != indexOfPointAndExtension) {
+                                localeStr = entryName.substring(
+                                        startOfLocaleStr + 1 , indexOfPointAndExtension
+                                );
+                            }
                             b.setLocale(localeStr);
                             //printLocale(b);
                             bundles.add(b);
@@ -97,9 +103,9 @@ public class I18n {
                             //System.out.println("File " + file);
                             String name = file.getName();
                             String localeStr = name.substring(
-                                name.indexOf(baseFileName) + baseFileName.length()
-                                        + (name.contains("_")? 1 : 0),
-                                name.lastIndexOf('.'));
+                                    name.indexOf(baseFileName) + baseFileName.length()
+                                    + (name.contains("_") ? 1 : 0),
+                                    name.lastIndexOf('.'));
                             LocalizablePropertyResourceBundle b = new LocalizablePropertyResourceBundle(new FileInputStream(file));
                             //System.out.println(localeStr);
                             b.setLocale(localeStr);
@@ -144,14 +150,13 @@ public class I18n {
         }
 
         //System.out.println(Arrays.toString(matchsLevels));
-        
         for (int i = 3; i > -1; i--) {
             for (int j = 0; j < bundles.size(); j++) {
                 if (matchsLevels[j] == i) {
                     ResourceBundle b = bundles.get(j);
                     Set<String> keySet = b.keySet();
                     for (String key : keySet) {
-                        if ( !_i18n.getMessages().containsKey(key) ) {
+                        if (!_i18n.getMessages().containsKey(key)) {
                             _i18n.setMessage(key, b.getString(key));
                             //System.out.println("adding "+key+" "+b.getString(key));
                         }
@@ -179,8 +184,7 @@ public class I18n {
 
     private class MatchLevels {
 
-        public static final int
-                NONE = 0,
+        public static final int NONE = 0,
                 LANGUAGE = 1,
                 COUNTRY = 2,
                 VARIANT = 3;
@@ -226,15 +230,15 @@ public class I18n {
         return _i18n.m(cardinality, keyOne, keyMany, args);
     }
 
-    private class LocalizablePropertyResourceBundle 
+    private class LocalizablePropertyResourceBundle
             extends PropertyResourceBundle {
-        
+
         private Locale locale;
-        
+
         public LocalizablePropertyResourceBundle(InputStream stream) throws IOException {
             super(stream);
         }
-        
+
         public void setLocale(String localeString) {
             String[] parts = localeString.split("_");
             if (parts.length == 0) {
