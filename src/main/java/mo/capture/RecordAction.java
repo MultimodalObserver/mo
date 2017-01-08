@@ -42,7 +42,7 @@ public class RecordAction implements StageAction {
     public void init(
             ProjectOrganization organization,
             Participant participant,
-            Stage stage) {
+            StageModule stage) {
 
         this.org = organization;
         this.participant = participant;

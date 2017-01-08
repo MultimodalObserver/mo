@@ -5,12 +5,12 @@ import java.util.List;
 import mo.core.plugin.ExtensionPoint;
 
 @ExtensionPoint
-public interface Stage {
+public interface StageModule {
     
     String getCodeName();
     String getName();
     List<StagePlugin> getPlugins();
-    Stage fromFile(File file);
+    StageModule fromFile(File file);
     File toFile(File parent);
     void setOrganization(ProjectOrganization org);
     List<StageAction> getActions();

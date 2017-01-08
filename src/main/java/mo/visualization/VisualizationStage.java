@@ -20,18 +20,18 @@ import mo.core.plugin.Extension;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 import mo.organization.ProjectOrganization;
-import mo.organization.Stage;
 import mo.organization.StageAction;
 import mo.organization.StagePlugin;
+import mo.organization.StageModule;
 
 @Extension(
     xtends = {
         @Extends(
-                extensionPointId = "mo.organization.Stage"
+                extensionPointId = "mo.organization.StageModule"
         )
     }
 )
-public class VisualizationStage implements Stage {
+public class VisualizationStage implements StageModule {
     
     private List<StagePlugin> plugins;
     private List<StageAction> actions;
@@ -75,7 +75,7 @@ public class VisualizationStage implements Stage {
     }
 
     @Override
-    public Stage fromFile(File file) {
+    public StageModule fromFile(File file) {
         if (file.exists()) {
             try {
                 XElement root = XIO.readUTF(new FileInputStream(file));

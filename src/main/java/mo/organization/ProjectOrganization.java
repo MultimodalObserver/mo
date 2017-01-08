@@ -28,7 +28,7 @@ public class ProjectOrganization {
 
     Project project;
     List<Participant> participants;
-    List<Stage> stages;
+    List<StageModule> stages;
 
     public ProjectOrganization(String projectPath) {
         this(new Project(projectPath));
@@ -41,8 +41,8 @@ public class ProjectOrganization {
         restore();
     }
 
-    public void addStage(Stage stage) {
-        for (Stage s : stages) {
+    public void addStage(StageModule stage) {
+        for (StageModule s : stages) {
             if (s.getName().equals(stage.getName())) {
                 throw new IllegalArgumentException("Stage already exists");
             }
@@ -51,9 +51,9 @@ public class ProjectOrganization {
         stages.add(stage);
     }
     
-    public void addStageReplacingPrevious(Stage stage) {
-        ArrayList<Stage> toDelete = new ArrayList<>();
-        for (Stage s : stages) {
+    public void addStageReplacingPrevious(StageModule stage) {
+        ArrayList<StageModule> toDelete = new ArrayList<>();
+        for (StageModule s : stages) {
             if (s.getName().equals(stage.getName())) {
                 toDelete.add(s);
             }
@@ -64,7 +64,7 @@ public class ProjectOrganization {
         stages.add(stage);
     }
 
-    public List<Stage> getStages() {
+    public List<StageModule> getStages() {
         return stages;
     }
 
@@ -98,7 +98,7 @@ public class ProjectOrganization {
             root.addElement(ps);
             System.out.println("P Org store");
 
-            for (Stage stage : stages) {
+            for (StageModule stage : stages) {
                 XElement st = new XElement("stage");
 //                XElement name = new XElement("name");
 //                name.setString(stage.getName());
@@ -110,12 +110,14 @@ public class ProjectOrganization {
                 st.addAttribute(clazz);
 
                 File file = stage.toFile(project.getFolder());
-                Path projectRoot = Paths.get(project.getFolder().getAbsolutePath());
-                Path stagePath = Paths.get(file.toURI());
+                if (file != null) {
+                    Path projectRoot = Paths.get(project.getFolder().getAbsolutePath());
+                    Path stagePath = Paths.get(file.toURI());
 
-                Path relative = projectRoot.relativize(stagePath);
-                st.setString(relative.toString());
-                root.addElement(st);
+                    Path relative = projectRoot.relativize(stagePath);
+                    st.setString(relative.toString());
+                    root.addElement(st);
+                }
             }
             XIO.writeUTF(root, new FileOutputStream(orgXml));
         } catch (IOException ex) {
@@ -166,9 +168,9 @@ public class ProjectOrganization {
                         String path = xElement.getString();
                         Method method = clazz.getDeclaredMethod("fromFile", File.class);
 
-                        Stage stage;
+                        StageModule stage;
 
-                        stage = (Stage) method.invoke(
+                        stage = (StageModule) method.invoke(
                                 o, new File(project.getFolder(), path));
                         if (stage != null) {
                             stage.setOrganization(this);

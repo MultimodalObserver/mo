@@ -59,7 +59,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             insertNodeInParent(participantsNode, participant);
         }
 
-        for (Stage s : organization.getStages()) {
+        for (StageModule s : organization.getStages()) {
 
             DefaultMutableTreeNode newStageNode = new DefaultMutableTreeNode(s);
             insertNodeInParent(root, newStageNode);
@@ -90,12 +90,12 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         JMenu addStage = new JMenu(i18n.s("OrganizationDockable.addStage"));
         List<Plugin> stagePlugins
-                = PluginRegistry.getInstance().getPluginsFor("mo.organization.Stage");
+                = PluginRegistry.getInstance().getPluginsFor("mo.organization.StageModule");
         for (Plugin stagePlugin : stagePlugins) {
-            Stage nodeProvider = (Stage) stagePlugin.getNewInstance();
+            StageModule nodeProvider = (StageModule) stagePlugin.getNewInstance();
             JMenuItem item = new JMenuItem(nodeProvider.getName());
             item.addActionListener((ActionEvent e) -> {
-                addStageNodeIfNotExists((Stage) nodeProvider);
+                addStageNodeIfNotExists((StageModule) nodeProvider);
             });
             addStage.add(item);
         }
@@ -191,7 +191,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         participantMenu.add(lockItem);
 
         // TODO add actions menu items dynamically
-        for (Stage stage : organization.getStages()) {
+        for (StageModule stage : organization.getStages()) {
             addStageMenuToParticipantMenu(stage);
         }
 
@@ -224,9 +224,9 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                             lockItem.setText(i18n.s("OrganizationDockable.lock"));
                         }
                         participantMenu.show(source, x, y);
-                    } else if (selected.getUserObject() instanceof Stage) {
+                    } else if (selected.getUserObject() instanceof StageModule) {
                         JPopupMenu menu = new JPopupMenu("stage");
-                        Stage s = (Stage) selected.getUserObject();
+                        StageModule s = (StageModule) selected.getUserObject();
                         for (StagePlugin sp : s.getPlugins()) {
                             JMenuItem item = new JMenuItem(sp.getName());
                             item.addActionListener(new ActionListener() {
@@ -309,13 +309,13 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         }
     }
 
-    private void addStageNodeIfNotExists(Stage stage) {
+    private void addStageNodeIfNotExists(StageModule stage) {
         String newNodeName = stage.getName();
 
         for (DefaultMutableTreeNode node : stageNodes) {
 
-            if (node.getUserObject() instanceof Stage) {
-                String name = ((Stage) node.getUserObject()).getName();
+            if (node.getUserObject() instanceof StageModule) {
+                String name = ((StageModule) node.getUserObject()).getName();
                 if (name.equals(newNodeName)) {
                     System.out.println("Node already exists");
                     return;
@@ -401,7 +401,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         return this.organization.getParticipants();
     }
 
-    private void addStageMenuToParticipantMenu(Stage stage) {
+    private void addStageMenuToParticipantMenu(StageModule stage) {
         JMenu stageActions = new JMenu(stage.getName());
         for (StageAction action : stage.getActions()) {
             JMenuItem actionItem = new JMenuItem(action.getName());
@@ -447,8 +447,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                     returnValue = getRendererForParticipant(returnValue, (Participant) userObject);
                 } else if (userObject instanceof String && ((String) userObject).equals(i18n.s("OrganizationDockable.participants"))) {
                     returnValue = getRendererForParticipants(returnValue);
-                } else if (userObject instanceof Stage) {
-                    returnValue = getRendererForStage(returnValue, (Stage) userObject);
+                } else if (userObject instanceof StageModule) {
+                    returnValue = getRendererForStage(returnValue, (StageModule) userObject);
                 } else if (userObject instanceof PluginConfigPair) {
                     returnValue = getRendererForConfig(returnValue, (PluginConfigPair) userObject);
                 }
@@ -471,7 +471,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             return c;
         }
 
-        private DefaultTreeCellRenderer getRendererForStage(DefaultTreeCellRenderer c, Stage s) {
+        private DefaultTreeCellRenderer getRendererForStage(DefaultTreeCellRenderer c, StageModule s) {
             c.setText(s.getName());
             return c;
         }

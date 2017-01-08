@@ -6,9 +6,9 @@ import mo.core.plugin.Extension;
 import mo.organization.Configuration;
 import mo.organization.Participant;
 import mo.organization.ProjectOrganization;
-import mo.organization.Stage;
 import mo.organization.StageAction;
 import mo.organization.StagePlugin;
+import mo.organization.StageModule;
 
 public class VisualizeAction implements StageAction {
 
@@ -22,7 +22,7 @@ public class VisualizeAction implements StageAction {
     }
 
     @Override
-    public void init(ProjectOrganization organization, Participant participant, Stage stage) {
+    public void init(ProjectOrganization organization, Participant participant, StageModule stage) {
         
         ArrayList<Configuration> configs = new ArrayList<>();
         for (StagePlugin plugin : stage.getPlugins()) {
