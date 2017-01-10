@@ -85,7 +85,7 @@ public class TheEyeTribeCapturePlugin implements CaptureProvider {
 
     @Override
     public File toFile(File parent) {
-        File file = new File(parent, "theeyetribe-capture.xml");
+        File file = new File(parent, "theeyetribecapture.xml");
         if (!file.isFile()) {
             try {
                 file.createNewFile();
@@ -95,7 +95,7 @@ public class TheEyeTribeCapturePlugin implements CaptureProvider {
         }
         XElement root = new XElement("capturers");
         for (Configuration config : configurations) {
-            File p = new File(parent, "theeyetribe-capture");
+            File p = new File(parent, "theeyetribecapture");
             p.mkdirs();
             File f = config.toFile(p);
 

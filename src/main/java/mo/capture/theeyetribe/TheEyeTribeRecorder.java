@@ -38,7 +38,7 @@ public class TheEyeTribeRecorder implements IGazeListener {
     private void createFile(File parent) {
 
         Date now = new Date();
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss.SSS");
+        DateFormat df = new SimpleDateFormat("yyyyMMdd_HH.mm.ss.SSS");
 
         String reportDate = df.format(now);
 
