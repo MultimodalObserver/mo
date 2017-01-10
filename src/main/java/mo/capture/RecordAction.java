@@ -22,10 +22,10 @@ public class RecordAction implements StageAction {
     private RecordDialog dialog;
     File storageFolder;
     boolean isPaused = false;
-    
+
     private static final Image recImage
             = Utils.createImageIcon("images/rec.png", RecordAction.class).getImage();
-    
+
     private static final Image pausedImage
             = Utils.createImageIcon("images/rec-paused.png", RecordAction.class).getImage();
 
@@ -67,31 +67,34 @@ public class RecordAction implements StageAction {
     }
 
     private void startRecording() {
-        JFrame frame = DockablesRegistry.getInstance().getMainFrame();
 
-        if (SystemTray.isSupported()) {
-            try {
-                createAndShowTray();
-            } catch (AWTException ex) {
+        try {
+            for (RecordableConfiguration config : configurations) {
+                config.setupRecording(storageFolder, org, participant);
+            }
+
+            JFrame frame = DockablesRegistry.getInstance().getMainFrame();
+            if (SystemTray.isSupported()) {
+                try {
+                    createAndShowTray();
+                } catch (AWTException ex) {
+                    createAndShowControls();
+                }
+            } else {
                 createAndShowControls();
             }
-        } else {
-            createAndShowControls();
-        }
+            frame.setVisible(false);
 
-        frame.setVisible(false);
-
-        for (RecordableConfiguration config : configurations) {
-            config.setupRecording(storageFolder, org, participant);
-        }
-
-        for (RecordableConfiguration config : configurations) {
-            config.startRecording();
+            for (RecordableConfiguration config : configurations) {
+                config.startRecording();
+            }
+        } catch (Exception e) {
+            System.out.println("errorrrs!");
         }
     }
 
     private void createAndShowTray() throws AWTException {
-        
+
         final PopupMenu popup = new PopupMenu();
         final TrayIcon trayIcon = new TrayIcon(recImage);
         final SystemTray tray = SystemTray.getSystemTray();

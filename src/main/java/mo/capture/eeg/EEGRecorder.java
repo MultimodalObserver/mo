@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mo.capture.keyboard.KeyboardRecorder;
 import mo.organization.FileDescription;
 
 public class EEGRecorder implements EEGListener {
@@ -28,7 +27,17 @@ public class EEGRecorder implements EEGListener {
     
     public EEGRecorder(File stageFolder, EEGConfiguration config) throws IOException {
         client = new ThinkGearClient(null, null, false);
-        client.connect();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    client.connect();
+                } catch (IOException ex) {
+                    logger.log(Level.SEVERE, null, ex);
+                }
+            }
+        }).start();
+        
         this.config = config;
         createFile(stageFolder);
     }
@@ -44,7 +53,7 @@ public class EEGRecorder implements EEGListener {
         try {
             output.createNewFile();
             outputStream = new FileOutputStream(output);
-            desc = new FileDescription(output, KeyboardRecorder.class.getName());
+            desc = new FileDescription(output, EEGRecorder.class.getName());
         } catch (FileNotFoundException ex) {
             logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
@@ -133,7 +142,7 @@ public class EEGRecorder implements EEGListener {
         if (data.rawEegIsSet) {
             line += " r:" + data.rawEeg;
         }
-        return line;
+        return line+"\n";
     }
     
     // get string without .0 if necessary

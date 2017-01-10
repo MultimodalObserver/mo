@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.Socket;
-import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -52,6 +51,7 @@ public class ThinkGearClient {
             try {
                 EEGData data = mapper.readValue(line, EEGData.class);
                 data.time = time;
+                System.out.println(data);
                 for (EEGListener listener : listeners) {
                     listener.onData(data);
                 }

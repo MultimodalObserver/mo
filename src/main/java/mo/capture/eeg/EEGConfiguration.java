@@ -19,9 +19,7 @@ public class EEGConfiguration implements RecordableConfiguration {
     public EEGConfiguration(String id) {
         this.id = id;
     }
-    
-    
-    
+
     @Override
     public void setupRecording(File stageFolder, ProjectOrganization org, Participant p) {
         try {

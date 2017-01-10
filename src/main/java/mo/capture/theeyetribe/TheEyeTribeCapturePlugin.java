@@ -1,4 +1,4 @@
-package mo.capture.eeg;
+package mo.capture.theeyetribe;
 
 import bibliothek.util.xml.XElement;
 import bibliothek.util.xml.XIO;
@@ -23,30 +23,30 @@ import mo.organization.StagePlugin;
             @Extends(extensionPointId = "mo.capture.CaptureProvider")
         }
 )
-public class EEGCapturePlugin implements CaptureProvider {
+public class TheEyeTribeCapturePlugin implements CaptureProvider {
 
     private List<Configuration> configurations;
-    private static final Logger logger = Logger.getLogger(EEGCapturePlugin.class.getName());
+    private static final Logger logger = Logger.getLogger(TheEyeTribeCapturePlugin.class.getName());
 
-    public EEGCapturePlugin() {
+    public TheEyeTribeCapturePlugin() {
         configurations = new ArrayList<>();
     }
 
     @Override
     public String getName() {
-        return "MindWave";
+        return "The Eye Tribe";
     }
 
     @Override
     public Configuration initNewConfiguration(ProjectOrganization organization) {
-        EEGConfigurationDialog dialog
-                = new EEGConfigurationDialog(organization);
+        TheEyeTribeDialog dialog
+                = new TheEyeTribeDialog(organization);
 
         boolean accepted = dialog.showDialog();
 
         if (accepted) {
-            EEGConfiguration configuration
-                    = new EEGConfiguration(dialog.getConfigurationName());
+            TheEyeTribeConfiguration configuration
+                    = new TheEyeTribeConfiguration(dialog.getConfigurationName());
 
             configurations.add(configuration);
             return configuration;
@@ -57,19 +57,19 @@ public class EEGCapturePlugin implements CaptureProvider {
 
     @Override
     public List<Configuration> getConfigurations() {
-        return configurations;
+        return new ArrayList<>();
     }
 
     @Override
     public StagePlugin fromFile(File file) {
         if (file.isFile()) {
             try {
-                EEGCapturePlugin mc = new EEGCapturePlugin();
+                TheEyeTribeCapturePlugin mc = new TheEyeTribeCapturePlugin();
                 XElement root = XIO.readUTF(new FileInputStream(file));
                 XElement[] pathsX = root.getElements("path");
                 for (XElement pathX : pathsX) {
                     String path = pathX.getString();
-                    EEGConfiguration c = new EEGConfiguration("");
+                    TheEyeTribeConfiguration c = new TheEyeTribeConfiguration("");
                     Configuration config = c.fromFile(new File(file.getParentFile(), path));
                     if (config != null) {
                         mc.configurations.add(config);
@@ -85,7 +85,7 @@ public class EEGCapturePlugin implements CaptureProvider {
 
     @Override
     public File toFile(File parent) {
-        File file = new File(parent, "eeg-capture.xml");
+        File file = new File(parent, "theeyetribe-capture.xml");
         if (!file.isFile()) {
             try {
                 file.createNewFile();
@@ -95,7 +95,7 @@ public class EEGCapturePlugin implements CaptureProvider {
         }
         XElement root = new XElement("capturers");
         for (Configuration config : configurations) {
-            File p = new File(parent, "eeg-capture");
+            File p = new File(parent, "theeyetribe-capture");
             p.mkdirs();
             File f = config.toFile(p);
 

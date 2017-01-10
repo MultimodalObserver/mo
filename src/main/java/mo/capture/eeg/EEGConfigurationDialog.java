@@ -1,7 +1,14 @@
-package mo.capture.keyboard;
+package mo.capture.eeg;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dialog;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -12,34 +19,24 @@ import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.organization.ProjectOrganization;
 
-public class KeyboardCaptureConfigurationDialog 
-        extends JDialog implements DocumentListener {
+public class EEGConfigurationDialog extends JDialog implements DocumentListener {
 
-    JLabel errorLabel;
-    JTextField nameField;
-    JButton accept;
+    private boolean accepted;
+    private JTextField nameField;
+    private JLabel errorLabel;
+    private JButton accept;
 
-    ProjectOrganization org;
-
-    boolean accepted = false;
-
-    public KeyboardCaptureConfigurationDialog() {
-        super(null, "Keyboard Capture Configuration", Dialog.ModalityType.APPLICATION_MODAL);
+    public EEGConfigurationDialog(ProjectOrganization organization) {
+        super(null, "Mindwave EEG Capture Configuration", Dialog.ModalityType.APPLICATION_MODAL);
     }
 
-    public KeyboardCaptureConfigurationDialog(ProjectOrganization organization) {
-        super(null, "Keyboard Capture Configuration", Dialog.ModalityType.APPLICATION_MODAL);
-        org = organization;
-    }
-
-    public boolean showDialog() {
-
+    boolean showDialog() {
+        
         setLayout(new GridBagLayout());
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                accepted = false;
                 super.windowClosing(e);
             }
         });
@@ -86,14 +83,6 @@ public class KeyboardCaptureConfigurationDialog
         return accepted;
     }
 
-    public static void main(String[] args) {
-        ProjectOrganization o = new ProjectOrganization("C:\\Users\\Celso\\Desktop\\example");
-        KeyboardCaptureConfigurationDialog c = new KeyboardCaptureConfigurationDialog(o);
-        
-        boolean i = c.showDialog();
-        System.exit(0);
-    }
-
     @Override
     public void insertUpdate(DocumentEvent e) {
         updateState();
@@ -119,8 +108,15 @@ public class KeyboardCaptureConfigurationDialog
         }
     }
 
-    public String getConfigurationName() {
+    String getConfigurationName() {
         return nameField.getText();
     }
+    
+    public static void main(String[] args) {
+        ProjectOrganization o = new ProjectOrganization("C:\\Users\\Celso\\Desktop\\example");
+        EEGConfigurationDialog c = new EEGConfigurationDialog(o);
+        
+        boolean i = c.showDialog();
+        System.exit(0);
+    }
 }
-
