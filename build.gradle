@@ -83,7 +83,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     
-    compile 'com.theeyetribe:eyetribe-java:0.9.77'
+    compile 'com.theeyetribe:eyetribe-java:0.9.60'
     
     compile 'es.e-ucm:i18n:1.1.2-SNAPSHOT'
     

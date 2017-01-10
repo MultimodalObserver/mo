@@ -174,7 +174,8 @@ public class FixationPanel extends JPanel {
                 
                 FontMetrics fm = g.getFontMetrics();
                 
-                g.drawString(fix.number + "", p.x, p.y);
+                //g.
+                g.drawString(fix.number + "", (int)p.x, (int)p.y);
             }
         }
     }
