@@ -6,11 +6,18 @@ import mo.organization.Configuration;
 import mo.organization.Participant;
 import mo.organization.ProjectOrganization;
 
-public class TheEyetribeConfiguration implements RecordableConfiguration {
+public class TheEyeTribeConfiguration implements RecordableConfiguration {
+
+    private String id;
+    private TheEyeTribeRecorder recorder;
+    
+    public TheEyeTribeConfiguration(String id) {
+        this.id = id;
+    }
 
     @Override
     public void setupRecording(File stageFolder, ProjectOrganization org, Participant p) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder = new TheEyeTribeRecorder(stageFolder, this);
     }
 
     @Override
