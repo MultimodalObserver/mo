@@ -57,7 +57,7 @@ public class TheEyeTribeCapturePlugin implements CaptureProvider {
 
     @Override
     public List<Configuration> getConfigurations() {
-        return new ArrayList<>();
+        return configurations;
     }
 
     @Override
