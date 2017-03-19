@@ -28,9 +28,9 @@ public class TheEyeTribeRecorder implements IGazeListener {
     private FileDescription desc;
     ObjectMapper mapper = new ObjectMapper();
 
-    public TheEyeTribeRecorder(File stageFolder, TheEyeTribeConfiguration aThis) {
+    public TheEyeTribeRecorder(File stageFolder, TheEyeTribeConfiguration config) {
         client = new TETClient(null, null);
-
+        client.connect();
         this.config = config;
         createFile(stageFolder);
     }
@@ -51,9 +51,8 @@ public class TheEyeTribeRecorder implements IGazeListener {
             logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
-        }
-
-    }
+        } 
+   }
 
     private void deleteFile() {
         if (output.isFile()) {

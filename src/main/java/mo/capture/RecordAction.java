@@ -5,6 +5,8 @@ import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -28,6 +30,8 @@ public class RecordAction implements StageAction {
 
     private static final Image pausedImage
             = Utils.createImageIcon("images/rec-paused.png", RecordAction.class).getImage();
+    
+    private static final Logger logger = Logger.getLogger(RecordAction.class.getName());
 
     public RecordAction() {
         configurations = new ArrayList<>();
@@ -88,8 +92,8 @@ public class RecordAction implements StageAction {
             for (RecordableConfiguration config : configurations) {
                 config.startRecording();
             }
-        } catch (Exception e) {
-            System.out.println("errorrrs!");
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 

@@ -1,7 +1,11 @@
 package mo.capture.theeyetribe;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import mo.capture.RecordableConfiguration;
+import mo.capture.mouse.MouseCaptureConfiguration;
 import mo.organization.Configuration;
 import mo.organization.Participant;
 import mo.organization.ProjectOrganization;
@@ -10,6 +14,8 @@ public class TheEyeTribeConfiguration implements RecordableConfiguration {
 
     private String id;
     private TheEyeTribeRecorder recorder;
+    
+    private static final Logger logger = Logger.getLogger(TheEyeTribeConfiguration.class.getName());
     
     public TheEyeTribeConfiguration(String id) {
         this.id = id;
@@ -22,42 +28,56 @@ public class TheEyeTribeConfiguration implements RecordableConfiguration {
 
     @Override
     public void startRecording() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder.start();
     }
 
     @Override
     public void cancelRecording() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder.cancel();
     }
 
     @Override
     public void pauseRecording() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder.pause();
     }
 
     @Override
     public void resumeRecording() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder.resume();
     }
 
     @Override
     public void stopRecording() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        recorder.stop();
     }
 
     @Override
     public String getId() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return id;
     }
 
     @Override
     public File toFile(File parent) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            File f = new File(parent, "tet_"+id+".txt");
+            f.createNewFile();
+            return f;
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
     @Override
     public Configuration fromFile(File file) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        String fileName = file.getName();
+        System.out.println("mkconfigfromfile file:"+file);
+        if (fileName.contains("_") && fileName.contains(".")) {
+            String name = fileName.substring(fileName.indexOf("_")+1, fileName.lastIndexOf("."));
+            TheEyeTribeConfiguration config = new TheEyeTribeConfiguration(name);
+            return config;
+        }
+        return null;
     }
     
 }
