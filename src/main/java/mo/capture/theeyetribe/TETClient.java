@@ -7,6 +7,7 @@ import com.theeyetribe.clientsdk.IConnectionStateListener;
 import com.theeyetribe.clientsdk.IGazeListener;
 import com.theeyetribe.clientsdk.data.GazeData;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public class TETClient implements IConnectionStateListener, IGazeListener {
 
@@ -14,6 +15,8 @@ public class TETClient implements IConnectionStateListener, IGazeListener {
     Integer port;
     GazeManager gm;
     ArrayList<IGazeListener> listeners;
+    
+    private static final Logger logger = Logger.getLogger(TETClient.class.getName());
 
     public TETClient(String hostname, Integer port) {
 
@@ -46,6 +49,9 @@ public class TETClient implements IConnectionStateListener, IGazeListener {
         gm = GazeManager.getInstance();
         boolean success = gm.activate(ApiVersion.VERSION_1_0, ClientMode.PUSH, hostname, port, this);
 
+        if (!success) {
+            logger.info("Can't connect to TheEyeTribe server");
+        }
         System.out.println("Success: " + success);
         
         gm.addGazeListener(this);
