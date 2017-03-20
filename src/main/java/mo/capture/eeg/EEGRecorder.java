@@ -27,7 +27,7 @@ public class EEGRecorder implements EEGListener {
     
     public EEGRecorder(File stageFolder, EEGConfiguration config) throws IOException {
         client = new ThinkGearClient(null, null, false);
-        new Thread(new Runnable() {
+        Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -36,8 +36,9 @@ public class EEGRecorder implements EEGListener {
                     logger.log(Level.SEVERE, null, ex);
                 }
             }
-        }).start();
-        
+        });
+        t.start();
+        //t.
         this.config = config;
         createFile(stageFolder);
     }
@@ -106,9 +107,10 @@ public class EEGRecorder implements EEGListener {
     @Override
     public void onData(EEGData data) {
         try {
+            System.out.println("data: "+ format(data));
             outputStream.write(format(data).getBytes());
         } catch (IOException ex) {
-            Logger.getLogger(EEGRecorder.class.getName()).log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 

@@ -14,8 +14,8 @@ import java.util.logging.Logger;
 public class ThinkGearClient {
     
     private final ArrayList<EEGListener> listeners;
-    private final String host;
-    private final Integer port;
+    private String host = "127.0.0.1";
+    private Integer port = 13854;
     private final boolean enableRawOutput;
     private Socket socket;
     
@@ -25,8 +25,13 @@ public class ThinkGearClient {
         
         listeners = new ArrayList<>();
         
-        this.host = host == null ? "127.0.0.1": host;
-        this.port = port == null ? 13854: port;
+        if (host != null) {
+            this.host = host;
+        }
+        
+        if (port != null) {
+            this.port = port;
+        }
         
         this.enableRawOutput = enableRawOutput;
     }
@@ -84,10 +89,12 @@ public class ThinkGearClient {
     }
 
     public void disconnect() {
-        try {
-            socket.close();
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+        if (socket != null && socket.isConnected()) {
+            try {
+                socket.close();
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
         }
     }
 }
