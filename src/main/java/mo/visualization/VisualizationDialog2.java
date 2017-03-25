@@ -20,9 +20,9 @@ import javax.swing.JPanel;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.WizardDialog;
 import mo.organization.Configuration;
-import mo.visualization.mouse.DataFileFinder;
-import static mo.visualization.mouse.DataFileFinder.findFilesCreatedBy;
-import mo.visualization.mouse.MouseVisConfiguration;
+import mo.mouse.visualization.DataFileFinder;
+import static mo.mouse.visualization.DataFileFinder.findFilesCreatedBy;
+import mo.mouse.visualization.MouseVisConfiguration;
 
 public class VisualizationDialog2 {
 
