@@ -117,11 +117,6 @@ public class EyeTribePlayer implements Playable {
     }
 
     @Override
-    public void setSpeed(double factor) {
-        speed = factor;
-    }
-
-    @Override
     public void pause() {
         isPlaying = false;
     }
@@ -185,48 +180,48 @@ public class EyeTribePlayer implements Playable {
         isPlaying = playing;
     }
 
-    @Override
-    public void play() {
-        isPlaying = true;
-        TrackerGetResponse next = null;
-        while (isPlaying) {
-            if (current == null) {
-                current = getNext();
-            }
-            next = getNext();
-            
-//            pane.display(new Point(
-//                    (int) current.values.frame.smoothedCoordinates.x,
-//                    (int) current.values.frame.smoothedCoordinates.y));
-
-            double x = current.values.frame.smoothedCoordinates.x;
-            double y = current.values.frame.smoothedCoordinates.y;
-
-            if (current.values.frame.state != GazeData.STATE_TRACKING_FAIL &&
-                    current.values.frame.state != GazeData.STATE_TRACKING_LOST
-                    && !(x == 0 && y==0) ) {
-                hmap.update((int) x, (int) y);
-            }
-            
-            if (linesCount % 1000 == 0) {
-                System.out.println(linesCount);
-                if (linesCount > 118000) {
-                    isPlaying = false;
-                    System.out.println("end");
-                    System.exit(0);
-                }
-            }
-            
-            long sleep = (long) ((dateStringToMillis(next.values.frame.timeStampString) - dateStringToMillis(current.values.frame.timeStampString)) / speed);
-            current = next;
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            }
-
-        }
-    }
+//    @Override
+//    public void play() {
+//        isPlaying = true;
+//        TrackerGetResponse next = null;
+//        while (isPlaying) {
+//            if (current == null) {
+//                current = getNext();
+//            }
+//            next = getNext();
+//            
+////            pane.display(new Point(
+////                    (int) current.values.frame.smoothedCoordinates.x,
+////                    (int) current.values.frame.smoothedCoordinates.y));
+//
+//            double x = current.values.frame.smoothedCoordinates.x;
+//            double y = current.values.frame.smoothedCoordinates.y;
+//
+//            if (current.values.frame.state != GazeData.STATE_TRACKING_FAIL &&
+//                    current.values.frame.state != GazeData.STATE_TRACKING_LOST
+//                    && !(x == 0 && y==0) ) {
+//                hmap.update((int) x, (int) y);
+//            }
+//            
+//            if (linesCount % 1000 == 0) {
+//                System.out.println(linesCount);
+//                if (linesCount > 118000) {
+//                    isPlaying = false;
+//                    System.out.println("end");
+//                    System.exit(0);
+//                }
+//            }
+//            
+//            long sleep = (long) ((dateStringToMillis(next.values.frame.timeStampString) - dateStringToMillis(current.values.frame.timeStampString)) / speed);
+//            current = next;
+//            try {
+//                Thread.sleep(sleep);
+//            } catch (InterruptedException ex) {
+//                logger.log(Level.SEVERE, null, ex);
+//            }
+//
+//        }
+//    }
     
     TrackerGetResponse getNext() {
         TrackerGetResponse r = null;
@@ -275,8 +270,13 @@ public class EyeTribePlayer implements Playable {
             }
         });
 
-        p.play();
+        p.play(0); //TODO
 
+    }
+
+    @Override
+    public void play(long millis) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     public static class TestPane extends JPanel {

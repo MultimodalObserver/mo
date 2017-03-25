@@ -191,7 +191,7 @@ public class VisualizationPlayer {
 
     private void playAll() {
         for (VisualizableConfiguration config : configs) {
-            config.play();
+            config.play(0); //TODO0000000000000
         }
     }
 
