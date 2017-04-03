@@ -86,7 +86,13 @@ public class PlayerControlsPanel {
     }
     
     private void playPressed() {
-        player.play();
+        if (player.isPlaying()) {
+            player.pause();
+            play.setText("||");
+        } else {
+            player.play();
+            play.setText(">");
+        }
     }
 
     public void setTime(long time) {
