@@ -4,18 +4,11 @@
   <auxiliary>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-      <group>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/capture/RecordAction.java</file>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/visualization/gamelooptest/Playable2.java</file>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/visualization/gamelooptest/GameLoopPlayer.java</file>
-      </group>
+      <group/>
     </open-files>
+    <editor-bookmarks lastBookmarkId="0" xmlns="http://www.netbeans.org/ns/editor-bookmarks/2"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-      <group>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/capture/RecordAction.java</file>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/visualization/gamelooptest/Playable2.java</file>
-        <file>file:/F:/mega/MO/mo/multimodal-observer/src/main/java/mo/visualization/gamelooptest/GameLoopPlayer.java</file>
-      </group>
+      <group/>
     </open-files>
   </auxiliary>
 </gradle-project-properties>

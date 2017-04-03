@@ -1,5 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Title: Gradle
-Implementation-Version: 0.0.0
-Main-Class: mo.core.MultimodalObserver
-
