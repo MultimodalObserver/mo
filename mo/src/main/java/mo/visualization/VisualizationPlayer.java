@@ -90,6 +90,7 @@ public class VisualizationPlayer {
 
     public void play() {
         playerThread = new Thread(() -> {
+            isPlaying = true;
             while(!Thread.interrupted()) {
                 
                 long loopStart = System.nanoTime();
@@ -119,6 +120,7 @@ public class VisualizationPlayer {
             }
         });
         playerThread.start();
+        
         
         
 //        if (current >= end) {
@@ -211,4 +213,10 @@ public class VisualizationPlayer {
     public long getEnd() {
         return end;
     }
+
+    public boolean isPlaying() {
+        return isPlaying;
+    }
+    
+    
 }
