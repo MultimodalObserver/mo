@@ -8,7 +8,7 @@ sourceCompatibility = '1.8'
 //mainClassName = 'core.App'
 version = '0.0.0'
 
-evaluationDependsOn(':mo')
+//evaluationDependsOn(':mo')
 
 // NetBeans will automatically add "run" and "debug" tasks relying on the
 // "mainClass" property. You may however define the property prior executing
@@ -27,6 +27,7 @@ repositories {
     //allow local dependencies (dockframes)
     flatDir {
         dirs 'libs'
+        dirs '../libs/'
     }
     
     maven {
