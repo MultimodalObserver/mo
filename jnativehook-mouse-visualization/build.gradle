@@ -12,6 +12,7 @@ repositories {
     //allow local dependencies (dockframes)
     flatDir {
         dirs 'libs'
+        dirs '../libs/'
     }
     
     maven {
