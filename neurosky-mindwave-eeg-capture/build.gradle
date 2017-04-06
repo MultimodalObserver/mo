@@ -13,15 +13,21 @@ repositories {
     //allow local dependencies (dockframes)
     flatDir {
         dirs 'libs'
+        dirs '../libs'
     }
 }
 
 dependencies {
     
     compile project(':mo')
-/*
+
     testCompile group: 'junit', name: 'junit', version: '4.10'
 
+    compile name: "docking-frames-core"
+    compile name: "docking-frames-common"
+    compile name: 'i18n-1.1.2-SNAPSHOT' 
+    compile 'com.theeyetribe:eyetribe-java:0.9.60'
+    /*
     // http://mvnrepository.com/artifact/commons-io/commons-io
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
 
@@ -39,7 +45,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
     
-    compile 'com.theeyetribe:eyetribe-java:0.9.60'
+    
        
     //Jackson: json lib
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core

@@ -55,8 +55,11 @@ public class MousePlayer implements Playable {
                 nextEvent = readNextEventFromFile();
             }
 
+            
+            pane = new PlayerPane(bounds);
+            
             SwingUtilities.invokeLater(() -> {
-                pane = new PlayerPane(bounds);
+                
                 pane.display(currentEvent);
 //                DockableElement e = new DockableElement();
 //                e.add(pane);
