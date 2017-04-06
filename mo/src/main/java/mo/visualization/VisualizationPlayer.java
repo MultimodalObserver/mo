@@ -98,6 +98,8 @@ public class VisualizationPlayer {
                 for (VisualizableConfiguration config : configs) {
                     config.play(current);
                 }
+                
+                panel.setTime(current);
 
                 long loopEnd = System.nanoTime();
                 
