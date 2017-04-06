@@ -64,7 +64,7 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
             @Override
             public void mouseReleased(MouseEvent event) {
                 
-                if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
+                if (SwingUtilities.isRightMouseButton(event) /*&& event.isPopupTrigger()*/) {
                     int row = filesTree.getRowForLocation(event.getX(), event.getY());
                     
                     if (row == -1 || row == 0) {

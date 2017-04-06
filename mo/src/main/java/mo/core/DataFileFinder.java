@@ -53,9 +53,16 @@ public class DataFileFinder {
                                         System.out.println("comparing "+prop.getProperty("creator")+" with "+creator);
                                         if (prop.get("creator").equals(creator)) {
                                             if (prop.containsKey("file")) {
-                                                File f = new File(t.toFile() + "/" + prop.getProperty("file"));
+                                                //t.toFile().
+//                                                System.out.println("path1 "+t);
+//                                                System.out.println("path2 "+prop.getProperty("file"));
+//                                                System.out.println("p "+t.resolve(prop.getProperty("file")).normalize().toUri());
+                                                File f = t.resolve(prop.getProperty("file")).normalize().toFile();
                                                 if (f.exists()) {
                                                     result.add(f);
+                                                    System.out.println(f+" existe!");
+                                                } else {
+                                                    System.out.println("no existe :c");
                                                 }
                                             }
                                         }

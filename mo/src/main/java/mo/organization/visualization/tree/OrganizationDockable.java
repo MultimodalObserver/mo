@@ -198,7 +198,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseReleased(MouseEvent event) {
-                if (SwingUtilities.isRightMouseButton(event) && event.isPopupTrigger()) {
+                if (SwingUtilities.isRightMouseButton(event) /*&& event.isPopupTrigger()*/) {
 
                     JComponent source = (JComponent) event.getSource();
                     int x = event.getX();
