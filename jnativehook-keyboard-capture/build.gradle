@@ -6,12 +6,19 @@ sourceCompatibility = '1.8'
 
 version = '0.0.0'
 
+//evaluationDependsOn(':mo')
+
 repositories {
     mavenCentral()
    
     //allow local dependencies (dockframes)
     flatDir {
+        dirs '../libs'
         dirs 'libs'
+    }
+    
+    maven {
+        url  "http://dl.bintray.com/eyetribe/maven"
     }
 }
 
@@ -20,6 +27,10 @@ dependencies {
     compile project(':mo')
     
     testCompile group: 'junit', name: 'junit', version: '4.10'
+
+    compile name: "docking-frames-core"
+    compile name: "docking-frames-common"
+    compile name: 'i18n-1.1.2-SNAPSHOT' 
 }
 
 jar {
