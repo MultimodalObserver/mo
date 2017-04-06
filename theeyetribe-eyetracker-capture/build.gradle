@@ -13,10 +13,6 @@ repositories {
     flatDir {
         dirs 'libs'
     }
-    
-    maven {
-        url  "http://dl.bintray.com/eyetribe/maven"
-    }
 }
 
 dependencies {
@@ -33,7 +29,7 @@ jar {
         )
     }
     
-    from (configurations.compile.collect 
+/*    from (configurations.compile.collect 
         { it.isDirectory() ? it : zipTree(it) }){
         // remove all signature files
         exclude "META-INF/*.SF"
@@ -41,7 +37,7 @@ jar {
         exclude "META-INF/*.RSA"
     }
     
-    doLast{
+*/    doLast{
         project.file('build/libs/plugins').mkdirs()
         copy{
             from 'src/main/resources'
