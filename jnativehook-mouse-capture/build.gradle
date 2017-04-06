@@ -34,6 +34,7 @@ repositories {
         url  "http://dl.bintray.com/eyetribe/maven"
         //url  "http://artifactory.autocrm.net/artifactory/repo"
     }
+
 }
 
 dependencies {
@@ -41,9 +42,9 @@ dependencies {
     compile project(':mo')
     
     testCompile group: 'junit', name: 'junit', version: '4.10'
-
     compile name: "docking-frames-core"
     compile name: "docking-frames-common"
+    compile name: 'i18n-1.1.2-SNAPSHOT' 
 }
 
 jar {
