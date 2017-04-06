@@ -9,13 +9,9 @@ version = '0.0.0'
 repositories {
     mavenCentral()
    
-    //allow local dependencies (dockframes)
+    //allow local dependencies
     flatDir {
         dirs 'libs'
-    }
-    
-    maven {
-        url  "http://dl.bintray.com/eyetribe/maven"
     }
 }
 
@@ -24,9 +20,6 @@ dependencies {
     compile project(':mo')
     
     testCompile group: 'junit', name: 'junit', version: '4.10'
-
-    compile name: "docking-frames-core"
-    compile name: "docking-frames-common"
 }
 
 jar {
@@ -36,13 +29,13 @@ jar {
         )
     }
     
-    from (configurations.compile.collect 
+/*    from (configurations.compile.collect 
         { it.isDirectory() ? it : zipTree(it) }){
         // remove all signature files
         exclude "META-INF/*.SF"
         exclude "META-INF/*.DSA"
         exclude "META-INF/*.RSA"
-    }
+    }*/
     
     doLast{
         copy{
