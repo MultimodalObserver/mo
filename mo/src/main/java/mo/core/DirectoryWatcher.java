@@ -203,6 +203,11 @@ public class DirectoryWatcher {
         if (watcherThread != null && !watcherThread.isInterrupted() 
                 && watcherThread.isAlive()) {
             watcherThread.interrupt();
+            try {
+                watcher.close();
+            } catch (IOException ex) {
+                LOGGER.log(Level.SEVERE, null, ex);
+            }
         }
     }
     

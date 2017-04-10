@@ -40,8 +40,10 @@ public class CaptureStage implements StageModule {
     private List<StageAction> actions;
     private I18n i18n;
 
+    private static final String CODE_NAME = "capture";
+
     public CaptureStage() {
-        
+
         i18n = new I18n(CaptureStage.class);
 
         plugins = new ArrayList<>();
@@ -49,11 +51,11 @@ public class CaptureStage implements StageModule {
             CaptureProvider c = (CaptureProvider) plugin.getNewInstance();
             plugins.add(c);
         }
-        
+
         StageAction record = new RecordAction();
         actions = new ArrayList<>();
         actions.add(record);
-                
+
     }
 
     @Override
@@ -103,15 +105,15 @@ public class CaptureStage implements StageModule {
                 return cs;
             } catch (IOException | ClassNotFoundException ex) {
                 logger.log(Level.SEVERE, null, ex);
-            } catch (InstantiationException | IllegalAccessException 
-                    | NoSuchMethodException | SecurityException 
+            } catch (InstantiationException | IllegalAccessException
+                    | NoSuchMethodException | SecurityException
                     | IllegalArgumentException | InvocationTargetException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
         }
         return null;
     }
-    
+
     private void addOrReplaceStagePlugin(StagePlugin p) {
         ArrayList<StagePlugin> pluginsToReplace = new ArrayList<>();
         for (StagePlugin plugin : plugins) {
@@ -127,19 +129,18 @@ public class CaptureStage implements StageModule {
     public File toFile(File parent) {
         try {
             File captureFile = new File(parent, "capture.xml");
-            captureFile.createNewFile();
+            if (captureFile.createNewFile()) {
 
-            System.out.println("saving capture");
+                System.out.println("saving capture");
 
-            XElement root = new XElement("capture");
+                XElement root = new XElement("capture");
 
-            XElement name = new XElement("name");
-            name.setString(getName());
+                XElement name = new XElement("name");
+                name.setString(getName());
 
-            root.addElement(name);
+                root.addElement(name);
 
-            for (StagePlugin plugin : plugins) {
-                if (!plugin.getConfigurations().isEmpty()) {
+                plugins.stream().filter((plugin) -> (!plugin.getConfigurations().isEmpty())).forEachOrdered((plugin) -> {
                     File p = new File(parent, "capture");
                     if (!p.isDirectory()) {
                         p.mkdirs();
@@ -158,12 +159,12 @@ public class CaptureStage implements StageModule {
                         pluginX.addElement(path);
                         root.addElement(pluginX);
                     }
-                }
+                });
+
+                XIO.writeUTF(root, new FileOutputStream(captureFile));
+
+                return captureFile;
             }
-
-            XIO.writeUTF(root, new FileOutputStream(captureFile));
-
-            return captureFile;
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -177,6 +178,6 @@ public class CaptureStage implements StageModule {
 
     @Override
     public String getCodeName() {
-        return getName().toLowerCase();
+        return CODE_NAME;
     }
 }

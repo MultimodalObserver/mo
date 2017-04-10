@@ -60,7 +60,7 @@ public class RecordAction implements StageAction {
 
         storageFolder = new File(org.getLocation(),
                 "participant-" + participant.id + "/"
-                + stage.getName().toLowerCase());
+                + stage.getCodeName().toLowerCase());
         storageFolder.mkdirs();
 
         dialog = new RecordDialog(configs);

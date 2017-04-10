@@ -4,7 +4,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Date;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -17,28 +16,29 @@ public class PlayerControlsPanel {
     private JPanel panel;
     private JSlider slider;
     private JButton play;
-    private int sliderPrecision = 1000; //seconds
-    private GridBConstraints gbc;
-    private boolean sliderMovedProgrammatically;
-    private JLabel ellapsedTLabel;
-    private final static String ellapsedFormat = "%02d:%02d:%02d:%1d";
     private JLabel currentTime;
+    private JLabel ellapsedTLabel;
+    private GridBConstraints gbc;
     
-    private VisualizationPlayer player;
+    private boolean sliderMovedProgrammatically;
+        
+    private final static String ELLAPSED_FORMAT = "%02d:%02d:%02d:%1d";
+    private final FastDateFormat timeF = FastDateFormat.getInstance("yyyy-MM-dd  HH:mm:ss:SSS");
     
-    private long start, end;
+    private final VisualizationPlayer player;
+    
+    private static final String PLAY_SYMBOL = "\u25B6";
+    private static final String PAUSE_SYMBOL = "||"; //"\u23F8";
+    private static final String STOP_SYMBOL = "\u25A0";
     
     public PlayerControlsPanel(VisualizationPlayer player) {
         
         this.player = player;
-        start = player.getStart();
-        end = player.getEnd();
         
         panel = new JPanel(new GridBagLayout());
         
         SwingUtilities.invokeLater(() -> {
             gbc = new GridBConstraints();
-            
 
             slider = new JSlider(0, (int) (player.getEnd() - player.getStart()), 0);
             slider.addChangeListener(new ChangeListener() {
@@ -61,12 +61,9 @@ public class PlayerControlsPanel {
             gbc.i(new Insets(5, 5, 5, 5)).wx(1);
             panel.add(slider, gbc.gw(3));
 
-            play = new JButton(">");
-            play.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    playPressed();
-                }
+            play = new JButton(PLAY_SYMBOL);
+            play.addActionListener((ActionEvent e) -> {
+                playPressed();
             });
             panel.add(play, gbc.gy(1).gw(1).wx(0));
 
@@ -82,39 +79,49 @@ public class PlayerControlsPanel {
     private void sliderMoved() {
         int val = slider.getValue();
         long current = player.getStart() + val;
+        setTime(current);
         player.seek(current);
     }
     
     private void playPressed() {
         if (player.isPlaying()) {
+            play.setText(PLAY_SYMBOL);
             player.pause();
-            play.setText("||");
         } else {
+            play.setText(PAUSE_SYMBOL);
             player.play();
-            play.setText(">");
         }
     }
 
     public void setTime(long time) {
         SwingUtilities.invokeLater(() -> {
-            int ellapsed = (int) (time - start);
+            int ellapsed = (int) (time - player.getStart());
             long millis = (ellapsed % 1000) / 100;
             long second = (ellapsed / 1000) % 60;
             long minute = (ellapsed / (1000 * 60)) % 60;
             long hour = (ellapsed / (1000 * 60 * 60)) % 24;
-            ellapsedTLabel.setText(String.format(ellapsedFormat, hour, minute, second, millis));
+            ellapsedTLabel.setText(
+                    String.format(ELLAPSED_FORMAT, hour, minute, second, millis));
             
             Date d = new Date(time);
-            FastDateFormat timeF = FastDateFormat.getInstance("yyyy-MM-dd  HH:mm:ss:SSS");
+            
             currentTime.setText(timeF.format(d));
 
             sliderMovedProgrammatically = true;
-            slider.setValue((int) (time - start));
+            slider.setValue(ellapsed);
             sliderMovedProgrammatically = false;
+            
+            if (player.getCurrentTime() == player.getEnd()) {
+                stop();
+            }
         });
     }
     
     public JPanel getPanel() {
         return panel;
+    }
+
+    public void stop() {
+        play.setText(PLAY_SYMBOL);
     }
 }

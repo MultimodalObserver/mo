@@ -279,6 +279,10 @@ public class EyeTribePlayer implements Playable {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public void stop() {
+    }
+
     public static class TestPane extends JPanel {
 
         private double scale;

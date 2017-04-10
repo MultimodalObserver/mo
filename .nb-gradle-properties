@@ -6,7 +6,7 @@
       <display-name>collectJars</display-name>
       <non-blocking>no</non-blocking>
       <task-names>
-        <name must-exist="no">collectJars</name>
+        <name must-exist="yes">collectJars</name>
       </task-names>
       <task-args/>
       <task-jvm-args/>

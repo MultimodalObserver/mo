@@ -325,6 +325,11 @@ public class EEGPlayer implements Playable {
         
     }
 
+    @Override
+    public void stop() {
+        
+    }
+
     class EEGData {
 
         long time;
