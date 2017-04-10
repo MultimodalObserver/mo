@@ -8,18 +8,20 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
+import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
 
 public class KBVisConfig implements VisualizableConfiguration {
 
     
-    private final String[] creators = {"mo.capture.keyboard.KeyboardRecorder"};
+    private final String[] creators = {"mo.keyboard.capture.KeyboardRecorder"};
     
     private List<File> files;
     private String id;
     private KeyboardPlayer player;
     
     private static final Logger logger = Logger.getLogger(KBVisConfig.class.getName());
+    private boolean stopped;
 
     public KBVisConfig() {
         files = new ArrayList<>();
@@ -83,7 +85,7 @@ public class KBVisConfig implements VisualizableConfiguration {
         }
         return null;
     }
-    
+
     private void ensurePlayerCreated() {
         if (player == null && !files.isEmpty()) {
             player = new KeyboardPlayer(files.get(0));
@@ -91,40 +93,8 @@ public class KBVisConfig implements VisualizableConfiguration {
     }
 
     @Override
-    public void pause() {
+    public Playable getPlayer() {
         ensurePlayerCreated();
-        player.pause();
+        return player;
     }
-
-    @Override
-    public void seek(long millis) {
-        ensurePlayerCreated();
-        player.seek(millis);
-    }
-
-    @Override
-    public long getStart() {
-        ensurePlayerCreated();
-        return player.getStart();
-    }
-
-    @Override
-    public long getEnd() {
-        ensurePlayerCreated();
-        return player.getEnd();
-    }
-
-    //TODO
-    
-//    @Override
-//    public void play() {
-//        ensurePlayerCreated();
-//        player.play();
-//    }
-
-    @Override
-    public void play(long millis) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-    
 }

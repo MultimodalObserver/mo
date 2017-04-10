@@ -320,4 +320,9 @@ public class EyeTribeFixPlayer implements Playable {
 
         p.play(0); //TODO
     }
+
+    @Override
+    public void stop() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

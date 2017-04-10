@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
 import mo.visualization.Playable;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
@@ -61,11 +63,15 @@ public class MousePlayer implements Playable {
             SwingUtilities.invokeLater(() -> {
                 
                 pane.display(currentEvent);
-//                DockableElement e = new DockableElement();
-//                e.add(pane);
-//                DockablesRegistry.getInstance().addAppWideDockable(e);
-//                
-//                System.out.println(start + " " + end + " " + currentEvent);
+                
+                try {
+                    DockableElement e = new DockableElement();
+                    e.add(pane);
+                    DockablesRegistry.getInstance().addAppWideDockable(e);
+                } catch (Exception ex) {
+                    logger.log(Level.INFO, null, ex);
+                }
+                System.out.println(start + " " + end + " " + currentEvent);
             });
 
         } catch (FileNotFoundException ex) {
@@ -140,6 +146,7 @@ public class MousePlayer implements Playable {
 
             MouseEvent next = readNextEventFromFile();
             if (next == null) {
+                //System.out.println("return");
                 return;
             }
 
@@ -148,6 +155,10 @@ public class MousePlayer implements Playable {
 
                 marker = file.getFilePointer();
                 next = readNextEventFromFile();
+                
+                if (next == null) { // no more events (end of file)
+                    return;
+                }
             }
 
             file.seek(marker);
@@ -172,57 +183,10 @@ public class MousePlayer implements Playable {
         }
     }
     
-    //TODO
-
-//    @Override
-//    public void play() {
-//        isPlaying = true;
-//
-//        thread = new Thread() {
-//            @Override
-//            public void run() {
-//                if (timeToSleep > 0) {
-//                    try {
-//                        sleep(timeToSleep);
-//                    } catch (InterruptedException ex) {
-//                        logger.log(Level.SEVERE, null, ex);
-//                    }
-//                }
-//                timeToSleep = 0;
-//
-//                MouseEvent nextEvent = null;
-//                while (isPlaying) {
-//                    nextEvent = readNextEventFromFile();
-//                    if (currentEvent == null || nextEvent == null) {
-//                        isPlaying = false;
-//                        interrupt();
-//
-//                        System.out.println("No more data in file");
-//                        return;
-//                    }
-//                    
-//                    SwingUtilities.invokeLater(new Runnable(){
-//                        @Override
-//                        public void run() {
-//                            pane.display(currentEvent);
-//                        }
-//                    });
-//                    
-//                    long sleepTime = (long) ((nextEvent.time - currentEvent.time) / speed);
-//                    currentEvent = nextEvent;
-//                    if (sleepTime > 0) {
-//                        try {
-//                            sleep(sleepTime);
-//                        } catch (InterruptedException ex) {
-//                            logger.log(Level.SEVERE, null, ex);
-//                        }
-//                    }
-//                }
-//            }
-//
-//        };
-//        thread.start();
-//    }
+    @Override
+    public void stop() {
+        // do nothing
+    }
 
     private MouseEvent parseEventFromLine(String line) {
         if (line != null && line.contains(",")) {
@@ -276,6 +240,7 @@ public class MousePlayer implements Playable {
             e.button = Integer.parseInt(button);
             return e;
         }
+        logger.info("returning null");
         return null;
     }
 

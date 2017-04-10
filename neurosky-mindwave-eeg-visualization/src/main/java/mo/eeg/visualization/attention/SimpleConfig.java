@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
+import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
 
 public class SimpleConfig implements VisualizableConfiguration {
@@ -75,28 +76,8 @@ public class SimpleConfig implements VisualizableConfiguration {
     }
 
     @Override
-    public void pause() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void seek(long millis) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public long getStart() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public long getEnd() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public void play(long millis) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Playable getPlayer() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
 }

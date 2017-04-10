@@ -50,7 +50,7 @@ public class DataFileFinder {
                                 prop.load(new StringReader(s.replace("\\", "\\\\")));
                                 if (prop.containsKey("creator")) {
                                     for (String creator : creators) {
-                                        System.out.println("comparing "+prop.getProperty("creator")+" with "+creator);
+                                        //System.out.println("comparing "+prop.getProperty("creator")+" with "+creator);
                                         if (prop.get("creator").equals(creator)) {
                                             if (prop.containsKey("file")) {
                                                 //t.toFile().
@@ -60,9 +60,9 @@ public class DataFileFinder {
                                                 File f = t.resolve(prop.getProperty("file")).normalize().toFile();
                                                 if (f.exists()) {
                                                     result.add(f);
-                                                    System.out.println(f+" existe!");
+                                                    //System.out.println(f+" existe!");
                                                 } else {
-                                                    System.out.println("no existe :c");
+                                                    //System.out.println("no existe :c");
                                                 }
                                             }
                                         }

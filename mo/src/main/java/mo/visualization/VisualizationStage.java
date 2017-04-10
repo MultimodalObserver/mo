@@ -38,6 +38,8 @@ public class VisualizationStage implements StageModule {
     private ProjectOrganization organization;
     private I18n i18n;
     
+    private static final String CODENAME = "visualization";
+    
     private static final Logger logger 
             = Logger.getLogger(VisualizationStage.class.getName());
 
@@ -61,7 +63,7 @@ public class VisualizationStage implements StageModule {
     
     @Override
     public String getCodeName() {
-        return getName().toLowerCase();
+        return CODENAME;
     }
 
     @Override

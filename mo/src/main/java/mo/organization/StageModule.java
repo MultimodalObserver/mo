@@ -6,7 +6,6 @@ import mo.core.plugin.ExtensionPoint;
 
 @ExtensionPoint
 public interface StageModule {
-    
     String getCodeName();
     String getName();
     List<StagePlugin> getPlugins();

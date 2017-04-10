@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
+import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
 
 public class AttConfig implements VisualizableConfiguration {
@@ -84,33 +85,7 @@ public class AttConfig implements VisualizableConfiguration {
     }
 
     @Override
-    public void pause() {
-        ensurePlayerCreated();
-        player.pause();
+    public Playable getPlayer() {
+        return player;
     }
-
-    @Override
-    public void seek(long millis) {
-        ensurePlayerCreated();
-        player.seek(millis);
-    }
-
-    @Override
-    public long getStart() {
-        ensurePlayerCreated();
-        return player.getStart();
-    }
-
-    @Override
-    public long getEnd() {
-        ensurePlayerCreated();
-        return player.getEnd();
-    }
-
-    @Override
-    public void play(long millis) {
-        ensurePlayerCreated();
-        player.play(millis);
-    }
-    
 }
