@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
+import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
 
 public class FixationConfig implements VisualizableConfiguration {
@@ -81,41 +82,7 @@ public class FixationConfig implements VisualizableConfiguration {
     }
 
     @Override
-    public void pause() {
-        ensurePlayerExistence();
-        player.pause();
-    }
-
-    @Override
-    public void seek(long millis) {
-        ensurePlayerExistence();
-        player.seek(millis);
-    }
-
-    @Override
-    public long getStart() {
-        ensurePlayerExistence();
-        return player.getStart();
-    }
-
-    @Override
-    public long getEnd() {
-        ensurePlayerExistence();
-        return player.getEnd();
-    }
-
-    //TODO 
-    
-//    @Override
-//    public void play() {
-//        ensurePlayerExistence();
-//        player.play();
-//    }
-
-    //TODO
-    
-    @Override
-    public void play(long millis) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Playable getPlayer() {
+        return player;
     }
 }

@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 import mo.organization.Configuration;
 
-public class DummyVisConfig implements VisualizableConfiguration {
+public class DummyVisConfig implements VisualizableConfiguration, Playable {
 
     private List<String> compatibleCreators;
     private List<File> files;
-    private long start = 0, end = 1000, current = 0;
+    private long start = 0;
+    private long end = 1000;
+    private long current = 0;
     
     public DummyVisConfig() {
         compatibleCreators = new ArrayList<>();
@@ -50,7 +52,6 @@ public class DummyVisConfig implements VisualizableConfiguration {
 
     @Override
     public void pause() {
-        
     }
 
     @Override
@@ -85,5 +86,15 @@ public class DummyVisConfig implements VisualizableConfiguration {
         } else {
             current = millis;
         }
+    }
+
+    @Override
+    public void stop() {
+        current = start;
+    }
+
+    @Override
+    public Playable getPlayer() {
+        return this;
     }
 }
