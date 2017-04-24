@@ -9,6 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import mo.eeg.data.EEGData;
+import mo.eeg.data.EEGPower;
 import mo.organization.FileDescription;
 
 public class EEGRecorder implements EEGListener {
@@ -133,16 +135,16 @@ public class EEGRecorder implements EEGListener {
             line += " bs:" + data.blinkStrength;
         }
         if (data.mentalEffortIsSet) {
-            line += " me:" + data.mentalEffort;
+            line += " me:" + data.getMentalEffort();
         }
         if (data.familiarityIsSet) {
-            line += " fam:" + data.familiarity;
+            line += " fam:" + data.getFamiliarity();
         }
         if (data.status != null) {
             line += " s:" + data.status;
         }
         if (data.rawEegIsSet) {
-            line += " r:" + data.rawEeg;
+            line += " r:" + data.getRawEeg();
         }
         return line+"\n";
     }

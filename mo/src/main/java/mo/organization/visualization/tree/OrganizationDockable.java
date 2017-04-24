@@ -229,15 +229,12 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                         StageModule s = (StageModule) selected.getUserObject();
                         for (StagePlugin sp : s.getPlugins()) {
                             JMenuItem item = new JMenuItem(sp.getName());
-                            item.addActionListener(new ActionListener() {
-                                @Override
-                                public void actionPerformed(ActionEvent e) {
-                                    Configuration c = sp.initNewConfiguration(organization);
-                                    if (c != null) {
-                                        insertNodeInParent(
-                                                selected, new PluginConfigPair(sp, c));
-                                        organization.store();
-                                    }
+                            item.addActionListener((ActionEvent e) -> {
+                                Configuration c = sp.initNewConfiguration(organization);
+                                if (c != null) {
+                                    insertNodeInParent(
+                                            selected, new PluginConfigPair(sp, c));
+                                    organization.store();
                                 }
                             });
                             menu.add(item);
@@ -405,14 +402,11 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         JMenu stageActions = new JMenu(stage.getName());
         for (StageAction action : stage.getActions()) {
             JMenuItem actionItem = new JMenuItem(action.getName());
-            actionItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    DefaultMutableTreeNode selected
-                            = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                    Participant p = (Participant) selected.getUserObject();
-                    action.init(organization, p, stage);
-                }
+            actionItem.addActionListener((ActionEvent e) -> {
+                DefaultMutableTreeNode selected
+                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                Participant p = (Participant) selected.getUserObject();
+                action.init(organization, p, stage);
             });
             stageActions.add(actionItem);
         }

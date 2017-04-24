@@ -36,9 +36,9 @@ public class KeyboardPlayer implements Playable {
                 start = current.time;
                 nextEvent = readNextEventFromFile();
             }
+            
+            pane = new DisplayPanel();
             SwingUtilities.invokeLater(() -> {
-                pane = new DisplayPanel();
-                
                 try {
                     DockableElement e = new DockableElement();
                     e.add(pane.getPanel());
@@ -139,25 +139,13 @@ public class KeyboardPlayer implements Playable {
     @Override
     public void seek(long desiredMillis) {
         //System.out.println("KB seek:"+desiredMillis);
-        if (desiredMillis < start) {
-            seek(start);
+        if (desiredMillis < start
+                || desiredMillis > end
+                || desiredMillis == current.time
+                || (desiredMillis > current.time &&
+                    desiredMillis < nextEvent.time)) {
             return;
-        }
-
-        if (desiredMillis > end) {
-            seek(end);
-            return;
-        }
-
-        if (desiredMillis == current.time) {
-            display(current);
-            return;
-        }
-
-        if (desiredMillis > current.time && desiredMillis < nextEvent.time) {
-            return;
-        }
-        
+        }       
         
         KeyboardEvent event = current;
 
@@ -195,8 +183,6 @@ public class KeyboardPlayer implements Playable {
             current = event;
             nextEvent = next;
 
-            display(current);
-
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
@@ -224,9 +210,13 @@ public class KeyboardPlayer implements Playable {
     public void play(long millis) {
         if ( (millis >= start) && (millis <= end)) {
             seek(millis);
+            if (current.time == millis) {
+                display(current);
+            }
         }
     }
 
+    @Override
     public void stop() {
         stopped = true;
         pause();

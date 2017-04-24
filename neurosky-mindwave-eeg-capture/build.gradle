@@ -20,6 +20,8 @@ repositories {
 dependencies {
     
     compile project(':mo')
+    
+    compile project(':neurosky-mindwave-eeg-data')
 
     testCompile group: 'junit', name: 'junit', version: '4.10'
 

@@ -9,11 +9,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.FileDescription;
+import org.apache.commons.lang3.time.FastDateFormat;
 
 public class TheEyeTribeRecorder implements IGazeListener {
 
@@ -36,7 +38,7 @@ public class TheEyeTribeRecorder implements IGazeListener {
     private void createFile(File parent) {
 
         Date now = new Date();
-        DateFormat df = new SimpleDateFormat("yyyyMMdd_HH.mm.ss.SSS");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss.SSS");
 
         String reportDate = df.format(now);
 
@@ -49,8 +51,8 @@ public class TheEyeTribeRecorder implements IGazeListener {
             logger.log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
-        } 
-   }
+        }
+    }
 
     private void deleteFile() {
         if (output.isFile()) {
@@ -90,72 +92,60 @@ public class TheEyeTribeRecorder implements IGazeListener {
 
     @Override
     public void onGazeUpdate(GazeData gd) {
+        String str = gazeDataToString(gd);
+        if (str != null) {
+            try {
+                outputStream.write((str + "\n").getBytes());
+            } catch (IOException ex) {
+                logger.log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    private static String gazeDataToString(GazeData gd) {
+        String dataStr = "";
+        FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS");
+
         try {
-            outputStream.write((gazeDataToJson(gd)+"\n").getBytes());
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    private static String gazeDataToJson(GazeData gd) {
-        String json = "{";
-        
-        //time
-        json += "\"time\":" + gd.timeStamp + ",";
-        
-        //timestamp
-        json += "\"timestamp\":\"" + gd.timeStampString + "\",";
-        
-        //state
-        json += "\"state\":" + gd.state + ",";
-        
-        //fix
-        json += "\"fix\":" + gd.isFixated + ",";
-        
-        // avg
-        if (gd.hasSmoothedGazeCoordinates()) {
-            json += "\"avg\":" + pointToJson(gd.smoothedCoordinates) + ",";
-        }
-        
-        //raw
-        if (gd.hasRawGazeCoordinates()) {
-            json += "\"raw\":" + pointToJson(gd.rawCoordinates) + ",";
+            dataStr += "t:" + format.parse(gd.timeStampString);
+        } catch (ParseException ex) {
+            Logger.getLogger(TheEyeTribeRecorder.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
 
-        //lefteye
-        json += "\"lefteye\":{";
-        if (gd.hasSmoothedGazeCoordinates()) {
-            json += "\"avg\":" + pointToJson(gd.leftEye.smoothedCoordinates) + ",";
-        }
-        json += "\"pcenter\":" + pointToJson(gd.leftEye.pupilCenterCoordinates) + ",";
-        json += "\"psize\":" + gd.leftEye.pupilSize;
-        if (gd.hasRawGazeCoordinates()) {
-            json += ",\"raw\":" +pointToJson(gd.leftEye.rawCoordinates);
-        }
-        json += "},";
+        dataStr += " st:" + gd.state;
+        dataStr += " fx:" + gd.isFixated;
 
-        //righteye
-        json += "\"righteye\":{";
         if (gd.hasSmoothedGazeCoordinates()) {
-            json += "\"avg\":" + pointToJson(gd.rightEye.smoothedCoordinates) + ",";
+            dataStr += " sm:" + gd.smoothedCoordinates.x + ";" + gd.smoothedCoordinates.y;
         }
-        json += "\"pcenter\":" + pointToJson(gd.rightEye.pupilCenterCoordinates) + ",";
-        json += "\"psize\":" + gd.rightEye.pupilSize;
-        if (gd.hasRawGazeCoordinates()) {
-            json += ",\"raw\":" +pointToJson(gd.rightEye.rawCoordinates);
-        }
-        json += "}";
 
-        json += "}";
-                
-        return json;
-    }
-    
-    private static String pointToJson(Point2D point) {
-        return "{\"x\":" + point.x + ",\"y\":" + point.y + "}";
-    }
-    
-    public static void main(String[] args) {
-        System.out.println(gazeDataToJson(new GazeData()));
+        if (gd.hasRawGazeCoordinates()) {
+            dataStr += " rw:" + gd.rawCoordinates.x + ";" + gd.rawCoordinates.y;
+        }
+
+        if (gd.hasSmoothedGazeCoordinates()) {
+            dataStr += " lsm:" + gd.leftEye.smoothedCoordinates.x + ";" + gd.leftEye.smoothedCoordinates.y;
+        }
+
+        if (gd.hasRawGazeCoordinates()) {
+            dataStr += " lrw:" + gd.leftEye.rawCoordinates.x + ";" + gd.leftEye.rawCoordinates.y;
+        }
+
+        dataStr += " lpc:" + gd.leftEye.pupilCenterCoordinates.x + ";" + gd.leftEye.pupilCenterCoordinates.y;
+        dataStr += " lps:" + gd.leftEye.pupilSize;
+
+        if (gd.hasSmoothedGazeCoordinates()) {
+            dataStr += " rsm:" + gd.rightEye.smoothedCoordinates.x + ";" + gd.rightEye.smoothedCoordinates.y;
+        }
+
+        if (gd.hasRawGazeCoordinates()) {
+            dataStr += " rrw:" + gd.rightEye.rawCoordinates.x + ";" + gd.rightEye.rawCoordinates.y;
+        }
+
+        dataStr += " rpc:" + gd.rightEye.pupilCenterCoordinates.x + ";" + gd.rightEye.pupilCenterCoordinates.y;
+        dataStr += " rps:" + gd.rightEye.pupilSize;
+
+        return dataStr;
     }
 }
