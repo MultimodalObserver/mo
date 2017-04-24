@@ -19,6 +19,7 @@ repositories {
 dependencies {
     
     compile project(':mo')
+    compile project(':neurosky-mindwave-eeg-data')
 
     compile 'com.theeyetribe:eyetribe-java:0.9.60'
     

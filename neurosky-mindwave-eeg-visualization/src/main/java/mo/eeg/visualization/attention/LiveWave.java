@@ -1,39 +1,33 @@
 package mo.eeg.visualization.attention;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.imageio.ImageIO;
-import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
 public class LiveWave extends JPanel {
-    BufferedImage image;
-    Graphics2D graphics;
+    private BufferedImage image;
+    private Graphics2D graphics;
     
-    int width = 500, height = 200;
+    private int width = 500;
+    private int height = 200;
     
-    ArrayList<Variable> variables;
+    private ArrayList<Variable> variables;
     
-    int whiteSpaceWidth = 50;
-    int pointWidth = 1;
-    int pointHeight = 2;
+    private int whiteSpaceWidth = 50;
+    private int pointWidth = 1;
+    private int pointHeight = 2;
     
-    int pointDistance = 10;
+    private int pointDistance = 10;
     
-    int prevX;
-    int prevY;
+    private int prevX;
+    private int prevY;
     
-    long lastTimestamp = 0;
+    private long lastTimestamp = 0;
 
     public LiveWave() {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -44,37 +38,7 @@ public class LiveWave extends JPanel {
         setDoubleBuffered(true);
     }
     
-    public static void main(String[] args) {
-        LiveWave w = new LiveWave();
-        w.addVariable("test", 0, 100, null);
-        
-        JFrame f = new JFrame("Test");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setSize(new Dimension(300, 100));
-        f.add(w);
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                f.setVisible(true);
-            }
-        });
-        
-        int start = randInt(0,100);
-        long sleep = 500;
-        while(true) {
-            
-            //w.addData("test", next(start));
-            w.addData("test", System.currentTimeMillis(), randInt(0,100));
-            try {
-                Thread.sleep(sleep);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(LiveWave.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-    
-    static int next(int last) {
+    private static int next(int last) {
         Random r = new Random();
         int n = r.nextInt();
         if (n % 3 == 0) {
@@ -85,7 +49,7 @@ public class LiveWave extends JPanel {
         return last;
     }
     
-    public static int randInt(int min, int max) {
+    private static int randInt(int min, int max) {
 
         // Usually this can be a field rather than a method variable
         Random rand = new Random();
@@ -97,7 +61,7 @@ public class LiveWave extends JPanel {
         return randomNum;
     }
     
-    void addData(String variableName, long timestamp, double value) {
+    public void addData(String variableName, long timestamp, double value) {
         for (Variable variable : variables) {
             if (variable.name.equals(variableName)) {
                 draw(variable, timestamp, value);
@@ -105,7 +69,7 @@ public class LiveWave extends JPanel {
         }
     }
     
-    void draw(Variable v, long timestamp, double value) {
+    private void draw(Variable v, long timestamp, double value) {
         
         if (timestamp > lastTimestamp) {
             graphics.copyArea(0, 0, width, height, -pointDistance, 0);
@@ -147,7 +111,7 @@ public class LiveWave extends JPanel {
         repaint();
     }
 
-    void addVariable(String name, double min, double max, Color color) {
+    public void addVariable(String name, double min, double max, Color color) {
         for (Variable variable : variables) {
             if (variable.name.equals(name)) {
                 System.out.println("Name <"+name+"> already defined");
@@ -182,9 +146,20 @@ public class LiveWave extends JPanel {
                 null);
     }
     
-    class Variable {
+    private class Variable {
         Color color = Color.BLACK;
         String name;
         double min = 0, max = height;
+    }
+    
+    public void clear() {
+        Color prevBakground = graphics.getBackground();
+        Color prevColor = graphics.getColor();
+        graphics.setBackground(Color.white);
+        graphics.setColor(Color.white);
+        graphics.fillRect(0, 0, width, height);
+        graphics.setBackground(prevBakground);
+        graphics.setColor(prevColor);
+        
     }
 }

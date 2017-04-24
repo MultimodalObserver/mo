@@ -1,8 +1,6 @@
 package mo.visualization;
 
 import java.util.ArrayList;
-import mo.core.plugin.Extends;
-import mo.core.plugin.Extension;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.Configuration;
 import mo.organization.Participant;

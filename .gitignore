@@ -22,3 +22,4 @@ hs_err_pid*
 /jnativehook-mouse-capture/.nb-gradle/
 /jnativehook-mouse-visualization/.nb-gradle/
 /mo/.nb-gradle/
+/neurosky-mindwave-eeg-data/.nb-gradle/

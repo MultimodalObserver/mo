@@ -42,7 +42,7 @@ public class DisplayPanel {
             } else {
                 //String str = String.valueOf(Character.forDigit(event.keyCode, 0));
                 //logger.log(Level.INFO, Character.toString((char) event.keyChar));
-                text.append(Character.toString((char) event.rawCode));
+                text.append(Character.toString(event.keyChar));
                 //text.setText(text.getText()+str);
             }
 

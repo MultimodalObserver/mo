@@ -12,7 +12,7 @@ import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
 
 public class FixationConfig implements VisualizableConfiguration {
-    private final String[] creators = {"mo.capture.eyetribe.EyeTribeRecorder"};
+    private final String[] creators = {"mo.eyetracker.capture.TheEyeTribeRecorder"};
     private List<File> files;
     private String id;
     private EyeTribeFixPlayer player;
@@ -65,12 +65,6 @@ public class FixationConfig implements VisualizableConfiguration {
         }
         return null;
     }
-
-    private void ensurePlayerExistence() {
-        if (player == null) {
-            player = new EyeTribeFixPlayer(files.get(0));
-        }
-    }
     
     public void setId(String id) {
         this.id = id;
@@ -83,6 +77,9 @@ public class FixationConfig implements VisualizableConfiguration {
 
     @Override
     public Playable getPlayer() {
+        if (player == null) {
+            player = new EyeTribeFixPlayer(files.get(0));
+        }
         return player;
     }
 }
