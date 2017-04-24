@@ -1,4 +1,4 @@
-package mo.eeg.capture;
+package mo.eeg.data;
 
 public class EEGData {
     
@@ -18,16 +18,21 @@ public class EEGData {
      */
     public short blinkStrength = -1;
 
-    public double mentalEffort;
+    private double mentalEffort;
     public boolean mentalEffortIsSet;
 
-    public double familiarity;
+    private double familiarity;
     public boolean familiarityIsSet;
 
     public String status;
 
-    public short rawEeg;
+    private short rawEeg;
     public boolean rawEegIsSet;
+    
+    public EEGData() {
+        eSense = new ESense();
+        eegPower = new EEGPower();
+    }
 
     /**
      *
@@ -36,6 +41,10 @@ public class EEGData {
     public void setMentalEffort(double mentalEffort) {
         this.mentalEffort = mentalEffort;
         mentalEffortIsSet = true;
+    }
+    
+    public double getMentalEffort() {
+        return this.mentalEffort;
     }
 
     /**
@@ -46,6 +55,10 @@ public class EEGData {
         this.familiarity = familiarity;
         familiarityIsSet = true;
     }
+    
+    public double getFamiliarity() {
+        return this.familiarity;
+    }
 
     /**
      *
@@ -54,6 +67,10 @@ public class EEGData {
     public void setRawEeg(short rawEeg) {
         this.rawEeg = rawEeg;
         rawEegIsSet = true;
+    }
+    
+    public short getRawEeg() {
+        return this.rawEeg;
     }
 
     @Override

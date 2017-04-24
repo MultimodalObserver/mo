@@ -16,7 +16,7 @@ public class AttConfig implements VisualizableConfiguration {
     private String id;
     private List<File> files;
     private final static String[] creators 
-            = {"mo.capture.eeg.EEGRecorder"};
+            = {"mo.eeg.capture.EEGRecorder"};
     
     private EEGPlayer player;
    
@@ -77,15 +77,12 @@ public class AttConfig implements VisualizableConfiguration {
         }
         return null;
     }
-    
-    private void ensurePlayerCreated() {
-        if (player == null) {
-            player = new EEGPlayer(files.get(0));
-        }
-    }
 
     @Override
     public Playable getPlayer() {
+        if (player == null) {
+            player = new EEGPlayer(files.get(0));
+        }
         return player;
     }
 }

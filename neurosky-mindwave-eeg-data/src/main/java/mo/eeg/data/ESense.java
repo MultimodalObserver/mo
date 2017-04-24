@@ -1,4 +1,6 @@
-package mo.eeg.capture;
+package mo.eeg.data;
+
+
 
 public class ESense {
     public byte attention;
