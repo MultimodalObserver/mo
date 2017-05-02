@@ -71,7 +71,6 @@ public class MousePlayer implements Playable {
                 } catch (Exception ex) {
                     logger.log(Level.INFO, null, ex);
                 }
-                System.out.println(start + " " + end + " " + currentEvent);
             });
 
         } catch (FileNotFoundException ex) {
@@ -146,7 +145,6 @@ public class MousePlayer implements Playable {
 
             MouseEvent next = readNextEventFromFile();
             if (next == null) {
-                //System.out.println("return");
                 return;
             }
 

@@ -42,10 +42,8 @@ public final class PopupRegistry {
     }
     
     private void printJMenuItem(JMenuItem i, String indent) {
-        System.out.println(indent + i);
         for (MenuElement subElement : i.getSubElements()) {
-            //printJMenuItem((JMenuItem) subElement, indent+" ");
-            
+  
         }
     }
     
@@ -63,7 +61,7 @@ public final class PopupRegistry {
     private void putPropertyInChildrenComponents(MenuElement[] menus, Object key, Object value) {
         for (MenuElement menu : menus) {
             if (menu instanceof JComponent) {
-                System.out.println("property in "+menu);
+
                 ((JMenuItem) menu).putClientProperty(key, value);
                 putPropertyInChildrenComponents(menu.getSubElements(), key, value);
             }
@@ -71,7 +69,7 @@ public final class PopupRegistry {
     }
     
     private void printTree(Component c, String indent) {
-        System.out.println(indent + c);
+
         if (c instanceof Container) {
             for (Component component : ((Container) c).getComponents()) {
                 printTree(component, indent+" ");
@@ -81,7 +79,7 @@ public final class PopupRegistry {
     
     private void printSubElements(Object o, String indent) {
         if (o instanceof MenuElement) {
-            System.out.println(indent + o);
+
             MenuElement e = (MenuElement) o;
             for (MenuElement subElement : e.getSubElements()) {
                 printSubElements(subElement, indent+" ");

@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class DataFileFinder {
-    
+
     private static final Logger logger = Logger.getLogger(DataFileFinder.class.getName());
 
     public static List<File> findFilesCreatedBy(File root, String creator) {
@@ -34,56 +34,31 @@ public class DataFileFinder {
             Properties prop = new Properties();
             Files
                     .walk(root.toPath())
-                    .filter(new Predicate<Path>() {
-                        @Override
-                        public boolean test(Path t) {
-                            //System.out.println(t.getFileName());
-
-                            return t.getFileName().toString().endsWith(".desc");
-                        }
-                    })
-                    .forEach(new Consumer<Path>() {
-                        @Override
-                        public void accept(Path t) {
-                            try {
-                                String s = new String(Files.readAllBytes(t));
-                                prop.load(new StringReader(s.replace("\\", "\\\\")));
-                                if (prop.containsKey("creator")) {
-                                    for (String creator : creators) {
-                                        //System.out.println("comparing "+prop.getProperty("creator")+" with "+creator);
-                                        if (prop.get("creator").equals(creator)) {
-                                            if (prop.containsKey("file")) {
-                                                //t.toFile().
-//                                                System.out.println("path1 "+t);
-//                                                System.out.println("path2 "+prop.getProperty("file"));
-//                                                System.out.println("p "+t.resolve(prop.getProperty("file")).normalize().toUri());
-                                                File f = t.resolve(prop.getProperty("file")).normalize().toFile();
-                                                if (f.exists()) {
-                                                    result.add(f);
-                                                    //System.out.println(f+" existe!");
-                                                } else {
-                                                    //System.out.println("no existe :c");
-                                                }
+                    .filter((Path t) -> t.getFileName().toString().endsWith(".desc"))
+                    .forEach((Path t) -> {
+                        try {
+                            String s = new String(Files.readAllBytes(t));
+                            prop.load(new StringReader(s.replace("\\", "\\\\")));
+                            if (prop.containsKey("creator")) {
+                                for (String creator : creators) {
+                                    if (prop.get("creator").equals(creator)) {
+                                        if (prop.containsKey("file")) {
+                                            File f = t.resolve(prop.getProperty("file")).normalize().toFile();
+                                            if (f.exists()) {
+                                                result.add(f);
                                             }
                                         }
                                     }
                                 }
-                            } catch (IOException ex) {
-                                logger.log(Level.SEVERE, null, ex);
                             }
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
                         }
-                    }
-                    );
+                    });
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
 
         return result;
-    }
-
-    public static void main(String[] args) {
-        List<File> f = findFilesCreatedBy(new File("C:\\Users\\Celso\\Desktop\\ejemplo"), "mo.mouse.capture.MouseRecorder");
-        f.stream().forEach(System.out::println);
-
     }
 }

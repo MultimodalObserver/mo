@@ -75,17 +75,11 @@ public class LiveHeatMap extends JPanel {
         m.updateRate = 1;
         for (int i = 0; i < 100000; i++) {
             m.update(randInt(0, 99), randInt(0, 99));
-//            try {
-//                Thread.sleep(50);
-//            } catch (InterruptedException ex) {
-//                Logger.getLogger(LiveHeatMap.class.getName()).log(Level.SEVERE, null, ex);
-//            }
         }
         
         while(true) {
             m.update(randInt(0, 99), randInt(0, 99));
         }
-        //System.out.println("done");
     }
 
     public void update(int x, int y) {

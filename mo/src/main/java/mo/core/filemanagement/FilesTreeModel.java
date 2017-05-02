@@ -64,7 +64,6 @@ public class FilesTreeModel implements TreeModel {
                 
                 List<Object> path = pathToNode(root, file, new ArrayList<>());
                 if (path != null) {
-                    //System.out.println("    path no null>"+path);
                     path.remove(path.size() - 1);
 
                     TreeModelEvent removeEvent = new TreeModelEvent(
@@ -90,12 +89,6 @@ public class FilesTreeModel implements TreeModel {
             }
         });
         dirWatcher.start();
-        /*item.addActionListener((ActionEvent e) -> {
-            //System.out.println("files:");
-            for (File file : files) {
-                //System.out.println("  "+file);
-            }
-        });*/
     }
     
     private List<Object> pathToNode(File parent, File node, List<Object> path) {
@@ -120,7 +113,6 @@ public class FilesTreeModel implements TreeModel {
         }
 
         int count = getChildCount(parent);
-        //System.out.println("c "+count);
         for (int i = 0; i < count; i++) {
             ArrayList<Object> pathCopy = new ArrayList<>(path);
             List<Object> p = pathToNode((File) getChild(parent, i), node, pathCopy);
@@ -129,7 +121,6 @@ public class FilesTreeModel implements TreeModel {
             }
         }
 
-        //System.out.println("returning null "+parent+" "+node+" "+path);
         return null;
     }
 
@@ -172,8 +163,6 @@ public class FilesTreeModel implements TreeModel {
                 toRemove = next;
             }
         }
-        
-        System.out.println(toRemove);
 
         if (null != toRemove) {
             removeEvent = new TreeModelEvent(
@@ -266,8 +255,6 @@ public class FilesTreeModel implements TreeModel {
 
     @Override
     public void valueForPathChanged(TreePath path, Object newValue) {
-        //System.out.println("*** valueForPathChanged : "
-        //        + path + " --> " + newValue);
     }
 
     @Override

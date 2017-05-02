@@ -145,10 +145,9 @@ public class NewProjectWizardPanel extends JPanel {
             File file = fileChooser.getSelectedFile();
             locationField.setText(file.getPath());
             //This is where a real application would open the file.
-            //System.out.println("Opening: " + file.getName() + ".");
             updateState();
         } else {
-            //System.out.println("Open command cancelled by user.");
+
         }
     }
     

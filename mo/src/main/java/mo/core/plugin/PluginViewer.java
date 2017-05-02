@@ -81,13 +81,10 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
             public void actionPerformed(ActionEvent e) {
                 refresh();
                 PluginPlainViewer.print();
-                System.out.println("");
             }
         });
         
         buttonsPanel.add(refresh);
-        System.out.println("asd");
-        //dockable.add(refresh);
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout()); 
@@ -99,7 +96,6 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         
         c.f(GridBConstraints.BOTH);
         mainPanel.add(tabbedPane, c.gy(1).wy(1));
-        System.out.println(c);
         
         dockable = new DockableElement("PluginViewer");
         dockable.add(mainPanel);

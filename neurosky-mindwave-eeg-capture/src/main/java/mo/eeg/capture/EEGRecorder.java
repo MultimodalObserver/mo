@@ -109,7 +109,6 @@ public class EEGRecorder implements EEGListener {
     @Override
     public void onData(EEGData data) {
         try {
-            System.out.println("data: "+ format(data));
             outputStream.write(format(data).getBytes());
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);

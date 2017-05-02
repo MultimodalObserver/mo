@@ -51,7 +51,6 @@ public class DirectoryWatcher {
             try {
                 WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
                 keys.put(key, dir);
-                //System.out.println("registered "+key+" "+dir);
             } catch (IOException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }
@@ -133,24 +132,17 @@ public class DirectoryWatcher {
 
                             // TBD - provide example of how OVERFLOW event is handled
                             if (kind == OVERFLOW) {
-                                //System.out.println("DirectoryWatcher overflow");
                                 continue;
                             }
-                            
-                            System.out.println("ev count "+event.count());
 
                             // Context for directory entry event is the file name of entry
                             WatchEvent<Path> ev = cast(event); 
                             Path name = ev.context();
                             Path child = dir.resolve(name);
 
-                            //System.out.format(">>Name:%s\n>>C:%s\n", name, child);
-                            // print out event
-                            //System.out.format(">event %s: %s\n", event.kind().name(), child);
                             // if directory is created, and watching recursively, then
                             // register it and its sub-directories
                             if (kind == ENTRY_CREATE) {
-                                System.out.format("Create %s\n", child);
 
                                 if (Files.isDirectory(child, NOFOLLOW_LINKS)) {
                                     registerAll(child);
@@ -160,37 +152,32 @@ public class DirectoryWatcher {
                                     handler.onCreate(child.toFile());
                                 }
                             } else if (kind == ENTRY_MODIFY) {
-                                System.out.format("Modify %s\n", child);
                                 for (WatchHandler handler : handlers) {
                                     handler.onModify(child.toFile());
                                 }
                             } else if (kind == ENTRY_DELETE) {
-                                System.out.format("Delete %s\n", child);
 
                                 for (WatchHandler handler : handlers) {
                                     handler.onDelete(child.toFile());
                                 }
                             } else {
-                                //System.out.println("Other kind");
                             }
                         }
 
                         // reset key and remove from set if directory no longer accessible
                         boolean valid = key.reset();
                         if (!valid) {
-                            //System.out.println("not valid "+ key);
+
                             key.cancel();
                             keys.remove(key);
 
                             // all directories are inaccessible
                             if (keys.isEmpty()) {
-                                //System.out.println("exiting loop");
                                 isPaused.set(true);
                                 break;
                             }
                         }
                     }
-                    //System.out.println("Exit while");
                 }
             
 

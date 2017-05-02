@@ -35,9 +35,10 @@ public class VisualizeAction implements StageAction {
         
         if (accept) {
             VisualizationPlayer p = new VisualizationPlayer(d.getConfigurations());
-            DockablesRegistry.getInstance().addDockableInProjectGroup("", p.getDockable());
-        } else {
-            System.out.println("nou");
+            DockablesRegistry.getInstance()
+                    .addDockableInProjectGroup(
+                            organization.getLocation().getAbsolutePath(),
+                            p.getDockable());
         }
     }
     

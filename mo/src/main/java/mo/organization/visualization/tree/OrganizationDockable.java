@@ -314,7 +314,6 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             if (node.getUserObject() instanceof StageModule) {
                 String name = ((StageModule) node.getUserObject()).getName();
                 if (name.equals(newNodeName)) {
-                    System.out.println("Node already exists");
                     return;
                 }
             }
@@ -390,7 +389,6 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                 LOGGER.log(Level.SEVERE, null, ex);
             }
         }
-        System.out.println(file);
         return null;
     }
 

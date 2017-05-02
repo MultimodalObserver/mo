@@ -152,9 +152,7 @@ public class AppPreferencesWrapper {
         a.addOpenedProject("ruta");
         File f = new File("");
         a.addOpenedProject(f.getAbsolutePath() );
-        System.out.println(x.toXML(a));
         a.removeOpenedProject("ruta");
-        System.out.println(x.toXML(a));
     }
 
     @Override

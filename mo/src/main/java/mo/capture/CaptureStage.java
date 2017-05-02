@@ -96,17 +96,13 @@ public class CaptureStage implements StageModule {
 
                     CaptureProvider p = (CaptureProvider) method.invoke(o, ff);
                     if (p != null) {
-                        System.out.println(p.getName());
                         cs.addOrReplaceStagePlugin(p);
                     }
-                    System.out.println(ff);
                 }
 
                 return cs;
-            } catch (IOException | ClassNotFoundException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            } catch (InstantiationException | IllegalAccessException
-                    | NoSuchMethodException | SecurityException
+            } catch (IOException | ClassNotFoundException | InstantiationException
+                    | IllegalAccessException | NoSuchMethodException | SecurityException
                     | IllegalArgumentException | InvocationTargetException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
@@ -129,42 +125,41 @@ public class CaptureStage implements StageModule {
     public File toFile(File parent) {
         try {
             File captureFile = new File(parent, "capture.xml");
-            if (captureFile.createNewFile()) {
+            captureFile.createNewFile();
 
-                System.out.println("saving capture");
 
-                XElement root = new XElement("capture");
+            XElement root = new XElement("capture");
 
-                XElement name = new XElement("name");
-                name.setString(getName());
+            XElement name = new XElement("name");
+            name.setString(getName());
 
-                root.addElement(name);
+            root.addElement(name);
 
-                plugins.stream().filter((plugin) -> (!plugin.getConfigurations().isEmpty())).forEachOrdered((plugin) -> {
-                    File p = new File(parent, "capture");
-                    if (!p.isDirectory()) {
-                        p.mkdirs();
-                    }
-                    File f = plugin.toFile(p);
-                    if (f != null) {
-                        XElement pluginX = new XElement("plugin");
-                        XAttribute clazz = new XAttribute("class");
-                        clazz.setString(plugin.getClass().getName());
-                        pluginX.addAttribute(clazz);
-                        Path filePath = parent.toPath();
-                        Path selfPath = f.toPath();
-                        Path relative = filePath.relativize(selfPath);
-                        XElement path = new XElement("path");
-                        path.setString(relative.toString());
-                        pluginX.addElement(path);
-                        root.addElement(pluginX);
-                    }
-                });
+            plugins.stream().filter((plugin) -> (!plugin.getConfigurations().isEmpty())).forEachOrdered((plugin) -> {
+                File p = new File(parent, "capture");
+                if (!p.isDirectory()) {
+                    p.mkdirs();
+                }
+                File f = plugin.toFile(p);
+                if (f != null) {
+                    XElement pluginX = new XElement("plugin");
+                    XAttribute clazz = new XAttribute("class");
+                    clazz.setString(plugin.getClass().getName());
+                    pluginX.addAttribute(clazz);
+                    Path filePath = parent.toPath();
+                    Path selfPath = f.toPath();
+                    Path relative = filePath.relativize(selfPath);
+                    XElement path = new XElement("path");
+                    path.setString(relative.toString());
+                    pluginX.addElement(path);
+                    root.addElement(pluginX);
+                }
+            });
 
-                XIO.writeUTF(root, new FileOutputStream(captureFile));
+            XIO.writeUTF(root, new FileOutputStream(captureFile));
 
-                return captureFile;
-            }
+            return captureFile;
+
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }

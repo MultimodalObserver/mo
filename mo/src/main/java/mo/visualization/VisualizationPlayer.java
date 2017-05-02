@@ -11,32 +11,31 @@ public class VisualizationPlayer {
     private long end;
     private long current;
     private boolean isPlaying = false;
+    private boolean stopped = false;
+    private boolean endReached = false;
+
+    private Thread playerThread;
 
     private final List<VisualizableConfiguration> configs;
-    
+
     private final PlayerControlsPanel panel;
-    
-    private Thread playerThread; 
+    private final DockableElement dockable;
+
     private static final Logger logger = Logger.getLogger(VisualizationPlayer.class.getName());
     
-    private final DockableElement dockable;
-    private boolean stopped;
+    //private byte STOPPED=0, PLAYING=1, PAUSED=2;
 
     public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
         configs = configurations;
         obtainMinAndMaxTime();
 
         panel = new PlayerControlsPanel(this);
-        
+
         dockable = new DockableElement();
         dockable.add(panel.getPanel());
-        //DockablesRegistry.getInstance().addDockableInProjectGroup("", d);
+        dockable.setTitleText("Player Controls");
     }
-    
-    public DockableElement getDockable() {
-        return dockable;
-    }
-    
+
     private void obtainMinAndMaxTime() {
         long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
         for (VisualizableConfiguration config : configs) {
@@ -53,22 +52,22 @@ public class VisualizationPlayer {
         if (max == Long.MIN_VALUE) {
             max = 100000;
         }
-        
+
         current = start = min;
 
         end = max;
     }
 
     public void seek(long millis) {
-        
+
         if (millis < start) {
             millis = start;
         } else if (millis > end) {
             millis = end;
         }
-        
+
         current = millis;
-        
+
         for (VisualizableConfiguration config : configs) {
             config.getPlayer().seek(millis);
         }
@@ -76,78 +75,61 @@ public class VisualizationPlayer {
 
     public void pause() {
         //pauseAll();
-        isPlaying = false;
+        
         playerThread.interrupt();
+        isPlaying = false;
         panel.stop();
         //playButton.setText(">");
-    }
-    
-    public long getCurrentTime() {
-        return current;
     }
 
     public void play() {
         playerThread = new Thread(() -> {
             isPlaying = true;
-            while(!Thread.interrupted()) {
+            while (true/*!Thread.interrupted()*/) {
+                if (!isPlaying) {
+                    return;
+                }
                 
                 if (current > end) {
-                    if (stopped) {
-                        current = start;
-                        stopped = false;
-                        isPlaying = true;
-                    } else {
+                    if (isPlaying && !stopped) {
                         isPlaying = false;
+                        stopped = true;
                         for (VisualizableConfiguration config : configs) {
                             config.getPlayer().stop();
                         }
                         panel.stop();
-                        current--;
-                        stopped = true;
                         return;
+                    } else {
+                        current = start;
+                        stopped = false;
+                        isPlaying = true;
                     }
                 }
-                
+  
                 long loopStart = System.nanoTime();
-                
                 for (VisualizableConfiguration config : configs) {
                     config.getPlayer().play(current);
                 }
-                
-                panel.setTime(current);
 
-                long loopEnd = System.nanoTime();
-                long loopTime = loopEnd - loopStart;
-                long timeToWait = 1000000 - loopTime;
-                if (timeToWait > 0) {
-                    try {
-                        Thread.sleep(0, (int) timeToWait);
-                    } catch (InterruptedException ex) {
-                        //logger.log(Level.SEVERE, null, ex);
-                        return;
-                    }
-                }
+                panel.setTime(current);
+                
+                sleep(loopStart);
                 current++;
             }
         });
         playerThread.start();
     }
 
-    private void seekAll(long millis) {
-        for (VisualizableConfiguration config : configs) {
-            config.getPlayer().seek(current);
-        }
-    }
-
-    private void playAll() {
-        for (VisualizableConfiguration config : configs) {
-            config.getPlayer().play(0); //TODO0000000000000
-        }
-    }
-
-    private void pauseAll() {
-        for (VisualizableConfiguration config : configs) {
-            config.getPlayer().pause();
+    private void sleep(long loopStart) {
+        long loopEnd = System.nanoTime();
+        long loopTime = loopEnd - loopStart;
+        long timeToWait = 1000000 - loopTime;
+        if (timeToWait > 0) {
+            try {
+                Thread.sleep(0, (int) timeToWait);
+            } catch (InterruptedException ex) {
+                //logger.log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -161,5 +143,13 @@ public class VisualizationPlayer {
 
     public boolean isPlaying() {
         return isPlaying;
+    }
+
+    public DockableElement getDockable() {
+        return dockable;
+    }
+    
+    public long getCurrentTime() {
+        return current;
     }
 }

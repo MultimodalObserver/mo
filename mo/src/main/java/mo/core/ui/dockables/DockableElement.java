@@ -192,13 +192,10 @@ public class DockableElement extends DefaultSingleCDockable {
                 w = prop.getElement("width").getInt();
                 h = prop.getElement("height").getInt();
                 if (xmlLocationInfo.getElement("mode").getValue().endsWith("maximized")) {
-                    //System.out.println("  maximized");
                     setLocation(CLocation.external(x, y, w, h));
                     //TODO maximize
                 } else {
-                    //System.out.println("  no maximized");
                     setLocation(CLocation.external(x, y, w, h));
-                    
                 }
                 break;
         //never happends?
@@ -206,27 +203,21 @@ public class DockableElement extends DefaultSingleCDockable {
             case "CMaximalExternalizedLocation":
                 break;
             case "CStackLocation":
-                //System.out.println("  cstacklocation");
                 String mode = xmlLocationInfo.getElement("mode").getValue();
                 if (mode.endsWith("externalized")) {
-                    //System.out.println("   external");
                     XElement property = xmlLocationInfo.getElement("property");
                     int x = property.getElement("x").getInt();
                     int y = property.getElement("y").getInt();
                     int w = property.getElement("width").getInt();
                     int h = property.getElement("height").getInt();
                     List<DockableElement> l = findDockablesInControlWithBounds(control, x, y, w, h);
-                    //System.out.println("l size: " + l.size());
                     if (l.isEmpty()) {
-                        //System.out.println("no l");
                         setLocation(CLocation.external(x, y, w, h));
                         
                     } else {
-                        //System.out.println("si l : " + l.get(0).id);
                         setLocationsAside(l.get(0));
                     }
                 } else if (mode.endsWith("normal")) {
-                    //System.out.println("   normal");
                 }
                 break;
             case "CFlapIndexLocation":
