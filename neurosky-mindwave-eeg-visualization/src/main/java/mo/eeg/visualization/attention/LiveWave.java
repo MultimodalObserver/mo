@@ -114,7 +114,7 @@ public class LiveWave extends JPanel {
     public void addVariable(String name, double min, double max, Color color) {
         for (Variable variable : variables) {
             if (variable.name.equals(name)) {
-                System.out.println("Name <"+name+"> already defined");
+                //todo log
                 return;
             }
         }

@@ -55,8 +55,6 @@ public class PlayerControlsPanel {
                     return !sliderMovedProgrammatically;
                 }
             });
-
-            System.out.println(slider.getMinimum() + " " + slider.getMaximum());
             gbc.f(GridBagConstraints.HORIZONTAL);
             gbc.i(new Insets(5, 5, 5, 5)).wx(1);
             panel.add(slider, gbc.gw(3));

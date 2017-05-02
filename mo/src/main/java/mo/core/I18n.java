@@ -35,10 +35,7 @@ public class I18n {
     private static final Logger logger = Logger.getLogger(I18n.class.getName());
 
     public I18n(Class clazz) {
-        //System.out.println("-----------i18n "+clazz.getName()+" ----------------");
         Locale locale = Locale.getDefault();
-
-        //System.out.println("Def locale : "+locale);
         baseNames = Arrays.asList(new String[]{BASE_NAME});
         _i18n = new I18N();
 
@@ -80,7 +77,6 @@ public class I18n {
                                 );
                             }
                             b.setLocale(localeStr);
-                            //printLocale(b);
                             bundles.add(b);
 
                         }
@@ -100,16 +96,13 @@ public class I18n {
                 for (File file : files) {
                     if (file.getName().startsWith(baseFileName)) {
                         try {
-                            //System.out.println("File " + file);
                             String name = file.getName();
                             String localeStr = name.substring(
                                     name.indexOf(baseFileName) + baseFileName.length()
                                     + (name.contains("_") ? 1 : 0),
                                     name.lastIndexOf('.'));
                             LocalizablePropertyResourceBundle b = new LocalizablePropertyResourceBundle(new FileInputStream(file));
-                            //System.out.println(localeStr);
                             b.setLocale(localeStr);
-                            //System.out.println("loc "+b.getLocale());
                             //printLocale(b);
                             bundles.add(b);
                         } catch (FileNotFoundException ex) {
@@ -126,7 +119,6 @@ public class I18n {
             try {
                 ResourceBundle b = ResourceBundle.getBundle(i18nFolder + "." + packageName + "." + baseName, locale);
                 bundles.add(b);
-                //System.out.println(i18nFolder + "." + packageName + "."+ baseName+" _ " + b.getLocale().toString()+ " encontrado1");
                 //printLocale(b);
             } catch (Exception ex) {
                 //logger.log(Level.INFO, null, ex);
@@ -136,7 +128,6 @@ public class I18n {
             try {
                 ResourceBundle b = ResourceBundle.getBundle(packageName + "." + baseName, locale);
                 bundles.add(b);
-                //System.out.println(packageName + "." + baseName +" "+ b.getLocale().toString() + " encontrado2");
                 //printLocale(b);
             } catch (Exception e) {
                 //logger.log(Level.INFO, null, e);
@@ -149,7 +140,6 @@ public class I18n {
             matchsLevels[i] = matchLevel(locale, bundles.get(i).getLocale());
         }
 
-        //System.out.println(Arrays.toString(matchsLevels));
         for (int i = 3; i > -1; i--) {
             for (int j = 0; j < bundles.size(); j++) {
                 if (matchsLevels[j] == i) {
@@ -158,17 +148,10 @@ public class I18n {
                     for (String key : keySet) {
                         if (!_i18n.getMessages().containsKey(key)) {
                             _i18n.setMessage(key, b.getString(key));
-                            //System.out.println("adding "+key+" "+b.getString(key));
                         }
                     }
                 }
             }
-        }
-    }
-
-    private void printLocale(ResourceBundle b) {
-        for (String k : b.keySet()) {
-            System.out.println("    " + k + " = " + b.getString(k));
         }
     }
 

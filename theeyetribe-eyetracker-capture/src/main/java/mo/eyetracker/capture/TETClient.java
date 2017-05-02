@@ -52,24 +52,19 @@ public class TETClient implements IConnectionStateListener, IGazeListener {
         if (!success) {
             logger.info("Can't connect to TheEyeTribe server");
         }
-        System.out.println("Success: " + success);
+        //todo log
         
         gm.addGazeListener(this);
-        
-        System.out.println(gm.getNumGazeListeners());
-        System.out.println("ya");
     }
 
     public static void main(String[] args) {
         TETClient t = new TETClient(null, null);
         t.connect();
-        System.out.println("asd");
     }
 
     @Override
     public void onConnectionStateChanged(boolean bln) {
-        System.out.println("changed :" + bln);
-        System.out.println(gm.getTrackerState().name());
+        //todo log ?
     }
 
     @Override
@@ -77,7 +72,6 @@ public class TETClient implements IConnectionStateListener, IGazeListener {
         for (IGazeListener listener : listeners) {
             listener.onGazeUpdate(gd);
         }
-        System.out.println(gazeDataToString(gd));
     }  
     
     private String gazeDataToString(GazeData gd) {

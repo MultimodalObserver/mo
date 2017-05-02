@@ -98,15 +98,10 @@ public class VisualizationStage implements StageModule {
 
                         visStage.addOrReplaceStagePlugin(p);
                     }
-                    System.out.println(ff);
                 }
 
                 return visStage;
-            } catch (IOException | ClassNotFoundException ex) {
-                logger.log(Level.SEVERE, null, ex);
-            } catch (InstantiationException | IllegalAccessException 
-                    | NoSuchMethodException | SecurityException 
-                    | IllegalArgumentException | InvocationTargetException ex) {
+            } catch (IOException | ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
         }

@@ -155,12 +155,9 @@ public class DockablesTreeRecreator {
     }
 
     private void addDockableFromTree(CGrid grid, LocationNode node, float x, float y, float w, float h) {
-
-        //System.out.format("(%.2f %.2f) %.2f %.2f %s%n", x, y, w, h, node);
         if (node.docks.size() > 0) {
             DockableElement[] arr = new DockableElement[node.docks.size()];
             node.docks.toArray(arr);
-            //System.out.println(node.docks);
             grid.add(x, y, w, h, arr);
         } else {
             float fw = w, fh = h;
@@ -237,8 +234,6 @@ public class DockablesTreeRecreator {
         for (int i = 0; i < control.getCDockableCount(); i++) {
             boolean xtrue = false, ytrue = false, wtrue = false, htrue = false;
             DockableElement d = (DockableElement) control.getCDockable(i);
-            //System.out.println("id " + d.id);
-            //System.out.println("loc: " + d.getLocation());
 
             if (d.getLocation().findProperty() == null) {
                 continue;
@@ -247,7 +242,7 @@ public class DockablesTreeRecreator {
             DockableProperty p = d.getLocation().findProperty();
 
             XElement storage = new XElement("storage");
-            //System.out.println(p);
+
             p.store(storage);
             for (int j = 0; j < storage.getElementCount(); j++) {
                 XElement current = storage.getElement(j);
@@ -316,8 +311,6 @@ public class DockablesTreeRecreator {
         }
 
         private void preOrderPrint(String indentation) {
-
-            System.out.println(indentation + this);
 
             if (this.firstChild != null) {
                 this.firstChild.preOrderPrint(indentation + "  ");

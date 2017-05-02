@@ -163,7 +163,6 @@ public class FixationPanel extends JPanel {
             
             count = 0;
             for (Fixation fix = first; fix != null; fix = fix.next, count++) {
-                //System.out.println("drawing " + count + " " + fix.toString());
                 Point2D p = fix.getCenter();
                 g.setColor(colors[dataColorIndices[count]]);
                 g.fillOval((int) p.x - (sizes[count] / 2), (int) p.y - (sizes[count] / 2), sizes[count], sizes[count]);

@@ -33,9 +33,6 @@ public class ProjectOrganizationPlugin implements OrganizationVisualizationMenuI
     private void addProjectClicked(ActionEvent event) {
 
         JComponent c = (JComponent) event.getSource();
-        System.out.println("comp " + c);
-
-        System.out.println(c.getClientProperty("file"));
 
         File projectFolder = (File) c.getClientProperty("file");
 

@@ -37,18 +37,9 @@ public class MouseCaptureConfiguration implements RecordableConfiguration {
     @Override
     public Configuration fromFile(File file) {
         String fileName = file.getName();
-        System.out.println("mkconfigfromfile file:"+file);
         if (fileName.contains("_") && fileName.contains(".")) {
             String name = fileName.substring(fileName.indexOf("_")+1, fileName.lastIndexOf("."));
             MouseCaptureConfiguration config = new MouseCaptureConfiguration(name);
-//            try {
-//                XElement root = XIO.readUTF(new FileInputStream(file));
-//                config.setShouldCaptureMouseEvents(root.getElement("mouse").getBoolean());
-//                config.setShouldCaptureKeyboardEvents(root.getElement("keyboard").getBoolean());
-//            } catch (IOException ex) {
-//                logger.log(Level.SEVERE, null, ex);
-//            }
-//            System.out.println("mkconfigfromfile:"+config);
             return config;
         }
         return null;
