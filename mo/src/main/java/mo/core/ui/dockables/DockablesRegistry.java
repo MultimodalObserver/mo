@@ -134,7 +134,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
         parentMenu.add(menuItem);
         menuItem.setVisible(true);
-        //System.out.println("P>" + parentMenu + "\nS>" + menuItem);
         menuItem.addItemListener(this::checkBoxMenuItemStateChanged);
     }
 
@@ -255,7 +254,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
                 DockablesTreeRecreator treeRecreator = DockablesTreeRecreator.getInstance(control);
 
                 for (XElement dock : docks) {
-                    //System.out.println(dock);
                     XElement data = dock.getElement("data");
                     String className = data.getAttribute("class").getString();
 
@@ -294,8 +292,6 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
                 List<DockablesTreeRecreator.LocationNode> trees = treeRecreator.joinTrees();
                 treeRecreator.createTrees(trees);
-
-                //System.out.println(">>>"+trees);
             } catch (IOException | SecurityException | IllegalArgumentException ex) {
                 LOGGER.log(Level.SEVERE, null, ex);
             }

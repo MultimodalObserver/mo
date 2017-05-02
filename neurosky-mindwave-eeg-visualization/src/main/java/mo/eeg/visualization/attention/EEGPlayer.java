@@ -94,7 +94,6 @@ public class EEGPlayer implements Playable {
                 return data;
             }
         } catch (IOException | NumberFormatException ex) {
-            System.out.println(current);
             pause();
             logger.log(Level.SEVERE, null, ex);
             return null;

@@ -54,7 +54,6 @@ public class GameLoopPlayer implements Runnable {
                 
                 counter++;
                 if (counter == 1000) {
-                    System.out.println("up:"+updateDuration+" re:"+renderDuration);
                     System.exit(0);
                     
                 }
@@ -72,14 +71,5 @@ public class GameLoopPlayer implements Runnable {
     
     public void pause() {
         isPaused = false;
-    }
-    
-    public static void main(String[] args) {
-        ArrayList<Playable2> plays = new ArrayList<>();  
-        GameLoopPlayer p = new GameLoopPlayer(plays);
-        System.out.println("run");
-        p.pause();
-        p.run();
-        
     }
 }

@@ -102,7 +102,6 @@ public class MenuBar extends JMenuBar {
 
         for (JMenuItem menuItem : menuItems) {
             if (menuItem.getName().compareTo(name) == 0) {
-                //System.out.println(menuItem.getName());
                 return menuItem;
             }
         }
@@ -164,24 +163,5 @@ public class MenuBar extends JMenuBar {
         result = result.substring(0,result.length()-1);
         result+= "\n]";
         return result;
-    }
-    
-    //Test
-    public static void main(String[] args) {
-
-        JFrame f = new JFrame("asd");
-        f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.setLocationRelativeTo(null);
-        f.setSize(300, 300);
-
-        //MenuBar m = new MenuBar1();
-        System.out.println(PluginRegistry.getInstance().getPlugins().size());
-        for (Plugin arg : PluginRegistry.getInstance().getPlugins()) {
-            System.out.println(arg);
-        }
-        //MenuBar.getInstance().add(m);
-        f.setJMenuBar(MenuBar.getInstance());
-        //f.setJMenuBar(MenuBar1.getInstance());
-        f.setVisible(true);
     }
 }

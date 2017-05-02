@@ -70,7 +70,6 @@ public class TheEyeTribeConfiguration implements RecordableConfiguration {
     @Override
     public Configuration fromFile(File file) {
         String fileName = file.getName();
-        System.out.println("mkconfigfromfile file:"+file);
         if (fileName.contains("_") && fileName.contains(".")) {
             String name = fileName.substring(fileName.indexOf("_")+1, fileName.lastIndexOf("."));
             TheEyeTribeConfiguration config = new TheEyeTribeConfiguration(name);

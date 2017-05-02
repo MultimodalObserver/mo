@@ -170,10 +170,7 @@ public class PluginRegistry {
     private void processJarFile(File jar, String[] packages) {
 
         try (JarFile jarFile = new JarFile(jar)) {
-            
-//            System.out.println("jar " + jar);
-//            URL[] urls = new URL[] {jar.toURI().toURL()};
-//            System.out.println(jar.toURI().toURL());
+
             cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
             
             Enumeration entries = jarFile.entries();

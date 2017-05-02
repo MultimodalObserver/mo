@@ -99,7 +99,6 @@ public class KeyboardPlayer implements Playable {
                 hasModifiers = true;
                 break;
             default:
-                System.out.println("parse kb ev failed");
                 return null;
         }
 
@@ -138,7 +137,6 @@ public class KeyboardPlayer implements Playable {
 
     @Override
     public void seek(long desiredMillis) {
-        //System.out.println("KB seek:"+desiredMillis);
         if (desiredMillis < start
                 || desiredMillis > end
                 || desiredMillis == current.time
@@ -211,7 +209,11 @@ public class KeyboardPlayer implements Playable {
         if ( (millis >= start) && (millis <= end)) {
             seek(millis);
             if (current.time == millis) {
-                display(current);
+                while (current.time == millis) {
+                    display(current);
+                    current = nextEvent;
+                    nextEvent = readNextEventFromFile();
+                }
             }
         }
     }

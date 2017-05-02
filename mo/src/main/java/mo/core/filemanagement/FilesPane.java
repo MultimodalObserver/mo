@@ -114,7 +114,6 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
                 filesTree.expandRow(0);
             
         } else {
-            System.out.println("File <" + file + "> does not exists");
         }
     }
     
@@ -159,7 +158,6 @@ public class FilesPane extends DockableElement implements IDockableElementProvid
     @Override
     public DockableElement dockableFromFile(File file) {
         FilesPane d = new FilesPane();
-        //System.out.println("hola"+);
         if (file.exists()) {
             try (InputStream in = new FileInputStream(file)) {
                 FileRegistry.getInstance().setFilesPane(d);

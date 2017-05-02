@@ -107,7 +107,8 @@ public class TheEyeTribeRecorder implements IGazeListener {
         FastDateFormat format = FastDateFormat.getInstance("yyyy-MM-dd HH:mm:ss.SSS");
 
         try {
-            dataStr += "t:" + format.parse(gd.timeStampString);
+            Date date = format.parse(gd.timeStampString);
+            dataStr += "t:" + date.getTime();
         } catch (ParseException ex) {
             Logger.getLogger(TheEyeTribeRecorder.class.getName()).log(Level.SEVERE, null, ex);
             return null;

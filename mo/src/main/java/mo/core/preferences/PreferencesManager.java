@@ -40,9 +40,6 @@ public class PreferencesManager {
                 }
             }
         }
-        //} else {
-        //    System.out.println("ya existe");
-        //}
     }
 
     public static Object load(Class wrapperClass, File xmlFile) {
@@ -52,8 +49,7 @@ public class PreferencesManager {
         try {
             o = x.fromXML(xmlFile);
         } catch (Exception ex) {
-            System.out.println("Can't load preferences file");
-            //Logger.getLogger(PreferencesManager.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.info("Can't load preferences file");
         }
         return o;
     }
@@ -73,20 +69,5 @@ public class PreferencesManager {
             }
         }
         return o;
-    }
-
-    public static void main(String[] args) {
-
-        AppPreferencesWrapper aa;
-
-        aa = (AppPreferencesWrapper) PreferencesManager.load(AppPreferencesWrapper.class,
-                new File(Utils.getBaseFolder() + "/app.xml"));
-
-        if (aa != null) {
-            aa.getOpenedProjects().stream().forEach((openedProject) -> {
-                System.out.println(openedProject.getLocation());
-            });
-
-        }
     }
 }

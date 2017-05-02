@@ -42,7 +42,6 @@ public class ExtensionScanner extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, 
             String signature, String superName, String[] interfaces) {
-        //System.out.println(version+" "+access+" "+name+" "+signature+" "+superName+" "+interfaces);
         plugin.setId(name.replace("/", "."));
         extPoint.setId(name.replace("/", "."));
         super.visit(version, access, name, signature, superName, interfaces);
@@ -50,18 +49,16 @@ public class ExtensionScanner extends ClassVisitor {
     
     @Override
     public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-        //System.out.println("name "+name);
-        //System.out.println(" visitAnnotation: desc=" + desc + " visible=" + visible);
+
         if (desc.compareTo(EXTENSION_DESC) == 0) {
-            //plugin = new Plugin();
-            //System.out.println(" paso");
+
             isExtension = true;
             return new AnnotationVisitor(Opcodes.ASM5, 
                     super.visitAnnotation(desc, visible)) {
                 
                 @Override
                 public void visit(String nam, Object value) {
-                    //System.out.println("  visit " + nam + " " + value);
+
                     switch (nam) {
                         case "id":
                             plugin.setId((String) value);
@@ -89,34 +86,34 @@ public class ExtensionScanner extends ClassVisitor {
                         @Override
                         public AnnotationVisitor visitAnnotation(String name, String desc) {
                             Dependency d = new Dependency();
-                            //System.out.println("   vann " + name + " " + desc);
+
                             if (desc.compareTo(EXTENDS_DESC) == 0) {
                                 return new AnnotationVisitor(Opcodes.ASM5, super.visitAnnotation(name, desc)) {
                                     @Override
                                     public void visit(String name, Object value) {
-                                        //System.out.println("v=" + name + " value=" + value);
+
                                         switch (name) {
                                             case "extensionPointId":
                                                 d.setId((String) value);
-                                                //System.out.println(name+"="+value);
+
                                                 break;
                                             case "extensionPointVersion":
                                                 d.setVersion((String) value);
-                                                //System.out.println(name+"="+value);
+
                                                 
                                                 break;
                                             default:
                                                 break;
                                         }
-                                        //System.out.println("    visit " + name + " " + value);
-                                        super.visit(name, value); //To change body of generated methods, choose Tools | Templates.
+
+                                        super.visit(name, value);
                                     }
 
                                     @Override
                                     public void visitEnd() {
-                                        //System.out.println(" > "+d.getId() + " " + d.getVersion());
+
                                         plugin.addDependency(d);
-                                        super.visitEnd(); //To change body of generated methods, choose Tools | Templates.
+                                        super.visitEnd();
                                     }
                                 };
                             } else {
@@ -135,14 +132,14 @@ public class ExtensionScanner extends ClassVisitor {
                 
                 @Override
                 public void visit(String nam, Object value) {
-                    //System.out.println("  visit " + nam + " " + value);
+
                     switch (nam) {
                         case "id":
                             extPoint.setId((String) value);
                             break;
                         case "version":
                             extPoint.setVersion((String) value);
-                            //System.out.println("-v "+extPoint.getVersion());
+
                             break;
                         case "name":
                             extPoint.setName((String) value);
@@ -189,14 +186,7 @@ public class ExtensionScanner extends ClassVisitor {
                 plugin.setClazz(c);
             } catch (NoClassDefFoundError | ClassNotFoundException | IllegalAccessError ex) {
                 try {
-                    //System.out.println(plugin.getId());
-                    //cl.loadClass(plugin.getId());
-                    //cl.
-                    //ClassLoader cl = ExtensionScanner.class.getClassLoader();
-                    //System.out.println(cl.getParent());
                     plugin.setClazz(cl.loadClass(plugin.getId()));
-                    //URLClassLoader u = 
-                    //Logger.getLogger(ExtensionScanner.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (ClassNotFoundException ex1) {
                     LOGGER.log(Level.SEVERE, null, ex1);
                 }
@@ -216,7 +206,7 @@ public class ExtensionScanner extends ClassVisitor {
             plugin.setVersion(semverize(plugin.getVersion()));
             
         }
-        super.visitEnd(); //To change body of generated methods, choose Tools | Templates.
+        super.visitEnd();
     }
 
     public Plugin getPlugin(){

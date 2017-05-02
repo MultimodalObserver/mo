@@ -25,7 +25,7 @@ import mo.core.plugin.PluginRegistry;
 
 public class ProjectOrganization {
 
-    public final static Logger LOGGER = Logger.getLogger(ProjectOrganization.class.getName());
+    public final static Logger logger = Logger.getLogger(ProjectOrganization.class.getName());
 
     Project project;
     List<Participant> participants;
@@ -78,7 +78,6 @@ public class ProjectOrganization {
             XElement ps = new XElement("participants");
 
             for (Participant participant : participants) {
-                System.out.println(participant);
                 XElement xParticipant = new XElement("participant");
                 xParticipant.addElement("id").setString(participant.id);
                 xParticipant.addElement("name").setString(participant.name);
@@ -97,13 +96,9 @@ public class ProjectOrganization {
             }
 
             root.addElement(ps);
-            System.out.println("P Org store");
 
             for (StageModule stage : stages) {
                 XElement st = new XElement("stage");
-//                XElement name = new XElement("name");
-//                name.setString(stage.getName());
-//                st.addElement(name);
 
                 XAttribute clazz = new XAttribute("class");
                 clazz.setString(stage.getClass().getName());
@@ -112,6 +107,7 @@ public class ProjectOrganization {
 
                 File file = stage.toFile(project.getFolder());
                 if (file != null) {
+                    
                     Path projectRoot = Paths.get(project.getFolder().getAbsolutePath());
                     Path stagePath = Paths.get(file.toURI());
 
@@ -122,7 +118,7 @@ public class ProjectOrganization {
             }
             XIO.writeUTF(root, new FileOutputStream(orgXml));
         } catch (IOException ex) {
-            LOGGER.log(Level.SEVERE, null, ex);
+            logger.log(Level.SEVERE, null, ex);
         }
     }
 
@@ -148,7 +144,7 @@ public class ProjectOrganization {
                         try {
                             date = formatter.parse(day + " " + (Integer.parseInt(month) + 1) + " " + year);
                         } catch (ParseException ex) {
-                            LOGGER.log(Level.SEVERE, null, ex);
+                            logger.log(Level.SEVERE, null, ex);
                         }
                         p.date = date;
 
@@ -175,21 +171,18 @@ public class ProjectOrganization {
                                 o, new File(project.getFolder(), path));
                         if (stage != null) {
                             stage.setOrganization(this);
-
-                            System.out.println(stage);
                             addStageReplacingPrevious(stage);
-                            
                         }
                     } catch (IllegalAccessException | IllegalArgumentException |
                             InvocationTargetException | ClassNotFoundException |
                             InstantiationException | NoSuchMethodException |
                             SecurityException ex) {
-                        LOGGER.log(Level.SEVERE, null, ex);
+                        logger.log(Level.SEVERE, null, ex);
                     }
                 }
 
             } catch (IOException ex) {
-                LOGGER.log(Level.SEVERE, null, ex);
+                logger.log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -203,13 +196,15 @@ public class ProjectOrganization {
     }
 
     public void updateParticipant(Participant p) {
-        for (Participant participant : participants) {
-            if (participant.id.equals(p.id)) {
-                participant.name = p.name;
-                participant.date = p.date;
-                participant.notes = p.notes;
-            }
-        }
+        participants.stream().filter((participant) -> (participant.id.equals(p.id))).map((participant) -> {
+            participant.name = p.name;
+            return participant;
+        }).map((participant) -> {
+            participant.date = p.date;
+            return participant;
+        }).forEachOrdered((participant) -> {
+            participant.notes = p.notes;
+        });
     }
 
     public void deleteParticipant(Participant p) {

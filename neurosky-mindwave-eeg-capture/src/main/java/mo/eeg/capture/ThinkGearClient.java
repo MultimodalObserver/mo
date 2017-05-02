@@ -57,7 +57,6 @@ public class ThinkGearClient {
             try {
                 EEGData data = mapper.readValue(line, EEGData.class);
                 data.time = time;
-                System.out.println(data);
                 for (EEGListener listener : listeners) {
                     listener.onData(data);
                 }
@@ -76,17 +75,6 @@ public class ThinkGearClient {
     
     public void removeEEGDataListener(EEGListener listenerToRemove) {
         listeners.remove(listenerToRemove);
-    }
-    
-    public static void main(String[] args) throws IOException {
-        ThinkGearClient client = new ThinkGearClient(null, null, false);
-        client.addEEGDataListener(new EEGListener() {
-            @Override
-            public void onData(EEGData data) {
-                System.out.println(data+"\n");
-            }
-        });
-        client.connect();
     }
 
     public void disconnect() {

@@ -54,8 +54,6 @@ public class Project {
             StreamResult file = new StreamResult(new File(folder+"/moproject.xml"));
             transformer.transform(source, file);
  
-            //System.out.println("\nXML DOM Created Successfully..");
- 
         } catch (ParserConfigurationException | DOMException | IllegalArgumentException | TransformerException e) {
             LOGGER.log(Level.SEVERE, null, e);
         }

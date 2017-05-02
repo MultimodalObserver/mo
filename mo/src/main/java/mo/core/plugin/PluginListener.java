@@ -9,7 +9,7 @@ public interface PluginListener {
     
     /**
      * Invoked when a plugin with the same mayor version is added.
-     * Examples: 0.1.1 -> 0.1.2, 5.0.1 -> 5.1.0 
+     * Examples: 0.1.1 to 0.1.2, 5.0.1 to 5.1.0 
      */
     void pluginUpdated(Plugin plugin);
     

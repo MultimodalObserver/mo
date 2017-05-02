@@ -110,7 +110,6 @@ public class EyeTribeFixPlayer implements Playable {
 
     @Override
     public void seek(long requestedMillis) {
-        //System.out.println("KB seek:"+desiredMillis);
         if (requestedMillis < start
                 || requestedMillis > end
                 || requestedMillis == current.timeStamp
