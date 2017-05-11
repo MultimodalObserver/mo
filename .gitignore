@@ -12,6 +12,8 @@ build/
 *.jar
 !libs     # track manually downloaded libs
 
+build
+
 *.war
 
 *.ear
