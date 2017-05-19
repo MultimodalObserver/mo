@@ -6,6 +6,7 @@ import java.awt.Component;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.*;
@@ -36,7 +37,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
     private JPopupMenu participantMenu;
 
     public OrganizationDockable() {
-
+        i18n = new I18n(OrganizationDockable.class);
     }
 
     public OrganizationDockable(ProjectOrganization org) {
@@ -79,6 +80,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             ParticipantDialog dialog = new ParticipantDialog(organization);
             Participant participant = dialog.showDialog();
             if (participant != null) {
+                participant.folder = "participant-" + participant.id;
                 organization.addParticipant(participant);
                 organization.store();
                 insertNodeInParent(participantsNode, participant);
@@ -114,74 +116,81 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         JMenuItem deleteParticipant
                 = new JMenuItem(i18n.s("OrganizationDockable.deleteParticipant"));
-        deleteParticipant.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                DefaultMutableTreeNode selected
-                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-
-                Participant p = (Participant) selected.getUserObject();
-
-                String message = i18n.s(
-                        "OrganizationDockable.participantDeletionMesssage",
-                        p.id);
-
-                Object[] options = {
-                    i18n.s("OrganizationDockable.participantDeletionYes"),
-                    i18n.s("OrganizationDockable.participantDeletionNo"),
-                    i18n.s("OrganizationDockable.participantDeletionCancel")};
-
-                int r = JOptionPane.showOptionDialog(
-                        null,
-                        message,
-                        i18n.s("OrganizationDockable.participantDeletionTitle"),
-                        JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
-                        null, options, options[2]);
-
-                if (r == JOptionPane.YES_OPTION) {
-                    //TODO
-                } else if (r == JOptionPane.NO_OPTION) {
-                    organization.deleteParticipant(p);
-                    organization.store();
-
-                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) selected.getParent();
-                    int index = parent.getIndex(selected);
-                    selected.removeFromParent();
-                    DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-                    model.nodesWereRemoved(parent, new int[]{index}, new Object[]{selected});
-                }
+        deleteParticipant.addActionListener((ActionEvent e) -> {
+            DefaultMutableTreeNode selected
+                    = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            
+            Participant p = (Participant) selected.getUserObject();
+            
+            String message = i18n.s(
+                    "OrganizationDockable.participantDeletionMesssage",
+                    p.id);
+            
+            Object[] options = {
+                i18n.s("OrganizationDockable.participantDeletionYes"),
+                i18n.s("OrganizationDockable.participantDeletionNo"),
+                i18n.s("OrganizationDockable.participantDeletionCancel")};
+            
+            int r = JOptionPane.showOptionDialog(
+                    null,
+                    message,
+                    i18n.s("OrganizationDockable.participantDeletionTitle"),
+                    JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+                    null, options, options[2]);
+            
+            if (r == JOptionPane.YES_OPTION) {
+                
+                File f = new File(organization.getLocation() + "/" + p.folder);
+                
+                deleteDirectory(f);
+                
+                organization.deleteParticipant(p);
+                organization.store();
+                
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) selected.getParent();
+                int index = parent.getIndex(selected);
+                selected.removeFromParent();
+                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                model.nodesWereRemoved(parent, new int[]{index}, new Object[]{selected});
+                
+            } else if (r == JOptionPane.NO_OPTION) {
+                organization.deleteParticipant(p);
+                organization.store();
+                
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) selected.getParent();
+                int index = parent.getIndex(selected);
+                selected.removeFromParent();
+                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+                model.nodesWereRemoved(parent, new int[]{index}, new Object[]{selected});
             }
         });
 
         JMenuItem lockItem = new JMenuItem(i18n.s("OrganizationDockable.lock"));
-        lockItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                DefaultMutableTreeNode selected
-                        = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-                Participant p = (Participant) selected.getUserObject();
-
-                if (p.isLocked) {
-                    p.isLocked = false;
-                } else {
-                    p.isLocked = true;
-                }
-
-                organization.updateParticipant(p);
-                organization.store();
-
-                if (lockItem.getText().equals(i18n.s("OrganizationDockable.lock"))) {
-                    lockItem.setText(i18n.s("OrganizationDockable.unlock"));
-                } else {
-                    lockItem.setText(i18n.s("OrganizationDockable.lock"));
-                }
-
-                selected.setUserObject(p);
-                DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-                model.nodeChanged(selected);
-
+        lockItem.addActionListener((ActionEvent e) -> {
+            DefaultMutableTreeNode selected
+                    = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+            Participant p = (Participant) selected.getUserObject();
+            
+            if (p.isLocked) {
+                p.isLocked = false;
+                deleteParticipant.setEnabled(true);
+            } else {
+                p.isLocked = true;
+                deleteParticipant.setEnabled(false);
             }
+            
+            organization.updateParticipant(p);
+            organization.store();
+            
+            if (lockItem.getText().equals(i18n.s("OrganizationDockable.lock"))) {
+                lockItem.setText(i18n.s("OrganizationDockable.unlock"));
+            } else {
+                lockItem.setText(i18n.s("OrganizationDockable.lock"));
+            }
+            
+            selected.setUserObject(p);
+            DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+            model.nodeChanged(selected);
         });
 
         participantMenu = new JPopupMenu();
@@ -220,8 +229,10 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
                         Participant p = (Participant) selected.getUserObject();
                         if (p.isLocked) {
                             lockItem.setText(i18n.s("OrganizationDockable.unlock"));
+                            deleteParticipant.setEnabled(false);
                         } else {
                             lockItem.setText(i18n.s("OrganizationDockable.lock"));
+                            deleteParticipant.setEnabled(true);
                         }
                         participantMenu.show(source, x, y);
                     } else if (selected.getUserObject() instanceof StageModule) {
@@ -267,6 +278,27 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         JScrollPane scroll = new JScrollPane(tree);
         add(scroll);
+    }
+
+    private static boolean deleteDirectory(File path) {
+        if (path.exists()) {
+            File[] files = path.listFiles();
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    deleteDirectory(file);
+                } else {
+                    file.delete();
+                }
+            }
+        }
+        boolean result = false;
+        try {
+            result = path.delete();
+        } catch (Exception ex) {
+            LOGGER.log(Level.SEVERE, (Supplier<String>) ex);
+        }
+
+        return result;
     }
 
     private void insertNodeInParent(DefaultMutableTreeNode parent, Object userObjectToInsert) {
@@ -357,8 +389,8 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             file.createNewFile();
 
             XElement e = new XElement("config");
-            XElement b = new XElement("title");
-            b.setString(this.getTitleText());
+            XElement b = new XElement("name");
+            b.setString(organization.getLocation().getName());
             e.addElement(b);
 
             XIO.writeUTF(e, new FileOutputStream(file));
@@ -378,10 +410,12 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
             try (InputStream in = new FileInputStream(file)) {
 
                 XElement e = XIO.readUTF(in);
+                System.out.println(e);
                 String projectFolder = file.getParentFile().getAbsolutePath();
                 ProjectOrganization po = new ProjectOrganization(projectFolder);
                 OrganizationDockable d = new OrganizationDockable(po);
-                d.setTitleText(e.getElement("title").getString());
+                String s = i18n.s("ProjectOrganizationPlugin.titleSufix");
+                d.setTitleText(e.getElement("name").getString() + s);
                 d.setProjectPath(projectFolder);
 
                 return d;
@@ -411,6 +445,18 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         participantMenu.add(stageActions);
     }
 
+    public boolean deleteRecursive(File path) {
+        if (path.isDirectory()) {
+            for (File file : path.listFiles()) {
+                if (!deleteRecursive(file)) {
+
+                    return false;
+                }
+            }
+        }
+        return path.delete();
+    }
+
     private class PluginConfigPair {
 
         StagePlugin plugin;
@@ -431,7 +477,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
             DefaultTreeCellRenderer returnValue
                     = (DefaultTreeCellRenderer) defaultRenderer.
-                    getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+                            getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
             I18n i18n = new I18n(OrganizationDockable.class);
             if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
                 Object userObject = ((DefaultMutableTreeNode) value).getUserObject();

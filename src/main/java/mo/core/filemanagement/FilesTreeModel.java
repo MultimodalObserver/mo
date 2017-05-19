@@ -312,4 +312,8 @@ public class FilesTreeModel implements TreeModel {
             listeners.remove(l);
         }
     }
+    
+    public DirectoryWatcher getDirectoryWatcher() {
+        return this.dirWatcher;
+    }
 }

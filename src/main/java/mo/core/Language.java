@@ -39,7 +39,7 @@ public class Language implements IMenuBarItemProvider {
     private I18n i18n;
 
     public Language() {
-        
+
         i18n = new I18n(Language.class);
 
         menu.setName("language");
@@ -115,22 +115,41 @@ public class Language implements IMenuBarItemProvider {
             } catch (IOException ex) {
                 logger.log(Level.SEVERE, null, ex);
             }
+
+            File i18nFolder = new File(source.getParentFile(), "i18n");
+
+            if (i18nFolder.exists()) {
+                String[] extensions = {"properties"};
+                Collection<File> files = FileUtils
+                        .listFiles(i18nFolder, extensions, true);
+
+                for (File file : files) {
+                    if (file.getName().contains("Translations_")) {
+                        String fileName = file.getName();
+                        String localeStr = fileName.substring(
+                                fileName.indexOf("Translations_")
+                                + "Translations_".length(),
+                                fileName.lastIndexOf('.'));
+                        locales.add(localeStr);
+                    }
+                }
+            }
         } else {
             source = source.getParentFile().getParentFile();
             String[] extensions = {"class", "properties"};
 
             Collection<File> files = FileUtils
                     .listFiles(source, extensions, true);
-            
+
             for (File file : files) {
                 if (file.getName().contains("Translations_")) {
                     String fileName = file.getName();
-                        String localeStr = fileName.substring(
-                                fileName.indexOf("Translations_")
-                                        + "Translations_".length(),
-                                fileName.lastIndexOf('.'));
-                        locales.add(localeStr);
-                    }
+                    String localeStr = fileName.substring(
+                            fileName.indexOf("Translations_")
+                            + "Translations_".length(),
+                            fileName.lastIndexOf('.'));
+                    locales.add(localeStr);
+                }
             }
         }
 

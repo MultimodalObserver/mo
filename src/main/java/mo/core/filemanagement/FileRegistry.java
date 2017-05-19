@@ -59,4 +59,8 @@ public class FileRegistry {
     public void setFilesPane(FilesPane filesPane) {
         this.filesPane = filesPane;
     }
+
+    public void unWatch(File folder) {
+        filesPane.getFilesTreeModel().getDirectoryWatcher().removeDirectory(folder.toPath());
+    }
 }

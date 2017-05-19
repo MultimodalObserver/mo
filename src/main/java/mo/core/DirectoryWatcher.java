@@ -89,11 +89,17 @@ public class DirectoryWatcher {
                 @Override
                 public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
                     if (keys.containsValue(dir)) {
+                        WatchKey toDelete = null;
                         Set<Map.Entry<WatchKey, Path>> ks =  keys.entrySet();
                         for (Map.Entry<WatchKey, Path> entry : ks) {
                             if (entry.getValue().equals(dir)) {
-                                keys.remove(entry.getKey(), entry.getValue());
+                                toDelete = entry.getKey();
+                                //keys.remove(entry.getKey(), entry.getValue());
                             }
+                        }
+                        
+                        if (toDelete != null) {
+                            keys.remove(toDelete);
                         }
                     }
                     return FileVisitResult.CONTINUE;
@@ -101,6 +107,10 @@ public class DirectoryWatcher {
             });
         } catch (IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
+        }
+        
+        for (WatchKey watchKey : keys.keySet()) {
+            System.out.println(watchKey + " " + keys.get(watchKey));
         }
     }
     

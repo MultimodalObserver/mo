@@ -82,6 +82,7 @@ public class ProjectOrganization {
                 xParticipant.addElement("id").setString(participant.id);
                 xParticipant.addElement("name").setString(participant.name);
                 xParticipant.addElement("notes").setString(participant.notes);
+                xParticipant.addElement("folder").setString(participant.folder);
                 XElement date = new XElement("date");
                 Calendar c = Calendar.getInstance();
                 c.setTime(participant.date);
@@ -135,6 +136,7 @@ public class ProjectOrganization {
                         p.id = participant.getElement("id").getString();
                         p.name = participant.getElement("name").getString();
                         p.notes = participant.getElement("notes").getString();
+                        p.folder = participant.getElement("folder").getString();
 
                         SimpleDateFormat formatter = new SimpleDateFormat("dd MM yyyy");
                         String day = participant.getElement("date").getElement("day").getString();

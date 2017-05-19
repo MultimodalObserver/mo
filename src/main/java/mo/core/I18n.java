@@ -6,10 +6,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListResourceBundle;
 import java.util.Locale;
@@ -73,7 +75,7 @@ public class I18n {
 
                             if (startOfLocaleStr != indexOfPointAndExtension) {
                                 localeStr = entryName.substring(
-                                        startOfLocaleStr + 1 , indexOfPointAndExtension
+                                        startOfLocaleStr + 1, indexOfPointAndExtension
                                 );
                             }
                             b.setLocale(localeStr);
@@ -85,8 +87,10 @@ public class I18n {
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
                 }
-                //development
+
             } else {
+                //development
+
                 source = source.getParentFile().getParentFile();
                 String[] extensions = {"properties"};
 
@@ -133,6 +137,67 @@ public class I18n {
                 //logger.log(Level.INFO, null, e);
             }
 
+            //Option 4: properties files in i18n folder in the same folder of the jar
+            if (source.getName().endsWith(".jar")) {
+                String[] extensions = {"properties"};
+                Collection<File> files = FileUtils
+                        .listFiles(new File(source.getParentFile(), i18nFolder), extensions, true);
+
+                System.out.println("---" + clazz);
+
+                for (File file : files) {
+                    File parent = source.getParentFile();
+                    System.out.println("filename| " + file);
+
+                    System.out.println("src   " + (new File(source, i18nFolder)).toPath());
+                    Path relative = (new File(parent, i18nFolder)).toPath().relativize(file.toPath());
+
+                    System.out.println("rel   " + relative);
+
+                    String pathString = relative.toString().replace(File.separator, ".");
+                    //|| file.get.contains(packageName.replace("/", ".") + "/" + baseName)
+
+                    String fileName = file.getName();
+
+                    if (fileName.startsWith(baseFileName)) {
+                        System.out.println("filename            > " + file);
+                        try {
+
+                            String localeStr = fileName.substring(
+                                    fileName.lastIndexOf(baseFileName) + baseFileName.length()
+                                    + (fileName.contains("_") ? 1 : 0),
+                                    fileName.lastIndexOf('.'));
+                            LocalizablePropertyResourceBundle b = new LocalizablePropertyResourceBundle(new FileInputStream(file));
+                            b.setLocale(localeStr);
+                            //printLocale(b);
+                            bundles.add(b);
+                        } catch (FileNotFoundException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+
+                    } else if (pathString.startsWith(baseFileName)) {
+
+                        String localeStr = fileName.substring(
+                                fileName.lastIndexOf(baseName)
+                                + baseName.length()
+                                + (fileName.contains("_") ? 1 : 0),
+                                fileName.lastIndexOf(".properties")
+                        );
+                        try {
+                            LocalizablePropertyResourceBundle b = new LocalizablePropertyResourceBundle(new FileInputStream(file));
+                            b.setLocale(localeStr);
+                            //printLocale(b);
+                            bundles.add(b);
+                        } catch (FileNotFoundException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    }
+                }
+            }
         }
 
         int[] matchsLevels = new int[bundles.size()];
@@ -211,6 +276,19 @@ public class I18n {
 
     public String s(int cardinality, String keyOne, String keyMany, Object... args) {
         return _i18n.m(cardinality, keyOne, keyMany, args);
+    }
+
+    static void asd() {
+        Path p = (new File("F:\\downloads\\3DNes_32bit\\3dnes_Data\\Mono\\etc\\mono\\config")).toPath();
+        for (Iterator<Path> iterator = p.iterator(); iterator.hasNext();) {
+            Path next = iterator.next();
+            System.out.println(next.getFileName());
+        }
+
+    }
+
+    public static void main(String[] args) {
+        asd();
     }
 
     private class LocalizablePropertyResourceBundle

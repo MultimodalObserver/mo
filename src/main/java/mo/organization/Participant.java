@@ -8,4 +8,5 @@ public class Participant {
     public Date date;
     public String notes;
     public boolean isLocked;
+    public String folder;
 }
