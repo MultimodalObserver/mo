@@ -86,7 +86,7 @@ dependencies {
     
     compile 'com.theeyetribe:eyetribe-java:0.9.60'
     
-    compile 'es.e-ucm:i18n:1.1.2-SNAPSHOT'
+    //compile 'es.e-ucm:i18n:1.1.2-SNAPSHOT'
     
     //Jackson: json lib
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core

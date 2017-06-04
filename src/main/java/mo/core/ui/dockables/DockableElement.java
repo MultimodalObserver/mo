@@ -18,7 +18,7 @@ public class DockableElement extends DefaultSingleCDockable {
     CLocation backupLocation;
     
     public DockableElement() {
-        this(Long.toString(System.currentTimeMillis()));
+        this(Long.toString(System.nanoTime()));
     }
     
     public DockableElement(String id, CAction... actions) {
