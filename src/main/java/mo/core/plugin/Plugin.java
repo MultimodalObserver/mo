@@ -2,6 +2,7 @@ package mo.core.plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -114,6 +115,21 @@ public class Plugin {
         }
         
         return newInstance;
+    }
+    
+    @Override
+    public boolean equals(Object o){        
+        if (o == null) return false;
+        if (o == this) return true;
+        if (!(o instanceof Plugin)) return false;        
+        return this.id == ((Plugin) o).id;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 79 * hash + Objects.hashCode(this.id);
+        return hash;
     }
     
     @Override

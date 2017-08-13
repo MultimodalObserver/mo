@@ -285,6 +285,32 @@ public class PluginRegistry {
             processFolder(pluginFolder);
         }
     }
+    
+    public void unregisterPlugin(String pluginId){
+
+        Plugin plugin = null;
+        
+        for(Plugin p : plugins){
+            if(p.getId().equals(pluginId)){
+                plugin = p;
+                break;
+            }
+        }
+        
+        if(plugin == null){
+            logger.log(Level.INFO, "Plugin with Id <{0}> not found. It cannot be removed.", pluginId);
+            return;
+        }
+        
+        for(Dependency dependency : plugin.getDependencies()){           
+            ExtPoint extpt = dependency.getExtensionPoint();           
+            extpt.removePlugin(plugin);
+        }
+        
+        plugins.remove(plugin);
+        
+    }
+
 
     private void processFolder(String pluginFolder) {
         String[] extensions = {"class", "jar"};

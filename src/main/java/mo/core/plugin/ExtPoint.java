@@ -52,6 +52,11 @@ public class ExtPoint {
         plugins.add(p);
     }
     
+    
+    public void removePlugin(Plugin p){
+        plugins.remove(p);
+    }
+    
     public List<Plugin> getPlugins() {
         if (plugins == null) {
             plugins = new ArrayList<>();
