@@ -5,12 +5,15 @@ import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.Enumeration;
 import java.util.List;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -46,11 +49,12 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     JMenuItem menuItem = new JMenuItem("Plugin Viewer");
     DockableElement dockable;
     JTree pluginsTree, extPointsTree;
+    PluginManager pluginManager;
     boolean registered = false;
     JTabbedPane tabbedPane = new JTabbedPane();
     JPanel mainPanel, buttonsPanel;
     PluginCellRenderer renderer = new PluginCellRenderer();
-    private JScrollPane pluginsScrollPane, extPointScrollPane;
+    private JScrollPane pluginsScrollPane, extPointScrollPane, managePluginsScrollPane;
 
     public PluginViewer() {
 
@@ -58,14 +62,21 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
             menuItemClicked();
         });
 
+        // Plugins tab
         populatePluginsTree();
         pluginsScrollPane = new JScrollPane(pluginsTree);
         tabbedPane.addTab("Plugins", pluginsScrollPane);
         pluginsTree.expandRow(2);
 
+        // Extension points tab
         populateExtensionPointTree();
         extPointScrollPane = new JScrollPane(extPointsTree);
         tabbedPane.addTab("Extension Points", extPointScrollPane);
+        
+        // Plugin manager tabs
+        pluginManager = new PluginManager();
+        managePluginsScrollPane = new JScrollPane(pluginManager);
+        tabbedPane.addTab("Manage plugins", managePluginsScrollPane);
 
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
@@ -83,7 +94,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
                 PluginPlainViewer.print();
             }
         });
-        
+                
         buttonsPanel.add(refresh);
 
         mainPanel = new JPanel();
@@ -116,6 +127,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         tabbedPane.setComponentAt(1, new JScrollPane(extPointsTree));
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
+        
+        pluginManager.refresh();
     }
     
     private void populateExtensionPointTree() {
