@@ -1,31 +1,27 @@
 package mo.core.plugin;
 
+import mo.core.plugin.pluginmanagement.PluginInstaller;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.Enumeration;
 import java.util.List;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
-import javax.swing.border.BevelBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import mo.core.plugin.pluginmanagement.PluginList;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockableElement;
@@ -49,14 +45,18 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     JMenuItem menuItem = new JMenuItem("Plugin Viewer");
     DockableElement dockable;
     JTree pluginsTree, extPointsTree;
-    PluginManager pluginManager;
+    PluginInstaller pluginInstaller;
+    PluginList pluginList;
     boolean registered = false;
     JTabbedPane tabbedPane = new JTabbedPane();
     JPanel mainPanel, buttonsPanel;
     PluginCellRenderer renderer = new PluginCellRenderer();
     private JScrollPane pluginsScrollPane, extPointScrollPane, managePluginsScrollPane;
 
+    
+    
     public PluginViewer() {
+   
 
         menuItem.addActionListener((ActionEvent e) -> {
             menuItemClicked();
@@ -73,10 +73,13 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         extPointScrollPane = new JScrollPane(extPointsTree);
         tabbedPane.addTab("Extension Points", extPointScrollPane);
         
-        // Plugin manager tabs
-        pluginManager = new PluginManager();
-        managePluginsScrollPane = new JScrollPane(pluginManager);
-        tabbedPane.addTab("Manage plugins", managePluginsScrollPane);
+        // Plugin list tab
+        pluginList = new PluginList();
+        tabbedPane.addTab("Installed plugins", new JScrollPane(pluginList));
+        
+        // Plugin installer tab
+        pluginInstaller = new PluginInstaller();
+        tabbedPane.addTab("Get plugins", new JScrollPane(pluginInstaller));
 
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
@@ -128,7 +131,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
         
-        pluginManager.refresh();
+        pluginList.refresh();
+        pluginInstaller.refresh();
     }
     
     private void populateExtensionPointTree() {
