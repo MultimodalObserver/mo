@@ -14,7 +14,7 @@ public class PluginPlainViewer implements IMenuBarItemProvider {
     public PluginPlainViewer() {
         menuLauncher = new JMenuItem("Plain Plugin Viewer");
         menuLauncher.addActionListener((ActionEvent e) -> {
-            List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
+            List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
             for (Plugin plugin : plugins) {
                 System.out.println(plugin);
             }
@@ -37,7 +37,7 @@ public class PluginPlainViewer implements IMenuBarItemProvider {
     }    
     
     public static void print() {
-        List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
+        List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
         System.out.println("Plugins");
         for (Plugin plugin : plugins) {
             System.out.println("    "+plugin.getId());
@@ -46,7 +46,7 @@ public class PluginPlainViewer implements IMenuBarItemProvider {
             }
         }
         System.out.println("Extension Points");
-        List<ExtPoint> e = PluginRegistry.getInstance().getExtPoints();
+        List<ExtPoint> e = PluginRegistry.getInstance().getPluginData().getExtPoints();
         for (ExtPoint extPoint : e) {
             System.out.println("    "+extPoint.getId());
             for (Plugin plugin : extPoint.getPlugins()) {

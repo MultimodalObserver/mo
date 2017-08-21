@@ -92,7 +92,7 @@ public class OrganizationDockable extends DockableElement implements StorableDoc
 
         JMenu addStage = new JMenu(i18n.s("OrganizationDockable.addStage"));
         List<Plugin> stagePlugins
-                = PluginRegistry.getInstance().getPluginsFor("mo.organization.StageModule");
+                = PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.organization.StageModule");
         for (Plugin stagePlugin : stagePlugins) {
             StageModule nodeProvider = (StageModule) stagePlugin.getNewInstance();
             JMenuItem item = new JMenuItem(nodeProvider.getName());

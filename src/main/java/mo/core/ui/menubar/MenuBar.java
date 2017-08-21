@@ -52,6 +52,7 @@ public class MenuBar extends JMenuBar {
         List<Plugin> plugins = 
                 PluginRegistry
                         .getInstance()
+                        .getPluginData()
                         .getPluginsFor("mo.core.ui.menubar.IMenuBarItemProvider");
         
         plugins.stream().forEach((plugin) -> {
@@ -65,6 +66,7 @@ public class MenuBar extends JMenuBar {
         });
         
         PluginRegistry.getInstance()
+                .getPluginData()
                 .addPluginListener("mo.core.ui.menubar.IMenuBarItemProvider", 
                         new PluginListener() {
             @Override

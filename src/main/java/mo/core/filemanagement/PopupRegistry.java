@@ -27,12 +27,12 @@ public final class PopupRegistry {
         options = new HashMap<>();
         projectOptions = new ArrayList<>();
         
-        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.PopupOptionProvider")) {
+        for (Plugin p : PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.core.filemanagement.PopupOptionProvider")) {
             PopupOptionProvider option = (PopupOptionProvider) p.getInstance();
             addPopupOptionFor(option.getPopupItem(), option.getExtension());
         }
         
-        for (Plugin p : PluginRegistry.getInstance().getPluginsFor("mo.core.filemanagement.project.ProjectOptionProvider")) {
+        for (Plugin p : PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.core.filemanagement.project.ProjectOptionProvider")) {
             addPopupOptionForProjects(((ProjectOptionProvider) p.getInstance()).getOption());
         }
     }

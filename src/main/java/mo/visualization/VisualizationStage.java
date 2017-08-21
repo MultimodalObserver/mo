@@ -49,7 +49,7 @@ public class VisualizationStage implements StageModule {
         plugins = new ArrayList<>();
         actions = new ArrayList<>();
         
-        for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.visualization.VisualizationProvider")) {
+        for (Plugin plugin : PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.visualization.VisualizationProvider")) {
             VisualizationProvider p = (VisualizationProvider) plugin.getNewInstance();
             plugins.add(p);
         }

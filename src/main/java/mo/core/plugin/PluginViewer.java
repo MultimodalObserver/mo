@@ -15,6 +15,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -80,6 +82,11 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         // Plugin installer tab
         pluginInstaller = new PluginInstaller();
         tabbedPane.addTab("Get plugins", new JScrollPane(pluginInstaller));
+        
+        tabbedPane.addChangeListener((ChangeEvent e) -> {
+            /* Event - tab change */
+            
+        });
 
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
@@ -139,7 +146,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         extPointsTree = new JTree(new DefaultMutableTreeNode("Extension Points"));
         extPointsTree.setCellRenderer(renderer);
         DefaultTreeModel modelX = (DefaultTreeModel) extPointsTree.getModel();
-        List<ExtPoint> extensionPoints = PluginRegistry.getInstance().getExtPoints();
+        List<ExtPoint> extensionPoints = PluginRegistry.getInstance().getPluginData().getExtPoints();
         DefaultMutableTreeNode rootX = (DefaultMutableTreeNode) modelX.getRoot();
         for (ExtPoint extPoint : extensionPoints) {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(extPoint);
@@ -157,7 +164,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         pluginsTree.setCellRenderer(renderer);
 
         DefaultTreeModel model = (DefaultTreeModel) pluginsTree.getModel();
-        List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
+        List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
         for (Plugin plugin : plugins) {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(plugin);

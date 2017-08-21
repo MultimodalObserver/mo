@@ -1,11 +1,14 @@
 package mo.core.plugin;
 
-import com.github.zafarkhaja.semver.Version;
 import mo.core.Utils;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -19,9 +22,7 @@ import org.objectweb.asm.Opcodes;
 
 public class PluginRegistry {
 
-    private static PluginRegistry pg;
-
-    private final List<Plugin> plugins;
+    private static PluginRegistry pg;    
 
     private final static String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
@@ -32,12 +33,10 @@ public class PluginRegistry {
 
     private ClassLoader cl;
 
-    private final DirectoryWatcher dirWatcher;
-
-    //private final Map<String, Listeners>;
-    private final List<ExtPoint> extensionPoints;
+    private final DirectoryWatcher dirWatcher;   
     
-    private final HashMap<String, List<PluginListener>> pluginListeners;
+    private final PluginData pluginData;
+    
 
     private final static Logger logger
             = Logger.getLogger(PluginRegistry.class.getName());
@@ -45,11 +44,11 @@ public class PluginRegistry {
     private ArrayList<ClassLoader> classLoaders;
 
     private PluginRegistry() {
-        plugins = new ArrayList<>();
+        
         pluginFolders = new ArrayList<>();
-        extensionPoints = new ArrayList<>();
-        pluginListeners = new HashMap<>();
+        pluginData = new PluginData();        
         dirWatcher = new DirectoryWatcher();
+        
         File folder = new File(pluginsFolder);
         if (!folder.isDirectory()) {
             if (!folder.mkdir()) {
@@ -62,6 +61,10 @@ public class PluginRegistry {
         pluginFolders.add(pluginsFolder);
         dirWatcher.addDirectory(folder.toPath(), true);
         
+    }
+    
+    public PluginData getPluginData(){
+        return pluginData;
     }
 
     public synchronized static PluginRegistry getInstance() {
@@ -90,7 +93,7 @@ public class PluginRegistry {
                     } else {
                         pg.processFolder(file.getAbsolutePath());
                     }
-                    pg.checkDependencies();
+                    pg.pluginData.checkDependencies();
                 }
 
                 @Override
@@ -113,13 +116,13 @@ public class PluginRegistry {
                     } else {
                         pg.processFolder(file.getAbsolutePath());
                     }
-                    pg.checkDependencies();
+                    pg.pluginData.checkDependencies();
                 }
             });
 
             pg.dirWatcher.start();
 
-            pg.checkDependencies();
+            pg.pluginData.checkDependencies();
         }
 
         return pg;
@@ -147,10 +150,10 @@ public class PluginRegistry {
             cr.accept(exScanner, 0);
 
             if (exScanner.getPlugin() != null) {
-                addPlugin(exScanner.getPlugin());
+                pg.pluginData.addPlugin(exScanner.getPlugin());
                 //logger.info(exScanner.getPlugin()+ " added.");
             } else if (exScanner.getExtPoint() != null) {
-                addExtensionPoint(exScanner.getExtPoint());
+                pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
                 //logger.info(exScanner.getExtPoint()+ " added.");
             }
 
@@ -159,9 +162,6 @@ public class PluginRegistry {
         }
     }
 
-    private void processJarFile(String jarFilePath) {
-        processJarFile(new File(jarFilePath));
-    }
 
     private void processJarFile(File jar) {
         processJarFile(jar, null);
@@ -199,86 +199,13 @@ public class PluginRegistry {
 
     }
 
-    public void addPlugin(Plugin plugin) {
-        int toReplace = -1;
-        String newId = plugin.getId();
-        Version newVersion = Version.valueOf(plugin.getVersion());
-
-        for (int i = 0; i < plugins.size(); i++) {
-
-            Version v = Version.valueOf(plugins.get(i).getVersion());
-
-            if (newId.equals(plugins.get(i).getId())
-                    && newVersion.getMajorVersion() == v.getMajorVersion()
-                    && newVersion.getMinorVersion() == v.getMinorVersion()) {
-                toReplace = i;
-
-            }
-        }
-
-        if (toReplace > -1) {
-            plugins.set(toReplace, plugin);
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (pluginListeners.containsKey(dependency.getId())) {
-                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
-                        pluginListener.pluginUpdated(plugin);
-                    }
-                }
-            }
-        } else {
-            plugins.add(plugin);
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (pluginListeners.containsKey(dependency.getId())) {
-                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
-                        pluginListener.pluginAdded(plugin);
-                    }
-                }
-            }
-        }
-        
-        //logger.log(Level.INFO,"Plugin added: {0}", plugin);
+  
+    public void copyPluginToFolder(File file) throws IOException{
+        Path src = Paths.get(file.getAbsolutePath());
+        Path dest = Paths.get(pluginsFolder+"/");        
+        Files.copy(src, dest.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
     }
-
-    public List<Plugin> getPluginsFor(String extensionPointId) {
-        return getPluginsFor(extensionPointId, ">=0.0.0");
-    }
-
-    public List<Plugin> getPluginsFor(String extensionPointId, String version) {
-        List<Plugin> result = new ArrayList<>();
-        
-        String xpId = null;
-        for (ExtPoint extensionPoint : extensionPoints) {
-            if (extensionPoint.getId().equals(extensionPointId)) {
-                Version v = Version.valueOf(extensionPoint.getVersion());
-                if (v.satisfies(version)) {
-                    xpId = extensionPoint.getId();
-                }
-            }
-        }
-        
-        if (xpId == null) {
-            logger.log(Level.INFO, 
-                    "Id for extension point <{0}> not found", 
-                    extensionPointId );
-            return result;
-        }
-            
-        
-        for (Plugin plugin : plugins) {
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (dependency.getId().equals(extensionPointId)) {
-                    result.add(plugin);
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    public List<Plugin> getPlugins() {
-        return this.plugins;
-    }
+    
 
     private void processPluginFolders() {
         for (String pluginFolder : pluginFolders) {
@@ -286,31 +213,6 @@ public class PluginRegistry {
         }
     }
     
-    public void unregisterPlugin(String pluginId){
-
-        Plugin plugin = null;
-        
-        for(Plugin p : plugins){
-            if(p.getId().equals(pluginId)){
-                plugin = p;
-                break;
-            }
-        }
-        
-        if(plugin == null){
-            logger.log(Level.INFO, "Plugin with Id <{0}> not found. It cannot be removed.", pluginId);
-            return;
-        }
-        
-        for(Dependency dependency : plugin.getDependencies()){           
-            ExtPoint extpt = dependency.getExtensionPoint();           
-            extpt.removePlugin(plugin);
-        }
-        
-        plugins.remove(plugin);
-        
-    }
-
 
     private void processFolder(String pluginFolder) {
         String[] extensions = {"class", "jar"};
@@ -355,80 +257,8 @@ public class PluginRegistry {
         }
     }
 
-    public Object getPluginInstance(String pluginId) {
-        for (Plugin plugin : plugins) {
-            if (pluginId.equals(plugin.getId())) {
-                return plugin.getInstance();
-            }
-        }
-        return null;
-    }
 
-    public Plugin getPlugin(String pluginId) {
-        for (Plugin plugin : plugins) {
-            if (pluginId.equals(plugin.getId())) {
-                return plugin;
-            }
-        }
-        return null;
-    }
-
-    public List<ExtPoint> getExtPoints() {
-        return extensionPoints;
-    }
-
-    public void addPluginListener(String extensionPointId, PluginListener listener) {
-        if (!pluginListeners.containsKey(extensionPointId)) {
-            ArrayList<PluginListener> xpListeners = new ArrayList<>();
-            xpListeners.add(listener);
-            pluginListeners.put(extensionPointId, xpListeners);
-        } else {
-            pluginListeners.get(extensionPointId).add(listener);
-        }       
-    }
-
-    public void removePluginListener(String extensionPointId, PluginListener listener) {
-        if (pluginListeners.containsKey(extensionPointId)) {
-            List l = pluginListeners.get(extensionPointId);
-            if (l.contains(listener)) {
-                l.remove(l);
-            }
-        }
-    }
     
-    private void addExtensionPoint(ExtPoint extPoint) {
-        for (ExtPoint extensionPoint : extensionPoints) {
-            if (extensionPoint.getId().equals(extPoint.getId())) {
-                return;
-            }
-        }
-        extensionPoints.add(extPoint);
-    }
-
-    private void checkDependencies() {
-        for (Plugin plugin : plugins) {
-            for (Dependency dependency : plugin.getDependencies()) {
-                for (ExtPoint extensioPoint : extensionPoints) {
-                    if (dependency.getId().equals(extensioPoint.getId())) {
-                        dependency.setExtensionPoint(extensioPoint);
-                        dependency.setIsPresent(true);
-                        
-                        addPluginToExtensionPoint(extensioPoint, plugin);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    
-    private void addPluginToExtensionPoint(ExtPoint x, Plugin p) {
-        for (Plugin plugin : x.getPlugins()) {
-            if (plugin.getId().equals(p.getId())) {
-                return;
-            }
-        }
-        x.addPlugin(p);
-    }
     
     public List<ClassLoader> getClassLoaders() {
         return classLoaders;
