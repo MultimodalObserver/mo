@@ -172,7 +172,7 @@ public class PluginData {
     }
     
     
-    public boolean pluginIsRegistered(Plugin plugin, String version){        
+    public boolean pluginIsRegistered(Plugin plugin, String version){
         for(Plugin p : plugins){
             if(p.equals(plugin)){                
                 Version v = Version.valueOf(p.getVersion());
@@ -186,8 +186,9 @@ public class PluginData {
     
     public boolean pluginIsRegistered(Plugin plugin){  
         
+        
         String version = plugin.getVersion();
-        if(version.length() == 0){
+        if(version == null || version.length() == 0){
             version = ">=0.0.0";
         }
         
