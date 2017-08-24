@@ -37,6 +37,8 @@ public class PluginRegistry {
     
     private final PluginData pluginData;
     
+    private boolean testingJar = false;
+    
 
     private final static Logger logger
             = Logger.getLogger(PluginRegistry.class.getName());
@@ -66,34 +68,34 @@ public class PluginRegistry {
     public PluginData getPluginData(){
         return pluginData;
     }
+       
+  
+    
 
     public synchronized static PluginRegistry getInstance() {
         if (pg == null) {
-            pg = new PluginRegistry();
+            pg = new PluginRegistry();            
             
-            //look for plugins in app jar
-            pg.processAppJar();
+            try{
+                //look for plugins in app jar
+                pg.processAppJar();
+                
+                //look for plugins in folders
+                pg.processPluginFolders();
+                
+            } catch(Exception e){
+                e.printStackTrace();
+            }
             
-            //look for plugins in folders
-            pg.processPluginFolders();
 
             pg.dirWatcher.addWatchHandler(new WatchHandler() {
                 @Override
                 public void onCreate(File file) {
-                    if (file.isFile()) {
-                        if (file.getName().endsWith(".class")) {
-                            try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in, true);
-                            } catch (IOException ex) {
-                                logger.log(Level.SEVERE, null, ex);
-                            }
-                        } else if (file.getName().endsWith(".jar")) {
-                            pg.processJarFile(file);
-                        }
-                    } else {
-                        pg.processFolder(file.getAbsolutePath());
-                    }
-                    pg.pluginData.checkDependencies();
+                    try {
+                        processFile(file);
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }                    
                 }
 
                 @Override
@@ -103,23 +105,13 @@ public class PluginRegistry {
 
                 @Override
                 public void onModify(File file) {
-                    if (file.isFile()) {
-                        if (file.getName().endsWith(".class")) {
-                            try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in, true);
-                            } catch (IOException ex) {
-                                logger.log(Level.SEVERE, null, ex);
-                            }
-                        } else if (file.getName().endsWith(".jar")) {
-                            pg.processJarFile(file);
-                        }
-                    } else {
-                        pg.processFolder(file.getAbsolutePath());
-                    }
-                    pg.pluginData.checkDependencies();
+                    try {
+                        processFile(file);
+                    } catch(Exception e){
+                        e.printStackTrace();
+                    }   
                 }
             });            
-            
 
             pg.dirWatcher.start();
 
@@ -128,8 +120,28 @@ public class PluginRegistry {
 
         return pg;
     }
+    
+    
+    
+    private static void processFile(File file) throws IOException {
+        
+        if (file.isFile()) {
+            if (file.getName().endsWith(".class")) {
+                FileInputStream in = new FileInputStream(file);
+                
+                pg.processClassAsInputStream(in, true);
 
-    private void processAppJar() {
+            } else if (file.getName().endsWith(".jar")) {
+                pg.processJarFile(file);
+            }
+        } else {
+            pg.processFolder(file.getAbsolutePath());
+        }
+        pg.pluginData.checkDependencies();
+    }
+    
+
+    private void processAppJar() throws IOException {
         File jarFile = new File(PluginRegistry.class.getProtectionDomain()
                 .getCodeSource().getLocation().getFile());
 
@@ -143,63 +155,74 @@ public class PluginRegistry {
         }
     }
 
-    private void processClassAsInputStream(InputStream classIS, boolean external) {
-        try {
-            ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
-            exScanner.setClassLoader(cl);
-            ClassReader cr = new ClassReader(classIS);
-            cr.accept(exScanner, 0);
+    private void processClassAsInputStream(InputStream classIS, boolean external) throws IOException {
 
-            if (exScanner.getPlugin() != null) {
-                Plugin newPlugin = exScanner.getPlugin();
-                newPlugin.setExternal(external);
-                pg.pluginData.addPlugin(newPlugin);
-                //logger.info(exScanner.getPlugin()+ " added.");
-            } else if (exScanner.getExtPoint() != null) {
-                pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
-                //logger.info(exScanner.getExtPoint()+ " added.");
-            }
+        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
+        exScanner.setClassLoader(cl);
+        ClassReader cr = new ClassReader(classIS);
+        cr.accept(exScanner, 0);
 
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+        if(testingJar){
+            return;
         }
+
+        if (exScanner.getPlugin() != null) {
+            Plugin newPlugin = exScanner.getPlugin();
+            newPlugin.setExternal(external);
+            pg.pluginData.addPlugin(newPlugin);
+
+        } else if (exScanner.getExtPoint() != null) {
+            pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
+
+        }
+
     }
 
 
-    private void processJarFile(File jar) {
+    private void processJarFile(File jar) throws IOException {
         processJarFile(jar, null);
     }
 
-    private void processJarFile(File jar, String[] packages) {
+    private void processJarFile(File jar, String[] packages) throws IOException {
 
-        try (JarFile jarFile = new JarFile(jar)) {
+        JarFile jarFile = new JarFile(jar);
 
-            cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-            
-            Enumeration entries = jarFile.entries();
+        cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
 
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = (JarEntry) entries.nextElement();
-                String entryName = jarEntry.getName();
+        Enumeration entries = jarFile.entries();
 
-                if (entryName.endsWith(".class")) {
-                    if (packages != null) {
-                        for (String p : packages) {
-                            if (entryName.startsWith(p)) {
-                                processClassAsInputStream(jarFile
-                                        .getInputStream(jarEntry), true);
-                            }
+        while (entries.hasMoreElements()) {
+            JarEntry jarEntry = (JarEntry) entries.nextElement();
+            String entryName = jarEntry.getName();
+
+            if (entryName.endsWith(".class")) {
+                if (packages != null) {
+                    for (String p : packages) {
+                        if (entryName.startsWith(p)) {
+                            processClassAsInputStream(jarFile.getInputStream(jarEntry), true);
                         }
-                    } else {
-                        processClassAsInputStream(
-                                jarFile.getInputStream(jarEntry), true);
                     }
+                } else {
+                    processClassAsInputStream(jarFile.getInputStream(jarEntry), true);
                 }
             }
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
         }
+    }
 
+    
+    
+    public Exception checkPlugin(File file){
+        
+        testingJar = true;        
+        
+        try{            
+            processFile(file);
+            return null;            
+        } catch(Exception e){            
+            return e;            
+        } finally {
+            testingJar = false;
+        }        
     }
 
   
@@ -210,14 +233,14 @@ public class PluginRegistry {
     }
     
 
-    private void processPluginFolders() {
+    private void processPluginFolders() throws IOException {
         for (String pluginFolder : pluginFolders) {
             processFolder(pluginFolder);
         }
     }
     
 
-    private void processFolder(String pluginFolder) {
+    private void processFolder(String pluginFolder) throws IOException, FileNotFoundException, MalformedURLException {
         String[] extensions = {"class", "jar"};
         ClassLoader classLoader = PluginRegistry.class.getClassLoader();
         URLClassLoader urlCL;
@@ -225,14 +248,10 @@ public class PluginRegistry {
         Collection<File> files = FileUtils
                 .listFiles(new File(pluginFolder), extensions, true);
         for (File f : files) {
-            try {
-                if (f.getName().endsWith(".class")) {
-                    urls.add(f.getParentFile().toURI().toURL());
-                } else if (f.getName().endsWith(".jar")) {
-                    urls.add(f.toURI().toURL());
-                }
-            } catch (MalformedURLException ex) {
-                logger.log(Level.SEVERE, null, ex);
+            if (f.getName().endsWith(".class")) {
+                urls.add(f.getParentFile().toURI().toURL());
+            } else if (f.getName().endsWith(".jar")) {
+                urls.add(f.toURI().toURL());
             }
         }
 
@@ -248,12 +267,8 @@ public class PluginRegistry {
 
         for (File file : files) {
             if (file.getName().endsWith(".class")) {
-                try {
-                    processClassAsInputStream(
+                processClassAsInputStream(
                             new FileInputStream(file), false);
-                } catch (FileNotFoundException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
             } else if (file.getName().endsWith(".jar")) {
                 processJarFile(file);
             }

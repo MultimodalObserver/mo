@@ -64,6 +64,13 @@ public class PluginInstaller extends JPanel {
             else if(!(file.getName().endsWith(".class") || file.getName().endsWith(".jar"))){
                 
                 msg = "File " + file.getName() + " doesn't end with .class or .jar. No plugins were added.";
+            } else {
+                
+                Exception error = PluginRegistry.getInstance().checkPlugin(file);
+                
+                if(error != null){                
+                    msg = "File doesn't appear to be a valid plugin. No plugins were added.\n\nError details:\n\n" + error.toString();                
+                }
             }
             
             if(msg != null){
