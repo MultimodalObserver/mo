@@ -14,12 +14,15 @@ public class PluginTest {
         
         Plugin A = new Plugin();
         A.setId("A");
+        A.setName("AAA");
         
         Plugin B = new Plugin();
         B.setId("B");
+        B.setName("BBB");
         
         Plugin C = new Plugin();
         C.setId("A");
+        C.setName("CCC C CC C C");
         
         assertEquals(A, C);       
         assertEquals(A.equals(C), true);

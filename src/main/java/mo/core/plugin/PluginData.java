@@ -104,20 +104,21 @@ public class PluginData {
         }
         return null;
     }
+        
     
-    public void unregisterPlugin(String pluginId){
-
+    private void unregisterPlugin(String pluginId, String version){
+        
         Plugin plugin = null;
         
         for(Plugin p : plugins){
-            if(p.getId().equals(pluginId)){
+            if(p.getId().equals(pluginId) && p.getVersion().equals(version)){
                 plugin = p;
                 break;
             }
         }
         
         if(plugin == null){
-            logger.log(Level.INFO, "Plugin with Id <{0}> not found. It cannot be removed.", pluginId);
+            logger.log(Level.INFO, "Plugin with Id <{0}> (version " + version + ") not found. It cannot be removed.", pluginId);
             return;
         }
         
@@ -126,7 +127,30 @@ public class PluginData {
             extpt.removePlugin(plugin);
         }
         
-        plugins.remove(plugin);
+        plugins.remove(plugin);        
+    }
+    
+    public void unregisterPlugin(Plugin plugin){
+        if(plugin == null)
+            return;        
+        unregisterPlugin(plugin.getId(), plugin.getVersion());
+    }
+    
+    public void unregisterPlugin(String pluginId){       
+        
+        List<Plugin> sameId = new ArrayList<>();
+        
+        for(Plugin p : plugins){
+            if(p.getId().equals(pluginId)){
+                sameId.add(p);                
+            }
+        }
+        
+        
+        for(Plugin p : sameId){
+            System.out.println(p.getId());
+            unregisterPlugin(p);
+        }
         
     }
     

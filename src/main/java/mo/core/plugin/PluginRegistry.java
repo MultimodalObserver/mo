@@ -83,7 +83,7 @@ public class PluginRegistry {
                     if (file.isFile()) {
                         if (file.getName().endsWith(".class")) {
                             try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in);
+                                pg.processClassAsInputStream(in, true);
                             } catch (IOException ex) {
                                 logger.log(Level.SEVERE, null, ex);
                             }
@@ -106,7 +106,7 @@ public class PluginRegistry {
                     if (file.isFile()) {
                         if (file.getName().endsWith(".class")) {
                             try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in);
+                                pg.processClassAsInputStream(in, true);
                             } catch (IOException ex) {
                                 logger.log(Level.SEVERE, null, ex);
                             }
@@ -142,7 +142,7 @@ public class PluginRegistry {
         }
     }
 
-    private void processClassAsInputStream(InputStream classIS) {
+    private void processClassAsInputStream(InputStream classIS, boolean external) {
         try {
             ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
             exScanner.setClassLoader(cl);
@@ -150,7 +150,9 @@ public class PluginRegistry {
             cr.accept(exScanner, 0);
 
             if (exScanner.getPlugin() != null) {
-                pg.pluginData.addPlugin(exScanner.getPlugin());
+                Plugin newPlugin = exScanner.getPlugin();
+                newPlugin.setExternal(external);
+                pg.pluginData.addPlugin(newPlugin);
                 //logger.info(exScanner.getPlugin()+ " added.");
             } else if (exScanner.getExtPoint() != null) {
                 pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
@@ -184,12 +186,12 @@ public class PluginRegistry {
                         for (String p : packages) {
                             if (entryName.startsWith(p)) {
                                 processClassAsInputStream(jarFile
-                                        .getInputStream(jarEntry));
+                                        .getInputStream(jarEntry), true);
                             }
                         }
                     } else {
                         processClassAsInputStream(
-                                jarFile.getInputStream(jarEntry));
+                                jarFile.getInputStream(jarEntry), true);
                     }
                 }
             }
@@ -247,7 +249,7 @@ public class PluginRegistry {
             if (file.getName().endsWith(".class")) {
                 try {
                     processClassAsInputStream(
-                            new FileInputStream(file));
+                            new FileInputStream(file), false);
                 } catch (FileNotFoundException ex) {
                     logger.log(Level.SEVERE, null, ex);
                 }

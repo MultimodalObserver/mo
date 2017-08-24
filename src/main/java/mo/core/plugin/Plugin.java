@@ -17,6 +17,7 @@ public class Plugin {
     private String description;
     
     private Object instance;
+    private boolean external;
     
     //private List<Plugin> dependencies;
     //private List<String> dependenciesStrs;
@@ -28,6 +29,14 @@ public class Plugin {
     
     public Plugin(){
         
+    }
+    
+    public boolean getExternal(){
+        return external;
+    }
+    
+    public void setExternal(boolean external){
+        this.external = external;
     }
 
     public String getId() {
