@@ -201,8 +201,6 @@ public class PluginDataTest {
         assertEquals(pluginData.pluginIsRegistered(p32, "0.3.1"), true);
         assertEquals(pluginData.pluginIsRegistered(p3), true);
         assertEquals(pluginData.pluginIsRegistered(p32), true);
-        assertEquals(pluginData.pluginIsRegistered(p32, "0.2.1"), true);
-        assertEquals(pluginData.pluginIsRegistered(p3, "0.3.1"), true);
         
         assertEquals(pluginData.getPlugins().size(), 2);
     }

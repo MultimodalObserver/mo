@@ -131,7 +131,7 @@ public class Plugin {
         if (o == null) return false;
         if (o == this) return true;
         if (!(o instanceof Plugin)) return false;        
-        return this.id == ((Plugin) o).id;
+        return this.id == ((Plugin) o).id && this.version == ((Plugin) o).version;
     }
 
     @Override

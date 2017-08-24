@@ -118,7 +118,8 @@ public class PluginRegistry {
                     }
                     pg.pluginData.checkDependencies();
                 }
-            });
+            });            
+            
 
             pg.dirWatcher.start();
 

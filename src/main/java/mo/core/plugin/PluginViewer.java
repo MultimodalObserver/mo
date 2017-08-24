@@ -16,7 +16,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -53,7 +52,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     JTabbedPane tabbedPane = new JTabbedPane();
     JPanel mainPanel, buttonsPanel;
     PluginCellRenderer renderer = new PluginCellRenderer();
-    private JScrollPane pluginsScrollPane, extPointScrollPane, managePluginsScrollPane;
+    private JScrollPane pluginsScrollPane, extPointScrollPane;
 
     
     
@@ -96,7 +95,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         buttonsPanel = new JPanel();
         
         
-        JButton refresh = new JButton("Refresh");
+        JButton refresh = new JButton("↻");
+        refresh.setToolTipText("Refresh plugins");
         refresh.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -104,6 +104,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
                 PluginPlainViewer.print();
             }
         });
+
                 
         buttonsPanel.add(refresh);
 

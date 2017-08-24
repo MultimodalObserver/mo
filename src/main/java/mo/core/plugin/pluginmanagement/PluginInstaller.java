@@ -24,6 +24,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.UIManager;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.Utils;
 
 /**
@@ -51,12 +53,42 @@ public class PluginInstaller extends JPanel {
     
     private void addPlugins(List<File> files){
         
+
+        for(File file : files){
+            
+            String msg = null;
+            
+            if(!file.isFile()){            
+                msg = "File " + file.getName() + " doesn't exist.";
+            }
+            else if(!(file.getName().endsWith(".class") || file.getName().endsWith(".jar"))){
+                
+                msg = "File " + file.getName() + " doesn't end with .class or .jar. No plugins were added.";
+            }
+            
+            if(msg != null){
+            
+                JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }            
+        }
+   
+        
         if(confirmPluginAdd(files)){
             System.out.println("Se procede a agregar (o intentar) " + files.size() + " archivos");
             for(File f : files){
                 System.out.println(" ---- " + f.getAbsolutePath());
+                try{
+                    PluginRegistry.getInstance().copyPluginToFolder(f);
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
+                
             }
             System.out.println();
+            
+            JOptionPane.showMessageDialog(null, files.size() + " plugins added/updated.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            
         } else {
             System.out.println("No guardando");
         }
@@ -79,7 +111,7 @@ public class PluginInstaller extends JPanel {
         dragInactive.add(dragDropImage, BorderLayout.CENTER);
         dragInactive.add(new JLabel("Drag and drop here"));
 
-        JButton addPluginBtn = new JButton("Add new plugin");
+        JButton addPluginBtn = new JButton("Add new plugin", UIManager.getIcon("FileView.fileIcon"));
         addPluginBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -168,6 +200,7 @@ public class PluginInstaller extends JPanel {
                 
         
         add(addPluginBtn);
+        add(new JLabel("or"));
         add(dragDropPanel);
     }
 }
