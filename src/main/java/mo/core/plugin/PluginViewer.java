@@ -62,6 +62,16 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         menuItem.addActionListener((ActionEvent e) -> {
             menuItemClicked();
         });
+        
+        
+        // Plugin list tab
+        pluginList = new PluginList();
+        tabbedPane.addTab("Installed plugins", new JScrollPane(pluginList));
+        
+        // Plugin installer tab
+        pluginInstaller = new PluginInstaller();
+        tabbedPane.addTab("Get plugins", new JScrollPane(pluginInstaller));
+        
 
         // Plugins tab
         populatePluginsTree();
@@ -74,16 +84,11 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         extPointScrollPane = new JScrollPane(extPointsTree);
         tabbedPane.addTab("Extension Points", extPointScrollPane);
         
-        // Plugin list tab
-        pluginList = new PluginList();
-        tabbedPane.addTab("Installed plugins", new JScrollPane(pluginList));
         
-        // Plugin installer tab
-        pluginInstaller = new PluginInstaller();
-        tabbedPane.addTab("Get plugins", new JScrollPane(pluginInstaller));
         
         tabbedPane.addChangeListener((ChangeEvent e) -> {
             /* Event - tab change */
+            pluginList.refresh();
             
         });
 

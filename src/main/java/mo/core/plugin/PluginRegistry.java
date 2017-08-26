@@ -177,6 +177,14 @@ public class PluginRegistry {
         }
 
     }
+    
+    public synchronized boolean uninstallPlugin(Plugin plugin){
+        
+        System.out.println("Desinstalando plugin...");
+        
+        return true;
+        
+    }
 
 
     private void processJarFile(File jar) throws IOException {

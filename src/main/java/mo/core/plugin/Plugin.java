@@ -136,10 +136,13 @@ public class Plugin {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 79 * hash + Objects.hashCode(this.id);
+        int hash = 7;
+        hash = 67 * hash + Objects.hashCode(this.id);
+        hash = 67 * hash + Objects.hashCode(this.version);
         return hash;
     }
+
+    
     
     @Override
     public String toString(){

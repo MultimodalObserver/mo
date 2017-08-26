@@ -51,9 +51,9 @@ public class PluginInstaller extends JPanel {
         addPlugins(Arrays.asList(files));
     }
     
-    private void addPlugins(List<File> files){
-        
-
+    
+    private boolean checkFiles(List<File> files){
+    
         for(File file : files){
             
             String msg = null;
@@ -69,19 +69,39 @@ public class PluginInstaller extends JPanel {
                 Exception error = PluginRegistry.getInstance().checkPlugin(file);
                 
                 if(error != null){                
-                    msg = "File doesn't appear to be a valid plugin. No plugins were added.\n\nError details:\n\n" + error.toString();                
+                    msg = "File " + file.getName() + " doesn't appear to be a valid plugin. No plugins were added.\n\nError details:\n\n" + error.toString();                
                 }
             }
             
             if(msg != null){
             
                 JOptionPane.showMessageDialog(null, msg, "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                return false;
             }            
+        }
+        
+        return true;    
+    }
+    
+    
+    private void addPlugins(List<File> files){
+        
+
+        // Check files before confirmation dialog box
+        if(!checkFiles(files)){
+            return;
         }
    
         
         if(confirmPluginAdd(files)){
+            
+            // Check files again in case they changed during the confirm dialog
+            
+            if(!checkFiles(files)){
+                System.out.println("Se confirmo, pero no se agrego nada");
+                return;
+            }
+            
             System.out.println("Se procede a agregar (o intentar) " + files.size() + " archivos");
             for(File f : files){
                 System.out.println(" ---- " + f.getAbsolutePath());
