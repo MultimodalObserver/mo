@@ -29,9 +29,7 @@ public class TupleList extends JPanel {
     
     TupleList(){        
 
-        subContainer = new JPanel();
-        //setLayout(new BorderLayout());
-        
+        subContainer = new JPanel();    
         
         subContainer.setLayout(new GridBagLayout());
 	grid = new GridBagConstraints();
@@ -42,7 +40,6 @@ public class TupleList extends JPanel {
         grid.fill = GridBagConstraints.HORIZONTAL;
         grid.anchor = GridBagConstraints.NORTHWEST;
 
-        setBackground(Color.red);
         add(subContainer, BorderLayout.PAGE_START);
 
     }
@@ -75,7 +72,7 @@ public class TupleList extends JPanel {
             Dimension depDimension = table.getPreferredSize();
             
             // set max height
-            comp.setPreferredSize(new Dimension(depDimension.width, table.getRowHeight() * (Math.min(table.getRowCount(), MAX_ROWS_TABLE) + 2)));            
+            comp.setPreferredSize(new Dimension(400, table.getRowHeight() * (Math.min(table.getRowCount(), MAX_ROWS_TABLE) + 2)));            
             
         } else if(value instanceof JComponent){
             comp = (JComponent) value;

@@ -174,7 +174,6 @@ public class PluginRegistry {
                 try {
                     processFile(file);                    
                 } catch(Exception e){
-                    e.printStackTrace();
                 }
                 notifyChanges();
             }
