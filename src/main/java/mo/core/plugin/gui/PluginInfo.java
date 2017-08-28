@@ -140,8 +140,8 @@ class PluginInfo extends JPanel {
         JTable depTable = new JTable(depRows, depColumns);
         JTable extTable = new JTable(extRows, extColumns);
         
-        depTable.setRowSelectionAllowed(false);
-        extTable.setRowSelectionAllowed(false);
+        depTable.setEnabled(false);
+        extTable.setEnabled(false);
         
         tuples.addTuple("Dependencies", depTable);
         tuples.addTuple("Extension points", extTable);
