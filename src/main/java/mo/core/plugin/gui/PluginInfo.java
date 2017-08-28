@@ -41,8 +41,17 @@ class PluginInfo extends JPanel {
         tuples.addTuple("Version", plugin.getVersion());
         tuples.addTuple("Id", plugin.getId());
         
-        if(plugin.isThirdParty()) 
-            tuples.addTuple("Path", plugin.getPath());
+        if(plugin.isThirdParty()){
+            
+            String simplifiedPath = PluginRegistry.getInstance().getPluginsFolder().relativize(plugin.getPath()).toString();
+            
+            // Show only relative path
+            JLabel path = new JLabel(simplifiedPath);
+            
+            // Set tooltip to show the full path
+            path.setToolTipText(plugin.getPath().toString());
+            tuples.addTuple("File", path);
+        }
         
         tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in in MO");
         tuples.addScrollText("Description", plugin.getDescription());          

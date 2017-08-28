@@ -69,6 +69,11 @@ public class PluginRegistry {
     }
     
     
+    public Path getPluginsFolder(){
+        return Paths.get(pluginsFolder);
+    }
+    
+    
     public void subscribePluginsChanges(IPluginsObserver obs){
         observers.add(obs);
     }

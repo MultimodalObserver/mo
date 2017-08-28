@@ -50,7 +50,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     JMenuItem menuItem = new JMenuItem("Plugin Viewer");
     DockableElement dockable;
     JTree pluginsTree, extPointsTree;
-    PluginInstaller pluginInstaller;
+    LocalPluginInstaller localInstaller;
+    RemotePluginInstaller remoteInstaller;
     PluginList pluginList;
     boolean registered = false;
     JTabbedPane tabbedPane = new JTabbedPane();
@@ -73,8 +74,12 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         tabbedPane.addTab("Installed plugins", new JScrollPane(pluginList));
         
         // Plugin installer tab
-        pluginInstaller = new PluginInstaller();
-        tabbedPane.addTab("Get plugins", new JScrollPane(pluginInstaller));
+        localInstaller = new LocalPluginInstaller();
+        remoteInstaller = new RemotePluginInstaller();
+        JTabbedPane installer = new JTabbedPane();
+        installer.addTab("Local", new JScrollPane(localInstaller));
+        installer.addTab("Download", new JScrollPane(remoteInstaller));
+        tabbedPane.addTab("Get plugins", installer);
         
 
         // Plugins tab
@@ -137,19 +142,19 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         DefaultTreeModel m = (DefaultTreeModel) pluginsTree.getModel();
         ((DefaultMutableTreeNode) m.getRoot()).removeAllChildren();
         populatePluginsTree();
-        tabbedPane.setComponentAt(0, new JScrollPane(pluginsTree));
+        tabbedPane.setComponentAt(2, new JScrollPane(pluginsTree));
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
         
         m = (DefaultTreeModel) extPointsTree.getModel();
         ((DefaultMutableTreeNode) m.getRoot()).removeAllChildren();
         populateExtensionPointTree();
-        tabbedPane.setComponentAt(1, new JScrollPane(extPointsTree));
+        tabbedPane.setComponentAt(3, new JScrollPane(extPointsTree));
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
         
         pluginList.refresh();
-        pluginInstaller.refresh();
+        localInstaller.refresh();
     }
     
     private void populateExtensionPointTree() {

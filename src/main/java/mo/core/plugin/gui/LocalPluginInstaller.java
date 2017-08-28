@@ -32,7 +32,7 @@ import mo.core.ui.Utils;
  *
  * @author felo
  */
-public class PluginInstaller extends JPanel {
+public class LocalPluginInstaller extends JPanel {
     
     public void refresh(){    
         
@@ -122,7 +122,7 @@ public class PluginInstaller extends JPanel {
     }
     
 
-    public PluginInstaller(){        
+    public LocalPluginInstaller(){        
        
         JPanel dragDropPanel = new JPanel();        
 
