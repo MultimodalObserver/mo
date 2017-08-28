@@ -84,14 +84,22 @@ class PluginInfo extends JPanel {
                         JOptionPane.showMessageDialog(null, "Plugin is being used. Please stop recording data and try again.", "Error", JOptionPane.ERROR_MESSAGE);                    
                     }
                     
-                    boolean success = PluginRegistry.getInstance().uninstallPlugin(plugin);
+                    String success = PluginRegistry.getInstance().uninstallPlugin(plugin);
                     
-                    if(success){                        
+                    if(success == PluginRegistry.PLUGIN_DELETED_OK){                        
                         System.out.println("Update plugin tree");
                         
                     }
                     else {                        
-                        JOptionPane.showMessageDialog(null, "Plugin couldn't be removed.", "Error", JOptionPane.ERROR_MESSAGE);                    
+                        
+                        String extraMsg = "";
+                        if(success == PluginRegistry.FILE_CANNOT_BE_DELETED) extraMsg = "Unknown cause.";
+                        if(success == PluginRegistry.FILE_IS_DIRECTORY) extraMsg = "File is a directory.";
+                        if(success == PluginRegistry.FILE_NOT_FOUND) extraMsg = "File not found.";
+                        if(success == PluginRegistry.PLUGIN_NOT_THIRD_PARTY_PLUGIN) extraMsg = "File is not a third party plugin.";
+                        if(success == PluginRegistry.PLUGIN_BEING_USED) extraMsg = "Plugin is being used, stop recording and try again.";
+ 
+                        JOptionPane.showMessageDialog(null, "Plugin couldn't be removed. " + extraMsg, "Error", JOptionPane.ERROR_MESSAGE);                    
                     }                                       
                     
                 }
