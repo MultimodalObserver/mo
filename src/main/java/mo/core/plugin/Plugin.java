@@ -1,5 +1,7 @@
 package mo.core.plugin;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +22,7 @@ public class Plugin {
 
     private List<Dependency> dependencies;
     
-    private String path;
+    private Path path;
     
     private Class<?> clazz;
     
@@ -80,13 +82,22 @@ public class Plugin {
         this.dependencies.add(dependecy);
     }
     
-    public String getPath() {
+    public Path getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public void setPath(Path path) {
         this.path = path;
     }
+    
+    public void setPath(String pathStr){
+        if(pathStr == null){
+            this.path = null;
+        } else {
+            this.path = Paths.get(pathStr);
+        }        
+    }
+    
     
     public Class<?> getClazz() {
         return clazz;

@@ -136,7 +136,7 @@ public class PluginRegistry {
                     
                     if(!p.isThirdParty()) continue;
                     
-                    Path pluginPath = Paths.get(p.getPath());
+                    Path pluginPath = p.getPath();
                     
                     if(deletedFilepath.equals(pluginPath)){
                         plugin = p;
@@ -232,7 +232,7 @@ public class PluginRegistry {
             return false;
         }
         
-        File file = new File(plugin.getPath());
+        File file = plugin.getPath().toFile();
 
         if(!file.exists()) {
             return false;
