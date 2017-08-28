@@ -137,11 +137,11 @@ public class PluginRegistry {
             @Override
             public void onCreate(File file) {
                 try {
-                    processFile(file);
-                    notifyChanges();
+                    processFile(file);                    
                 } catch(Exception e){
                     e.printStackTrace();
-                }                    
+                }        
+                notifyChanges();
             }
 
             @Override
@@ -172,11 +172,11 @@ public class PluginRegistry {
             @Override
             public void onModify(File file) {
                 try {
-                    processFile(file);
-                    notifyChanges();
+                    processFile(file);                    
                 } catch(Exception e){
                     e.printStackTrace();
-                }   
+                }
+                notifyChanges();
             }
         });            
 
