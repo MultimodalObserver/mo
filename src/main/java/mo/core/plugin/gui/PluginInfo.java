@@ -1,26 +1,18 @@
-package mo.core.plugin.pluginmanagement;
+package mo.core.plugin.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.JTree;
 import javax.swing.SwingConstants;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import mo.core.plugin.Dependency;
-import mo.core.plugin.IPluginsObserver;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 
@@ -28,16 +20,14 @@ import mo.core.plugin.PluginRegistry;
  *
  * @author felo
  */
-
-
 class PluginInfo extends JPanel {
     
     private final Plugin plugin;    
     
     private final PluginList treeList;
     
-    private JPanel getInformationTab(){    
-        
+    private JPanel getInformationTab(){
+      
         TupleList tuples = new TupleList();
         
         tuples.addTuple("Name", plugin.getName());
@@ -196,240 +186,4 @@ class PluginInfo extends JPanel {
     }
 
 
-}
-
-
-
-
-
-
-
-
-class PluginError extends JPanel{
-    
-    
-    
-    public PluginError(Plugin plugin, PluginList treeList){
-        
-        
-        
-        JLabel pluginTitle = new JLabel(plugin.getName(), SwingConstants.LEFT);
-        pluginTitle.setFont(new Font("", Font.BOLD, 20));
-        Dimension d = pluginTitle.getPreferredSize();
-        d.height = 25;
-        pluginTitle.setPreferredSize(d); 
-        
-        JLabel pluginVersion = new JLabel("v" + plugin.getVersion(), SwingConstants.LEFT);
-        JPanel top = new JPanel();
-        
-
-        top.add(pluginTitle);
-        top.add(pluginVersion);        
-        
-        
-        
-        JPanel content = new JPanel();
-        
-        String errorMsg = "Plugin " + plugin.getName() + " (" + plugin.getId() + ") is corrupted.";
-        
-        content.add(new JLabel(errorMsg));        
-        
-        setLayout(new BorderLayout());
-        add(top, BorderLayout.NORTH);        
-        add(content, BorderLayout.CENTER);
-
-        
-    }
-    
-    
-    
-    
-    
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class TreeNode extends DefaultMutableTreeNode{
-    
-    private Plugin plugin;
-    
-    TreeNode(Plugin plugin){
-        super(plugin.getName());
-        this.plugin = plugin;        
-    }
-    
-    public Plugin getPlugin(){
-        return this.plugin;
-    }
-}
-
-
-
-public class PluginList extends JSplitPane implements IPluginsObserver {
- 
-    
-    private Plugin focusedPlugin = null;
-    
-    public void refresh(){    
-        showList();
-        if(focusedPlugin != null && !PluginRegistry.getInstance().getPluginData().pluginIsRegistered(focusedPlugin)){
-            this.setRightComponent(new JPanel());
-        }
-    }
-    
-    public PluginList(){
-        
-        super(JSplitPane.HORIZONTAL_SPLIT, new JPanel(), new JPanel());      
-        
-        PluginRegistry.getInstance().subscribePluginsChanges(this);
-
-        showList();
-        
-    }
-    
-    
-    private void expandTree(JTree tree){        
-        for (int i = 0; i < tree.getRowCount(); i++) {
-            tree.expandRow(i);
-        }        
-    }
-    
-    
-    private void showPluginInfo(Plugin plugin_){
-        
-        // check if plugin actually exists
-        List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
-        Plugin plugin = null;
-        for(Plugin p : plugins){
-            if(p.equals(plugin_)){
-                plugin = p;
-                break;
-            }
-        }
-
-        this.setRightComponent(new PluginInfo(plugin, this));        
-        
-    }
-    
-    
-    private void showPluginError(Plugin plugin){
-        
-        this.setRightComponent(new PluginError(plugin, this));
-        
-    }
-    
-    
-    private void showList(){
-        
-        List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
-        
-        
-        DefaultMutableTreeNode allPlugins = new DefaultMutableTreeNode("Installed Plugins");
-        DefaultMutableTreeNode hardCodedPlugins = new DefaultMutableTreeNode("MO");
-        DefaultMutableTreeNode dynamicPlugins = new DefaultMutableTreeNode("Third party");
-        
-        for(Plugin p : plugins){
-            
-            TreeNode node = new TreeNode(p);
-           
-            if(p.isThirdParty()){
-               dynamicPlugins.add(node);
-            } else {
-                hardCodedPlugins.add(node);
-            }                     
-        }
-        
-        JTree tree = new JTree(allPlugins);
-        JScrollPane scroll = new JScrollPane(tree);
-        
-        
-        tree.addTreeSelectionListener(new TreeSelectionListener(){
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                
-                
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode)
-                tree.getLastSelectedPathComponent();
-                if (node == null || !(node instanceof TreeNode)) return;
-                TreeNode nodeData = (TreeNode) node;
-                
-                focusedPlugin = nodeData.getPlugin();
-                
-                if(nodeData.getPlugin().sanityCheck()){
-                    
-                    
-                    showPluginInfo(focusedPlugin);
-                    
-                    
-                } else {
-                    
-                    showPluginError(focusedPlugin);
-                    
-                }
-                
-            }
-        });
-        
-        
-
-        
-        this.setLeftComponent(scroll);
-        
-        if(!dynamicPlugins.isLeaf())
-            allPlugins.add(dynamicPlugins); 
-
-        if(!hardCodedPlugins.isLeaf())
-            allPlugins.add(hardCodedPlugins);
-        
-        
-        expandTree(tree);
-        this.getLeftComponent().revalidate();
-        
-    }
-
-    @Override
-    public void update() {
-        refresh();
-        
-    }
-    
 }

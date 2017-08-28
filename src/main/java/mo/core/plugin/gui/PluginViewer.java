@@ -1,6 +1,5 @@
-package mo.core.plugin;
+package mo.core.plugin.gui;
 
-import mo.core.plugin.pluginmanagement.PluginInstaller;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagLayout;
@@ -22,7 +21,12 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import mo.core.plugin.pluginmanagement.PluginList;
+import mo.core.plugin.Dependency;
+import mo.core.plugin.ExtPoint;
+import mo.core.plugin.Extends;
+import mo.core.plugin.Extension;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockableElement;

@@ -1,9 +1,12 @@
-package mo.core.plugin;
+package mo.core.plugin.gui;
 
 import java.awt.event.ActionEvent;
-import java.util.Date;
 import java.util.List;
 import javax.swing.JMenuItem;
+import mo.core.plugin.Dependency;
+import mo.core.plugin.ExtPoint;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.menubar.IMenuBarItemProvider;
 import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
