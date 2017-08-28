@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
@@ -56,7 +57,6 @@ class PluginInfo extends JPanel {
         tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in in MO");
         tuples.addScrollText("Description", plugin.getDescription());          
         
-       
         return tuples;
    
     }   
@@ -180,14 +180,14 @@ class PluginInfo extends JPanel {
         
         
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Information", getInformationTab());
+        tabbedPane.addTab("Information", new JScrollPane(getInformationTab()));
         
         
         if(plugin.isThirdParty()){
-            tabbedPane.addTab("Operations", getOperations());
+            tabbedPane.addTab("Operations", new JScrollPane(getOperations()));
         }
         
-        tabbedPane.addTab("Advanced", getAdvanced());
+        tabbedPane.addTab("Advanced", new JScrollPane(getAdvanced()));
         
 	
 

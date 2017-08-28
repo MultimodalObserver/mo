@@ -1,4 +1,6 @@
 package mo.core.plugin.gui;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,36 +17,46 @@ import javax.swing.SwingConstants;
  *
  * @author felo
  */
-public class TupleList extends JPanel {
-    
-    private int row;
+public class TupleList extends JPanel {    
         
-    private GridBagConstraints grid;
+    private final GridBagConstraints grid;
     
     private static final String EMPTY = "---";
     
     private static final int MAX_ROWS_TABLE = 5;
     
+    private final JPanel subContainer;
+    
     TupleList(){        
-        row = 0;
+
+        subContainer = new JPanel();
+        //setLayout(new BorderLayout());
         
-        setLayout(new GridBagLayout());
+        
+        subContainer.setLayout(new GridBagLayout());
 	grid = new GridBagConstraints();
         
         grid.gridy = 0;
         grid.insets = new Insets(10, 10, 10, 10);
-        grid.weightx = 0.5;
+
         grid.fill = GridBagConstraints.HORIZONTAL;
+        grid.anchor = GridBagConstraints.NORTHWEST;
+
+        setBackground(Color.red);
+        add(subContainer, BorderLayout.PAGE_START);
+
     }
     
     
     private void addTuple(String key, JComponent value){
         
         grid.gridx = 0;
-	add(new JLabel(key, SwingConstants.RIGHT), grid);
+        grid.weightx = 1;        
+	subContainer.add(new JLabel(key, SwingConstants.RIGHT), grid);
 
 	grid.gridx = 1;	
-	add(value, grid);
+        grid.weightx = 25;
+	subContainer.add(value, grid);
         
         grid.gridy++;
         
