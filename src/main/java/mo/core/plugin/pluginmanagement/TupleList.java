@@ -68,7 +68,7 @@ public class TupleList extends JPanel {
             Dimension depDimension = table.getPreferredSize();
             
             // set max height
-            comp.setPreferredSize(new Dimension(depDimension.width, table.getRowHeight() * (Math.min(table.getRowCount(), MAX_ROWS_TABLE) + 1)));            
+            comp.setPreferredSize(new Dimension(depDimension.width, table.getRowHeight() * (Math.min(table.getRowCount(), MAX_ROWS_TABLE) + 2)));            
             
         } else if(value instanceof JComponent){
             comp = (JComponent) value;

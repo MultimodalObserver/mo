@@ -17,12 +17,9 @@ public class Plugin {
     private String description;
     
     private Object instance;
-    private boolean external;
-    
-    //private List<Plugin> dependencies;
-    //private List<String> dependenciesStrs;
+
     private List<Dependency> dependencies;
-    //private HashMap<String,String> dep;
+    
     private String path;
     
     private Class<?> clazz;
@@ -31,12 +28,8 @@ public class Plugin {
         
     }
     
-    public boolean getExternal(){
-        return external;
-    }
-    
-    public void setExternal(boolean external){
-        this.external = external;
+    public boolean isThirdParty(){
+        return path != null;
     }
 
     public String getId() {
@@ -125,6 +118,24 @@ public class Plugin {
         
         return newInstance;
     }
+    
+    
+    
+    public boolean sanityCheck(){
+        
+        if(getDependencies() == null) return false;
+        
+        for(Dependency dep : getDependencies()){
+        
+            if(dep == null) return false;
+            
+            if(dep.getExtensionPoint() == null) return false;
+        
+        }        
+        return true;
+    }
+    
+    
     
     @Override
     public boolean equals(Object o){        

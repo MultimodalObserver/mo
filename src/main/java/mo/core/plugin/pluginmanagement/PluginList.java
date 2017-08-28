@@ -5,9 +5,6 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -19,8 +16,11 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import mo.core.plugin.Dependency;
+import mo.core.plugin.IPluginsObserver;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
 
@@ -34,19 +34,30 @@ class PluginInfo extends JPanel {
     
     private final Plugin plugin;    
     
+    private final PluginList treeList;
+    
     private JPanel getInformationTab(){    
         
         TupleList tuples = new TupleList();
         
         tuples.addTuple("Name", plugin.getName());
-        tuples.addTuple("Author", "xyz");
-        tuples.addTuple("Docs", new JButton("Read docs"));
+        
+        if(plugin.isThirdParty()) 
+            tuples.addTuple("Author", "xyz");
+        
+        if(plugin.isThirdParty()) 
+            tuples.addTuple("Website", new JButton("Open Website"));
+        
         tuples.addTuple("Version", plugin.getVersion());
         tuples.addTuple("Id", plugin.getId());
-        tuples.addTuple("Path", plugin.getPath());
-        tuples.addTuple("Third party", plugin.getExternal()? "Yes" : "No");
-        tuples.addScrollText("Description", plugin.getDescription());                
         
+        if(plugin.isThirdParty()) 
+            tuples.addTuple("Path", plugin.getPath());
+        
+        tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in in MO");
+        tuples.addScrollText("Description", plugin.getDescription());          
+        
+       
         return tuples;
    
     }   
@@ -62,16 +73,9 @@ class PluginInfo extends JPanel {
         uninstallBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(!plugin.getExternal())
+                if(!plugin.isThirdParty())
                     return;
-                
-                System.out.println("Me falta probar bien todos los flujos alternativos de este metodo");
-                System.out.println("* Probar cambiando el archivo mientras el dialogo de confirmacion esta abierto");
-                System.out.println("* Probar teniendo varias versiones del mismo plugin y ver que se borre la correcta");
-                System.out.println("* Probar que ocurre si un plugin no esta vinculado con ningun archivo");
-                System.out.println("* Probar borrando un plugin que borre manualmente desde la carpeta (en otras palabras ya no existe)");
-                System.out.println("**** con respecto a lo anterior, se deberia poder actualizar la lista automaticamente en caso que eso pase");
-                System.out.println("**** es decir, hacer que el watcher mande una senal para actualizar la lista");
+
        
                 int dialogResult = JOptionPane.showConfirmDialog (null, "Remove " + plugin.getName() + " permanently?", "Warning", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if(dialogResult == JOptionPane.YES_OPTION){                                 
@@ -83,8 +87,7 @@ class PluginInfo extends JPanel {
                     
                     boolean success = PluginRegistry.getInstance().uninstallPlugin(plugin);
                     
-                    if(success){
-                        
+                    if(success){                        
                         System.out.println("Update plugin tree");
                         
                     }
@@ -93,6 +96,8 @@ class PluginInfo extends JPanel {
                     }                                       
                     
                 }
+                
+                treeList.refresh();
             }
         });
         
@@ -121,11 +126,11 @@ class PluginInfo extends JPanel {
         }
         
         String[] extColumns = {"Name", "Id", "Version"};
-        String[][] extRows = new String[plugin.getDependencies().size()][];
+        String[][] extRows = new String[plugin.getDependencies().size()][];        
         
-              
+        
         for(int i=0; i<plugin.getDependencies().size(); i++){            
-            Dependency dep = plugin.getDependencies().get(i);
+            Dependency dep = plugin.getDependencies().get(i);         
             
             extRows[i] = new String[]{
                 dep.getExtensionPoint().getName(),
@@ -146,8 +151,9 @@ class PluginInfo extends JPanel {
     }
     
 
-    public PluginInfo(Plugin p) {
+    public PluginInfo(Plugin p, PluginList treeList) {
         
+        this.treeList = treeList;
         this.plugin = p;
 
         JLabel pluginTitle = new JLabel(plugin.getName(), SwingConstants.LEFT);
@@ -164,11 +170,13 @@ class PluginInfo extends JPanel {
         top.add(pluginVersion);        
         
         
+        
+        
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Information", getInformationTab());
         
         
-        if(plugin.getExternal()){
+        if(plugin.isThirdParty()){
             tabbedPane.addTab("Operations", getOperations());
         }
         
@@ -180,6 +188,8 @@ class PluginInfo extends JPanel {
         add(top, BorderLayout.NORTH);
 
         add(tabbedPane, BorderLayout.CENTER);
+        
+        
         
         
 
@@ -195,7 +205,47 @@ class PluginInfo extends JPanel {
 
 
 
+class PluginError extends JPanel{
+    
+    
+    
+    public PluginError(Plugin plugin, PluginList treeList){
+        
+        
+        
+        JLabel pluginTitle = new JLabel(plugin.getName(), SwingConstants.LEFT);
+        pluginTitle.setFont(new Font("", Font.BOLD, 20));
+        Dimension d = pluginTitle.getPreferredSize();
+        d.height = 25;
+        pluginTitle.setPreferredSize(d); 
+        
+        JLabel pluginVersion = new JLabel("v" + plugin.getVersion(), SwingConstants.LEFT);
+        JPanel top = new JPanel();
+        
 
+        top.add(pluginTitle);
+        top.add(pluginVersion);        
+        
+        
+        
+        JPanel content = new JPanel();
+        
+        String errorMsg = "Plugin " + plugin.getName() + " (" + plugin.getId() + ") is corrupted.";
+        
+        content.add(new JLabel(errorMsg));        
+        
+        setLayout(new BorderLayout());
+        add(top, BorderLayout.NORTH);        
+        add(content, BorderLayout.CENTER);
+
+        
+    }
+    
+    
+    
+    
+    
+}
 
 
 
@@ -244,7 +294,7 @@ class TreeNode extends DefaultMutableTreeNode{
     
     TreeNode(Plugin plugin){
         super(plugin.getName());
-        this.plugin = plugin;
+        this.plugin = plugin;        
     }
     
     public Plugin getPlugin(){
@@ -254,16 +304,23 @@ class TreeNode extends DefaultMutableTreeNode{
 
 
 
-public class PluginList extends JSplitPane {
+public class PluginList extends JSplitPane implements IPluginsObserver {
  
+    
+    private Plugin focusedPlugin = null;
     
     public void refresh(){    
         showList();
+        if(focusedPlugin != null && !PluginRegistry.getInstance().getPluginData().pluginIsRegistered(focusedPlugin)){
+            this.setRightComponent(new JPanel());
+        }
     }
     
     public PluginList(){
         
-        super(JSplitPane.HORIZONTAL_SPLIT, new JPanel(), new JPanel());        
+        super(JSplitPane.HORIZONTAL_SPLIT, new JPanel(), new JPanel());      
+        
+        PluginRegistry.getInstance().subscribePluginsChanges(this);
 
         showList();
         
@@ -288,11 +345,15 @@ public class PluginList extends JSplitPane {
                 break;
             }
         }
-        
-        
 
-        this.setRightComponent(new PluginInfo(plugin));
+        this.setRightComponent(new PluginInfo(plugin, this));        
         
+    }
+    
+    
+    private void showPluginError(Plugin plugin){
+        
+        this.setRightComponent(new PluginError(plugin, this));
         
     }
     
@@ -310,7 +371,7 @@ public class PluginList extends JSplitPane {
             
             TreeNode node = new TreeNode(p);
            
-            if(p.getExternal()){
+            if(p.isThirdParty()){
                dynamicPlugins.add(node);
             } else {
                 hardCodedPlugins.add(node);
@@ -318,19 +379,38 @@ public class PluginList extends JSplitPane {
         }
         
         JTree tree = new JTree(allPlugins);
-        JScrollPane scroll = new JScrollPane(tree); 
+        JScrollPane scroll = new JScrollPane(tree);
         
-        tree.addMouseListener(new MouseAdapter() {
+        
+        tree.addTreeSelectionListener(new TreeSelectionListener(){
             @Override
-            public void mouseClicked(MouseEvent e) {
-
+            public void valueChanged(TreeSelectionEvent e) {
+                
+                
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode)
-                       tree.getLastSelectedPathComponent();
+                tree.getLastSelectedPathComponent();
                 if (node == null || !(node instanceof TreeNode)) return;
                 TreeNode nodeData = (TreeNode) node;
-                showPluginInfo(nodeData.getPlugin());
+                
+                focusedPlugin = nodeData.getPlugin();
+                
+                if(nodeData.getPlugin().sanityCheck()){
+                    
+                    
+                    showPluginInfo(focusedPlugin);
+                    
+                    
+                } else {
+                    
+                    showPluginError(focusedPlugin);
+                    
+                }
+                
             }
         });
+        
+        
+
         
         this.setLeftComponent(scroll);
         
@@ -343,6 +423,12 @@ public class PluginList extends JSplitPane {
         
         expandTree(tree);
         this.getLeftComponent().revalidate();
+        
+    }
+
+    @Override
+    public void update() {
+        refresh();
         
     }
     

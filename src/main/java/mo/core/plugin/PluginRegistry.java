@@ -23,11 +23,13 @@ import org.objectweb.asm.Opcodes;
 public class PluginRegistry {
 
     private static PluginRegistry pg;    
+    
+    private List<IPluginsObserver> observers;
 
-    private final static String pluginsFolder
+    private final String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
 
-    private final static String APP_PACKAGE = "mo/";
+    private final String APP_PACKAGE = "mo/";
 
     private final List<String> pluginFolders;
 
@@ -40,13 +42,14 @@ public class PluginRegistry {
     private boolean testingJar = false;
     
 
-    private final static Logger logger
+    private final Logger logger
             = Logger.getLogger(PluginRegistry.class.getName());
     
     private ArrayList<ClassLoader> classLoaders;
 
     private PluginRegistry() {
         
+        observers = new ArrayList<>();
         pluginFolders = new ArrayList<>();
         pluginData = new PluginData();        
         dirWatcher = new DirectoryWatcher();
@@ -64,6 +67,18 @@ public class PluginRegistry {
         dirWatcher.addDirectory(folder.toPath(), true);
         
     }
+    
+    
+    public void subscribePluginsChanges(IPluginsObserver obs){
+        observers.add(obs);
+    }
+    
+    private void notifyChanges(){
+        for(IPluginsObserver obs : observers){
+            obs.update();
+        }
+    }
+    
     
     public PluginData getPluginData(){
         return pluginData;
@@ -88,32 +103,7 @@ public class PluginRegistry {
             }
             
 
-            pg.dirWatcher.addWatchHandler(new WatchHandler() {
-                @Override
-                public void onCreate(File file) {
-                    try {
-                        processFile(file);
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }                    
-                }
-
-                @Override
-                public void onDelete(File file) {
-                    // nothing
-                }
-
-                @Override
-                public void onModify(File file) {
-                    try {
-                        processFile(file);
-                    } catch(Exception e){
-                        e.printStackTrace();
-                    }   
-                }
-            });            
-
-            pg.dirWatcher.start();
+            pg.initDirWatcher();
 
             pg.pluginData.checkDependencies();
         }
@@ -123,13 +113,69 @@ public class PluginRegistry {
     
     
     
-    private static void processFile(File file) throws IOException {
+    private void initDirWatcher(){
+        
+        pg.dirWatcher.addWatchHandler(new WatchHandler() {
+            @Override
+            public void onCreate(File file) {
+                try {
+                    processFile(file);
+                    notifyChanges();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }                    
+            }
+
+            @Override
+            public void onDelete(File file) {
+                
+                Path deletedFilepath = Paths.get(file.getAbsolutePath());
+                
+                Plugin plugin = null;
+                for(Plugin p : pluginData.getPlugins()){  
+                    
+                    if(!p.isThirdParty()) continue;
+                    
+                    Path pluginPath = Paths.get(p.getPath());
+                    
+                    if(deletedFilepath.equals(pluginPath)){
+                        plugin = p;
+                        break;
+                    }
+                }
+                
+                if(plugin == null) return;
+                
+                pluginData.unregisterPlugin(plugin);
+
+                notifyChanges();
+            }
+
+            @Override
+            public void onModify(File file) {
+                try {
+                    processFile(file);
+                    notifyChanges();
+                } catch(Exception e){
+                    e.printStackTrace();
+                }   
+            }
+        });            
+
+        pg.dirWatcher.start();
+        
+        
+    }
+    
+    
+    
+    private void processFile(File file) throws IOException {
         
         if (file.isFile()) {
             if (file.getName().endsWith(".class")) {
                 FileInputStream in = new FileInputStream(file);
                 
-                pg.processClassAsInputStream(in, true);
+                pg.processClassAsInputStream(in, null);
 
             } else if (file.getName().endsWith(".jar")) {
                 pg.processJarFile(file);
@@ -155,7 +201,7 @@ public class PluginRegistry {
         }
     }
 
-    private void processClassAsInputStream(InputStream classIS, boolean external) throws IOException {
+    private void processClassAsInputStream(InputStream classIS, String path) throws IOException {
 
         ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
         exScanner.setClassLoader(cl);
@@ -168,7 +214,9 @@ public class PluginRegistry {
 
         if (exScanner.getPlugin() != null) {
             Plugin newPlugin = exScanner.getPlugin();
-            newPlugin.setExternal(external);
+            
+            
+            newPlugin.setPath(path);
             pg.pluginData.addPlugin(newPlugin);
 
         } else if (exScanner.getExtPoint() != null) {
@@ -180,9 +228,36 @@ public class PluginRegistry {
     
     public synchronized boolean uninstallPlugin(Plugin plugin){
         
-        System.out.println("Desinstalando plugin...");
+        if(!plugin.isThirdParty()){
+            return false;
+        }
         
-        return true;
+        File file = new File(plugin.getPath());
+
+        if(!file.exists()) {
+            return false;
+        }
+        
+        if(file.isDirectory()) { 
+            return false;
+        }
+        
+        
+        System.out.println("Desinstalando plugin "+plugin.getName()+"...");
+        
+        System.out.println("Si el plugin esta en uso, no se deberia poder borrar");
+        
+        pluginData.unregisterPlugin(plugin);
+        
+        
+                
+        try {
+            boolean deleted = file.delete();
+            return deleted;
+            
+        } catch(Exception e){
+            return false;
+        }        
         
     }
 
@@ -207,11 +282,11 @@ public class PluginRegistry {
                 if (packages != null) {
                     for (String p : packages) {
                         if (entryName.startsWith(p)) {
-                            processClassAsInputStream(jarFile.getInputStream(jarEntry), true);
+                            processClassAsInputStream(jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
                         }
                     }
                 } else {
-                    processClassAsInputStream(jarFile.getInputStream(jarEntry), true);
+                    processClassAsInputStream(jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
                 }
             }
         }
@@ -276,7 +351,7 @@ public class PluginRegistry {
         for (File file : files) {
             if (file.getName().endsWith(".class")) {
                 processClassAsInputStream(
-                            new FileInputStream(file), false);
+                            new FileInputStream(file), null);
             } else if (file.getName().endsWith(".jar")) {
                 processJarFile(file);
             }
