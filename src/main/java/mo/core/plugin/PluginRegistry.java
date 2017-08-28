@@ -32,7 +32,7 @@ public class PluginRegistry {
 
     private static PluginRegistry pg;    
     
-    private List<IPluginsObserver> observers;
+    private List<IUpdatable> observers;
 
     private final String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
@@ -85,12 +85,12 @@ public class PluginRegistry {
     }
     
     
-    public void subscribePluginsChanges(IPluginsObserver obs){
+    public void subscribePluginsChanges(IUpdatable obs){
         observers.add(obs);
     }
     
     private void notifyChanges(){
-        for(IPluginsObserver obs : observers){
+        for(IUpdatable obs : observers){
             obs.update();
         }
     }

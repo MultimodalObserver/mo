@@ -34,10 +34,7 @@ import mo.core.ui.Utils;
  */
 public class LocalPluginInstaller extends JPanel {
     
-    public void refresh(){    
-        
-    }
-    
+   
     
     private boolean confirmPluginAdd(List<File> files){        
        

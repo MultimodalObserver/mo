@@ -104,7 +104,7 @@ class PluginInfo extends JPanel {
                     
                 }
                 
-                treeList.refresh();
+                treeList.update();
             }
         });
         

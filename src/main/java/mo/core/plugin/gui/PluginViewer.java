@@ -97,7 +97,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         
         tabbedPane.addChangeListener((ChangeEvent e) -> {
             /* Event - tab change */
-            pluginList.refresh();
+            pluginList.update();
             
         });
 
@@ -109,7 +109,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         buttonsPanel = new JPanel();
         
         
-        JButton refresh = new JButton("↻");
+        /*JButton refresh = new JButton("↻");
         refresh.setToolTipText("Refresh plugins");
         refresh.addActionListener(new ActionListener() {
             @Override
@@ -118,9 +118,8 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
                 PluginPlainViewer.print();
             }
         });
-
                 
-        buttonsPanel.add(refresh);
+        buttonsPanel.add(refresh);*/
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout()); 
@@ -153,8 +152,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
         
-        pluginList.refresh();
-        localInstaller.refresh();
+        pluginList.update();
     }
     
     private void populateExtensionPointTree() {
