@@ -36,7 +36,7 @@ class PluginInfo extends JPanel {
             tuples.addTuple("Author", "xyz");
         
         if(plugin.isThirdParty()) 
-            tuples.addTuple("Website", new JButton("Open Website"));
+            tuples.addTuple("Website", new Link("https://www.google.com"));
         
         tuples.addTuple("Version", plugin.getVersion());
         tuples.addTuple("Id", plugin.getId());
