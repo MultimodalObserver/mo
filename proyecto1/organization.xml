@@ -1,7 +1,0 @@
-<?xml version='1.0'?>
-<organization>
-	<participants/>
-	<stage class="mo.capture.CaptureStage">capture.xml</stage>
-	<stage class="mo.visualization.VisualizationStage">visualization.xml</stage>
-	<stage class="mo.analysis.AnalysisStage">analysis.xml</stage>
-</organization>
