@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.core.ui.dockables.DockableElement;
+import javax.swing.*;
+import mo.analysis.AnalysisTimePanel;
+import mo.analysis.TimePanelScroll;
+import javax.swing.JScrollPane;
+
 
 public class VisualizationPlayer {
 
@@ -20,20 +25,24 @@ public class VisualizationPlayer {
 
     private final PlayerControlsPanel panel;
     private final DockableElement dockable;
+    private final AnalysisTimePanel analysisTimePanel;
+    private final DockableElement timePanelDockable;
 
     private static final Logger logger = Logger.getLogger(VisualizationPlayer.class.getName());
     
-    //private byte STOPPED=0, PLAYING=1, PAUSED=2;
-
     public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
         configs = configurations;
         obtainMinAndMaxTime();
 
         panel = new PlayerControlsPanel(this);
-
         dockable = new DockableElement();
         dockable.add(panel.getPanel());
         dockable.setTitleText("Player Controls");
+
+        analysisTimePanel = new AnalysisTimePanel(this);
+        timePanelDockable = new DockableElement();
+        timePanelDockable.add(analysisTimePanel);
+        timePanelDockable.setTitleText("Analysis Time Panel");
     }
 
     private void obtainMinAndMaxTime() {
@@ -112,6 +121,7 @@ public class VisualizationPlayer {
                 }
 
                 panel.setTime(current);
+                analysisTimePanel.setTime(current);
                 
                 sleep(loopStart);
                 current++;
@@ -148,8 +158,16 @@ public class VisualizationPlayer {
     public DockableElement getDockable() {
         return dockable;
     }
+
+    public DockableElement getTimePanelDockable() {
+        return timePanelDockable;
+    }
     
     public long getCurrentTime() {
         return current;
+    }
+
+    public List<VisualizableConfiguration> getConfigs() {
+        return configs;
     }
 }
