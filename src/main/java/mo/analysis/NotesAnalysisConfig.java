@@ -10,18 +10,20 @@ import java.util.logging.Logger;
 import mo.organization.Configuration;
 import mo.visualization.Playable;
 import mo.visualization.VisualizableConfiguration;
-import mo.analysis.NotesAnalyzer;
 import mo.analysis.AnalyzableConfiguration;
-import mo.analysis.Analyzable;
+import mo.organization.ProjectOrganization;
+import mo.organization.Participant;
+import mo.core.ui.dockables.DockableElement;
+import mo.core.ui.dockables.DockablesRegistry;
+import javax.swing.JPanel;
 
-public class NotesAnalysisConfig implements AnalyzableConfiguration {
+public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
 
-    
-    private final String[] creators = {"mo.mouse.capture.MouseRecorder"};
+    private final String[] creators = {"alonsho"};
     
     private List<File> files;
     private String id;
-    private NotesAnalyzer analyzer;
+    private NotesPlayer player;
     
     private static final Logger logger = Logger.getLogger(NotesAnalysisConfig.class.getName());
     private boolean stopped;
@@ -33,7 +35,7 @@ public class NotesAnalysisConfig implements AnalyzableConfiguration {
     public void setId(String id) {
         this.id = id;
     }
-    
+
     @Override
     public List<String> getCompatibleCreators() {
         return Arrays.asList(creators);
@@ -73,6 +75,7 @@ public class NotesAnalysisConfig implements AnalyzableConfiguration {
         } catch (IOException ex) {
             logger.log(Level.SEVERE, null, ex);
         }
+
         return f;
     }
 
@@ -86,19 +89,48 @@ public class NotesAnalysisConfig implements AnalyzableConfiguration {
             config.id = name;
             return config;
         }
+
         return null;
     }
 
-
-    // TODO: necesito un ensureAnalyxderCreated
-    // private void ensurePlayerCreated() {
-    //     if (player == null && !files.isEmpty()) {
-    //         player = new KeyboardPlayer(files.get(0));
-    //     }
-    // }
+    @Override 
+    public void startAnalysis() {
+        try {
+            System.out.println("startAnalysis");
+            Thread.sleep(1000);
+            System.out.println("startAnalysis");
+            Thread.sleep(1000);
+            System.out.println("startAnalysis");
+        } catch(InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
 
     @Override
-    public Analyzable getAnalyzer() {
-        return analyzer;
+    public void cancelAnalysis() {
+        Thread.currentThread().interrupt();
+    }
+
+    @Override
+    public void setupAnalysis(File stageFolder, ProjectOrganization org, Participant p) {
+        try {
+            System.out.println("setupAnalysis");
+            Thread.sleep(1000);
+            System.out.println("setupAnalysis");
+            Thread.sleep(1000);
+            System.out.println("setupAnalysis");
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public Playable getPlayer() {
+        if (player == null) {
+            player = new NotesPlayer();
+        }
+
+        return player;
     }
 }

@@ -23,7 +23,6 @@ public class TimeRuler {
 		this.start = start;
 		this.end = end;
 		milis = (int) (end - start);
-		// font = new Font("Arial Unicode MS", Font.PLAIN, 9);
 		font = new Font(Font.MONOSPACED, Font.PLAIN, 9);
 		rulerHeight = 25;
 		decStickHeight = 5;

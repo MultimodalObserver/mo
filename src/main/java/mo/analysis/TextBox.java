@@ -14,13 +14,8 @@ public class TextBox extends JPanel  implements KeyListener {
 	final private JScrollPane textAreaScrollPane;
 
 	public TextBox() {
-        
-
-        // JTextArea
         textArea = new JTextArea(2,1);
-        textArea.setText("alonso");
 
-        // JScrollPane
         textAreaScrollPane = new JScrollPane(textArea);
         textAreaScrollPane.setPreferredSize(new Dimension(150,30));
         textAreaScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -28,12 +23,10 @@ public class TextBox extends JPanel  implements KeyListener {
         textArea.getDocument().putProperty("filterNewlines", Boolean.TRUE);
         textArea.addKeyListener(this);
 
-        // this
         this.setBounds(0,0,150,30);
 		this.setOpaque(false);
         this.setVisible(false);
 		add(textAreaScrollPane);
-		
 	}
 
 	public void showme() {
@@ -47,15 +40,13 @@ public class TextBox extends JPanel  implements KeyListener {
 
 	@Override
 	public void	keyPressed(KeyEvent e) {
-		System.out.println("keyPressed");
 		if(e.getKeyCode() == KeyEvent.VK_ENTER) {
-			System.out.println("EnterKey correcto correcto");
 		}
 	}
 
 	@Override
-	public void keyReleased(KeyEvent e){System.out.println("keyReleased");}
+	public void keyReleased(KeyEvent e) {}
 
 	@Override
-	public void	keyTyped(KeyEvent e){System.out.println("keyTyped");}
+	public void	keyTyped(KeyEvent e) {}
 }

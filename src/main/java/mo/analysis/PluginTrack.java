@@ -20,9 +20,6 @@ public class PluginTrack {
 	public int y1;
 	public int y2;
 
-	// #todo: sacar el alpha04 de aqui
-
-
 	public PluginTrack(long start, long end, int y1, int y2) {
 		this.start = start;
 		this.end = end;
@@ -34,14 +31,11 @@ public class PluginTrack {
 		alpha04 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f);
 	}
 
-	// pintar track
 	public void paint(Graphics2D g2d, int x, int y, int width, int height) {
 		g2d.setColor(color);
-		// g2d.setComposite(alpha04);
 		g2d.fillRect(x,y,width,height);
 	}
 
-	// agregar nueva nota
 	public void addNote(Note note) {
 		this.notes.add(note);
 	}
@@ -50,7 +44,6 @@ public class PluginTrack {
 		this.notes.remove(index);
 	}
 
-	// #todo
 	public void setNotes(List<Note> notes) {
 		this.notes = notes;
 	}

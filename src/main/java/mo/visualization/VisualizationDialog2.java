@@ -166,13 +166,6 @@ public class VisualizationDialog2 {
     }
 
     public static void main(String[] args) {
-//        MouseVisConfiguration c = new MouseVisConfiguration();
-//        c.setId("nombre");
-//        c.getCompatibleCreators();
-//        List<Configuration> cs = new ArrayList<>();
-//        cs.add(c);
-//        VisualizationDialog2 d = new VisualizationDialog2(cs, new File("C:\\Users\\Celso\\Desktop\\ejemplo"));
-//        d.dialog.showWizard();
     }
     
     public boolean show() {

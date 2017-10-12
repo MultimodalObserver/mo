@@ -24,9 +24,6 @@ public class TimePanelScroll extends JScrollPane implements AdjustmentListener {
 	public TimePanelScroll() {
 		bufferedImage = new BufferedImage(100,100, BufferedImage.TYPE_INT_ARGB);
 		g2d = bufferedImage.createGraphics();
-
-        // setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
 	}
 
 	@Override

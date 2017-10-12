@@ -87,7 +87,7 @@ public class PlayerControlsPanel {
             player.pause();
         } else {
             play.setText(PAUSE_SYMBOL);
-            player.play();
+            player.play(); // alonso
         }
     }
 

@@ -171,6 +171,7 @@ public class ProjectOrganization {
 
                         stage = (StageModule) method.invoke(
                                 o, new File(project.getFolder(), path));
+                        System.out.println(" ProjectOrganization path = " + path); // borrame linea visualization.xml
                         if (stage != null) {
                             stage.setOrganization(this);
                             addStageReplacingPrevious(stage);

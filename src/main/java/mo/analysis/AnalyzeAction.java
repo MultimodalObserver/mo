@@ -1,6 +1,7 @@
 package mo.analysis;
 
 import java.util.ArrayList;
+import java.util.List;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.Configuration;
 import mo.organization.StagePlugin;
@@ -13,8 +14,49 @@ import mo.visualization.VisualizationDialog2;
 import mo.visualization.VisualizationPlayer;
 import mo.visualization.VisualizableConfiguration;
 
+import java.awt.GridBagLayout;
+import java.awt.Dialog.ModalityType;
+
+import java.io.File;
+
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+
+import javax.swing.JPanel;
+
+import javax.swing.JButton;
+
+import java.awt.FlowLayout;
+
+import javax.swing.SwingWorker;
+
+import javax.swing.JFrame;
+
+import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class AnalyzeAction implements StageAction {
+
+    private File storageFolder;
+    private ProjectOrganization org;
+    private Thread[] threads;
+    private JButton cancelButon;
+    private JButton okButon;
+    private boolean accepted;
+    private StagePlugin notesPlugin;
+
+    private Participant participant;
+
+
+    private long current, start, end;
+
+    private List<AnalyzableConfiguration> analyzableConfigurations;
+
+    private static final Logger logger = Logger.getLogger(AnalyzeAction.class.getName());
 
     public static void main(String[] args) {
         
@@ -28,6 +70,7 @@ public class AnalyzeAction implements StageAction {
     @Override
     public void init(ProjectOrganization organization, Participant participant, StageModule stage) {
         ArrayList<Configuration> configs = new ArrayList<>();
+        analyzableConfigurations = new ArrayList<>();
         for (StageModule astage : organization.getStages()) {
             if(astage.getCodeName().equals("visualization")) {
                 for(StagePlugin aplugin : astage.getPlugins()) {
@@ -37,20 +80,168 @@ public class AnalyzeAction implements StageAction {
                 }
             }
         }
+
+        this.org = organization;
+        this.participant = participant;
+
+        storageFolder = new File(org.getLocation(),"participant-" + participant.id + "/" + stage.getCodeName().toLowerCase());
+        storageFolder.mkdirs();
+
         for (StagePlugin plugin : stage.getPlugins()) {
+            if(plugin.getName().equals("Notes plugin")) {
+                notesPlugin = plugin;
+                continue;
+            }
+
             for (Configuration configuration : plugin.getConfigurations()) {
                 configs.add(configuration);
+                analyzableConfigurations.add((AnalyzableConfiguration) configuration);
             }
         }
-        
-        AnalysisDialog d = new AnalysisDialog(configs, organization.getLocation());
-        boolean accept = d.show();
-        
+
+        AnalysisDialog analysisDialog = new AnalysisDialog(notesPlugin, configs, organization.getLocation());
+        boolean accept = analysisDialog.show();
+
         if (accept) {
+
+            List<PlayableAnalyzableConfiguration> playableConfigurations = analysisDialog.getPlayableConfigurations();
+            List<NotPlayableAnalyzableConfiguration> notPlayableConfigurations = analysisDialog.getNotPlayableConfigurations();
+
+            analyzableConfigurations = new ArrayList<>(playableConfigurations);
+            analyzableConfigurations.addAll(notPlayableConfigurations);
+
+            List<AnalyzableConfiguration> analyzableList = new ArrayList(analyzableConfigurations);
+            analyzableList.add(analysisDialog.getNotesConfiguration());
+
+            JDialog waitDialog = new JDialog();
+            JLabel label = new JLabel("Procesando, por favor espere.");
+
+            JPanel panel = new JPanel();
+            panel.setLayout(new BorderLayout());
+
+            JPanel buttonsPanel = new JPanel();
+
+            cancelButon = new JButton("Cancelar");
+            cancelButon.setEnabled(true);
+            cancelButon.addActionListener((ActionEvent e) -> {
+                accepted = false;
+                waitDialog.setVisible(false);
+                waitDialog.dispose();
+
+                cancelAnalysis(analyzableList);
+            });
             
-            VisualizationPlayer player = new VisualizationPlayer(d.getConfigurations());
-            DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());
-            DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getTimePanelDockable());
+            okButon = new JButton("Aceptar");
+            okButon.setEnabled(false);
+            okButon.addActionListener((ActionEvent e) -> {
+
+                accepted = true;
+                waitDialog.setVisible(false);
+                waitDialog.dispose();
+
+            });
+
+            buttonsPanel.add(okButon);
+            buttonsPanel.add(cancelButon);
+
+            waitDialog.setModalityType(ModalityType.APPLICATION_MODAL);
+            waitDialog.setLocationRelativeTo(null);
+            waitDialog.setTitle("Please Wait...");
+
+            panel.add(label, BorderLayout.NORTH);
+            panel.add(buttonsPanel, BorderLayout.SOUTH);
+            waitDialog.add(panel);
+
+            waitDialog.pack();
+            waitDialog.setVisible(false);
+
+            SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
+                @Override
+                protected Void doInBackground() throws Exception {
+
+                threads = new Thread[analyzableList.size()];
+                int i = 0;
+                for (AnalyzableConfiguration config : analyzableList) {
+                    threads[i] = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            config.setupAnalysis(storageFolder, org, participant);
+                            config.startAnalysis();
+                        }
+                    });
+
+                    threads[i].start();
+                }
+
+                for(i = 0; i < threads.length; i++) { 
+                    threads[i].join();
+                }
+
+                label.setText("Analisis listo");
+                cancelButon.setEnabled(false);
+                okButon.setEnabled(true);
+
+                return null;
+                }
+            };
+
+            mySwingWorker.execute();
+            waitDialog.setVisible(true);
+
+            if(accepted) {
+                List<VisualizableConfiguration> vlista = (List<VisualizableConfiguration>) (List<?>) analysisDialog.getPlayableConfigurations();
+                vlista.addAll(analysisDialog.getVisualizableConfigurations());
+                obtainMinAndMaxTime(vlista);
+
+                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
+                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
+                vlista.add(analysisDialog.getNotesConfiguration());
+
+                VisualizationPlayer player = new VisualizationPlayer(analysisDialog.getVisualizableConfigurations());
+                DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());
+            }
         }
+    }
+
+    public void cancelAnalysis(List<AnalyzableConfiguration> analyzables) {
+        for(Thread thread : threads) {
+            thread.interrupt();
+        }
+
+        for (AnalyzableConfiguration config : analyzables) {
+            config.cancelAnalysis();
+        }
+    }
+
+    public void startAnalysis(List<AnalyzableConfiguration> configurations) {
+        try {
+            for (AnalyzableConfiguration config : configurations) {
+                config.setupAnalysis(storageFolder,org,participant);
+                config.startAnalysis();
+            }
+        } catch(Exception ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void obtainMinAndMaxTime(List<VisualizableConfiguration> configs) {
+        long min = Long.MAX_VALUE, max = Long.MIN_VALUE;
+        for (VisualizableConfiguration config : configs) {
+            if (config.getPlayer().getStart() < min) {
+                min = config.getPlayer().getStart();
+            }
+            if (config.getPlayer().getEnd() > max) {
+                max = config.getPlayer().getEnd();
+            }
+        }
+        if (min == Long.MAX_VALUE) {
+            min = 0;
+        }
+        if (max == Long.MIN_VALUE) {
+            max = 100000;
+        }
+
+        current = start = min;
+        end = max;
     }
 }

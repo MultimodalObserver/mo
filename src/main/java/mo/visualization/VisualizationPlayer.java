@@ -8,6 +8,7 @@ import javax.swing.*;
 import mo.analysis.AnalysisTimePanel;
 import mo.analysis.TimePanelScroll;
 import javax.swing.JScrollPane;
+import mo.analysis.AnalyzableConfiguration;
 
 
 public class VisualizationPlayer {
@@ -22,15 +23,18 @@ public class VisualizationPlayer {
     private Thread playerThread;
 
     private final List<VisualizableConfiguration> configs;
+    // private final List<AnalyzableConfiguration> analysisConfigs;
 
     private final PlayerControlsPanel panel;
     private final DockableElement dockable;
-    private final AnalysisTimePanel analysisTimePanel;
-    private final DockableElement timePanelDockable;
+    // private final AnalysisTimePanel analysisTimePanel;
+    // private final DockableElement timePanelDockable;
+    private boolean doAnalysis = false;
 
     private static final Logger logger = Logger.getLogger(VisualizationPlayer.class.getName());
     
     public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
+
         configs = configurations;
         obtainMinAndMaxTime();
 
@@ -38,11 +42,6 @@ public class VisualizationPlayer {
         dockable = new DockableElement();
         dockable.add(panel.getPanel());
         dockable.setTitleText("Player Controls");
-
-        analysisTimePanel = new AnalysisTimePanel(this);
-        timePanelDockable = new DockableElement();
-        timePanelDockable.add(analysisTimePanel);
-        timePanelDockable.setTitleText("Analysis Time Panel");
     }
 
     private void obtainMinAndMaxTime() {
@@ -121,8 +120,11 @@ public class VisualizationPlayer {
                 }
 
                 panel.setTime(current);
-                analysisTimePanel.setTime(current);
-                
+
+                // if(analysisTimePanel != null) {
+                //     analysisTimePanel.setTime(current);
+                // }
+
                 sleep(loopStart);
                 current++;
             }
@@ -159,9 +161,9 @@ public class VisualizationPlayer {
         return dockable;
     }
 
-    public DockableElement getTimePanelDockable() {
-        return timePanelDockable;
-    }
+    // public DockableElement getTimePanelDockable() {
+    //     return timePanelDockable;
+    // }
     
     public long getCurrentTime() {
         return current;

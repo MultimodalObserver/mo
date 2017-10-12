@@ -23,6 +23,8 @@ import mo.core.ui.WizardDialog;
 import mo.organization.Configuration;
 import mo.visualization.VisualizableConfiguration;
 
+import mo.organization.StagePlugin;
+
 public class AnalysisDialog {
 
     WizardDialog dialog;
@@ -40,7 +42,12 @@ public class AnalysisDialog {
 
     GridBConstraints gbc;
 
-    public AnalysisDialog(List<Configuration> configs, File project) {
+    private StagePlugin notesPlugin;
+    private PlayableAnalyzableConfiguration notesConfiguration;
+
+    public AnalysisDialog(StagePlugin notesPlugin, List<Configuration> configs, File project) {
+        this.notesPlugin = notesPlugin;
+        notesConfiguration = (PlayableAnalyzableConfiguration) notesPlugin.getConfigurations().get(0);
         gbc = new GridBConstraints();
         projectRoot = project;
         dialog = new WizardDialog(null, "Visualization setup");
@@ -49,8 +56,6 @@ public class AnalysisDialog {
 
         configsPanel.setLayout(new GridBagLayout());
         GridBConstraints g = new GridBConstraints();
-
-        configurations = new ArrayList<>();
 
         configurations = new ArrayList<>();
         checkBoxs = new ArrayList<>();
@@ -75,11 +80,6 @@ public class AnalysisDialog {
 
         dialog.addPanel(filesPane);
 
-        // filesPane = new JPanel(new GridBagLayout());
-        // filesPane.setName("select analysis configs");
-
-        // dialog.addPanel(filesPane);
-        
         dialog.addActionListener(new WizardDialog.WizardListener() {
             @Override
             public void onStepChanged() {
@@ -94,11 +94,7 @@ public class AnalysisDialog {
         if (dialog.getCurrentStep() == 0) {
             Configuration aConfiguration;
             for (JCheckBox checkBox : checkBoxs) {
-                // for (Class inter : checkBox.getClientProperty("configuration").getClass().getInterfaces()){
-                //     System.out.println("la clase = " + inter.getSimpleName());
-                // }
                 Configuration rc;
-                System.out.println("la clase = " + (checkBox.getClientProperty("configuration").getClass().getInterfaces()[0]).getSimpleName());
                 if("VisualizableConfiguration".equals((checkBox.getClientProperty("configuration").getClass().getInterfaces()[0]).getSimpleName())) {
 
                     rc = (VisualizableConfiguration) checkBox.getClientProperty("configuration");
@@ -139,7 +135,7 @@ public class AnalysisDialog {
     private void stepChanged() {
         if (dialog.getCurrentStep() == 0) {
             dialog.disableBack();
-            filesPane.removeAll();// = new JPanel();
+            filesPane.removeAll();
             filesComboBoxes.clear();
             dialog.disableFinish();
             dialog.disableBack();
@@ -154,11 +150,38 @@ public class AnalysisDialog {
                     VisualizableConfiguration c = (VisualizableConfiguration) configuration;
                     List<String> creators = c.getCompatibleCreators();
                     files = findFilesCreatedBy(projectRoot, creators);
+                    if (files.size() > 0) {
+                        JComboBox b = new JComboBox();
+                        b.putClientProperty("configuration", configuration);
+                        b.addItem("Select a file");
+                        for (File file : files) {
+                            
+                            try {
+                                b.addItem(new FilePath(projectRoot, file));
+                                FilePath fPath = new FilePath(projectRoot, file);
+                                String archivoCombobox = fPath.toString();
+                            } catch (IOException ex) {
+                                Logger.getLogger(AnalysisDialog.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+
+                        }
+                        filesComboBoxes.add(b);
+                        b.addActionListener(new ActionListener() {
+                            @Override
+                            public void actionPerformed(ActionEvent e) {
+                                updateState();
+                            }
+                        });
+                        filesPane.add(b, gbc.gy(row++));
+                    }
+                } else if(configuration instanceof NotPlayableAnalyzableConfiguration) {
+                    NotPlayableAnalyzableConfiguration c = (NotPlayableAnalyzableConfiguration) configuration;
+                    List<String> creators = c.getCompatibleCreators();
+                    files = findFilesCreatedBy(projectRoot, creators);
                     JComboBox b = new JComboBox();
                     b.putClientProperty("configuration", configuration);
                     b.addItem("Select a file");
                     for (File file : files) {
-                        
                         try {
                             b.addItem(new FilePath(projectRoot, file));
                             FilePath fPath = new FilePath(projectRoot, file);
@@ -166,7 +189,6 @@ public class AnalysisDialog {
                         } catch (IOException ex) {
                             Logger.getLogger(AnalysisDialog.class.getName()).log(Level.SEVERE, null, ex);
                         }
-
                     }
                     filesComboBoxes.add(b);
                     b.addActionListener(new ActionListener() {
@@ -176,25 +198,14 @@ public class AnalysisDialog {
                         }
                     });
                     filesPane.add(b, gbc.gy(row++));
-                    
                 }
             }
             
         } 
-        // else if(dialog.getCurrentStep() == 2) {
-        //     dialog.enableBack();
-        // }
         updateState();
     }
 
     public static void main(String[] args) {
-//        MouseVisConfiguration c = new MouseVisConfiguration();
-//        c.setId("nombre");
-//        c.getCompatibleCreators();
-//        List<Configuration> cs = new ArrayList<>();
-//        cs.add(c);
-//        VisualizationDialog2 d = new VisualizationDialog2(cs, new File("C:\\Users\\Celso\\Desktop\\ejemplo"));
-//        d.dialog.showWizard();
     }
     
     public boolean show() {
@@ -215,18 +226,97 @@ public class AnalysisDialog {
         }
         return result;
     }
-    
-    public List<VisualizableConfiguration> getConfigurations() {
-        ArrayList<VisualizableConfiguration> list = new ArrayList<>();
+
+    public List<Configuration> getConfigurations() {
+        ArrayList<Configuration> list = new ArrayList<>();
+        Configuration c;
+        VisualizableConfiguration vc;
+        PlayableAnalyzableConfiguration pac;
+        NotPlayableAnalyzableConfiguration npac;
         for (JComboBox filesComboBox : filesComboBoxes) {
             FilePath f = (FilePath) filesComboBox.getSelectedItem();
-            VisualizableConfiguration c = (VisualizableConfiguration) filesComboBox.getClientProperty("configuration");
-            c.addFile(f.file);
-            list.add(c);
+            c = (Configuration) filesComboBox.getClientProperty("configuration");
+            if (c instanceof PlayableAnalyzableConfiguration ) {
+                pac = (PlayableAnalyzableConfiguration) c;
+                pac.addFile(f.file);
+                list.add(pac);
+            } else if (c instanceof VisualizableConfiguration) {
+                vc = (VisualizableConfiguration) c;
+                vc.addFile(f.file);
+                list.add(vc);
+            } else {
+                npac = (NotPlayableAnalyzableConfiguration) c;
+                npac.addFile(f.file);
+                list.add(npac);
+            }
         }
         return list;
     }
-    
+
+    public List<PlayableAnalyzableConfiguration> getPlayableConfigurations() {
+        ArrayList<PlayableAnalyzableConfiguration> list = new ArrayList<>();
+        Configuration c;
+        PlayableAnalyzableConfiguration pac;
+        VisualizableConfiguration vc;
+        for (JComboBox filesComboBox : filesComboBoxes) {
+            FilePath f = (FilePath) filesComboBox.getSelectedItem();
+            c = (Configuration) filesComboBox.getClientProperty("configuration");
+
+            if (c instanceof PlayableAnalyzableConfiguration ) {
+                pac = (PlayableAnalyzableConfiguration) c;
+                pac.addFile(f.file);
+                list.add(pac);
+                notesConfiguration.addFile(f.file);
+            }
+        }
+
+        return list;
+    }
+
+    public PlayableAnalyzableConfiguration getNotesConfiguration() {
+        return notesConfiguration;
+    }
+
+    public List<NotPlayableAnalyzableConfiguration> getNotPlayableConfigurations() {
+        ArrayList<NotPlayableAnalyzableConfiguration> list = new ArrayList<>();
+        Configuration c;
+        NotPlayableAnalyzableConfiguration npac;
+
+        for (JComboBox filesComboBox : filesComboBoxes) {
+            FilePath f = (FilePath) filesComboBox.getSelectedItem();
+            c = (Configuration) filesComboBox.getClientProperty("configuration");
+
+            if(c instanceof NotPlayableAnalyzableConfiguration) {
+                npac = (NotPlayableAnalyzableConfiguration) c;
+                npac.addFile(f.file);
+                list.add(npac);
+            }
+        }
+        return list;
+    }
+
+    public List<VisualizableConfiguration> getVisualizableConfigurations() {
+        ArrayList<VisualizableConfiguration> list = new ArrayList<>();
+        Configuration c;
+        VisualizableConfiguration vc;
+        for (JComboBox filesComboBox : filesComboBoxes) {
+            FilePath f = (FilePath) filesComboBox.getSelectedItem();
+            c = (Configuration) filesComboBox.getClientProperty("configuration");
+            
+            if(c instanceof PlayableAnalyzableConfiguration)
+                continue;
+
+            if (c instanceof VisualizableConfiguration) {
+                vc = (VisualizableConfiguration) c;
+                vc.addFile(f.file);
+                list.add(vc);
+                notesConfiguration.addFile(f.file);
+            }
+        }
+
+        return list;
+    }
+
     class FilePath {
 
         File from;

@@ -42,11 +42,6 @@ public class AnalysisStage implements StageModule {
     private static final Logger logger = Logger.getLogger(AnalysisStage.class.getName());
     private List<StageAction> actions;
 
-
-
-    // todo: constructor
-    // todo: cargar los plugins
-
     public AnalysisStage() {
         i18n = new I18n(AnalysisStage.class);
         
@@ -54,7 +49,7 @@ public class AnalysisStage implements StageModule {
         actions = new ArrayList<>();
         
         List<Plugin> listaDePlugins = PluginRegistry.getInstance().getPluginsFor("mo.analysis.AnalysisProvider");
-        for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.analysis.AnalysisProvider")) { // no tengo plugins aqui, no los cargo
+        for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.analysis.AnalysisProvider")) {
             AnalysisProvider p = (AnalysisProvider) plugin.getNewInstance();
             plugins.add(p);
         }
@@ -94,11 +89,9 @@ public class AnalysisStage implements StageModule {
 
                     Method method = clazz.getDeclaredMethod("fromFile", File.class);
 
-                    //VisualizationProvider p = (VisualizationProvider) method.invoke(o, ff);
                     AnalysisProvider p = (AnalysisProvider) method.invoke(o, ff);
                     if (p != null) {
-
-                        anStage.addOrReplaceStagePlugin(p); // todo: implementar este metodo
+                        anStage.addOrReplaceStagePlugin(p);
                     }
                 }
 
@@ -175,7 +168,4 @@ public class AnalysisStage implements StageModule {
         plugins.removeAll(pluginsToReplace);
         plugins.add(p);
     }
-
-
-
 }
