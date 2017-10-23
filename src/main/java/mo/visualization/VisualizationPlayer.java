@@ -10,6 +10,10 @@ public class VisualizationPlayer {
     private long start;
     private long end;
     private long current;
+    //------Variables Christian----
+    private long inicio;
+    private long temp_act;
+    //----------------------------
     private boolean isPlaying = false;
     private boolean stopped = false;
     private boolean endReached = false;
@@ -80,16 +84,26 @@ public class VisualizationPlayer {
         isPlaying = false;
         panel.stop();
         //playButton.setText(">");
+        for (VisualizableConfiguration config : configs) {
+            config.getPlayer().pause();
+        }
     }
 
     public void play() {
         playerThread = new Thread(() -> {
             isPlaying = true;
+            //----------Christian------------
+            //Esto repara el problema de desface de la seekSlider
+            inicio=System.currentTimeMillis()-current;
+             //-------------------------------
             while (true/*!Thread.interrupted()*/) {
                 if (!isPlaying) {
                     return;
                 }
                 
+                //----------Christian------------
+                current=System.currentTimeMillis()-inicio;
+                 //-------------------------------
                 if (current > end) {
                     if (isPlaying && !stopped) {
                         isPlaying = false;
@@ -98,6 +112,7 @@ public class VisualizationPlayer {
                             config.getPlayer().stop();
                         }
                         panel.stop();
+                        current = start;//Christian
                         return;
                     } else {
                         current = start;
@@ -114,7 +129,7 @@ public class VisualizationPlayer {
                 panel.setTime(current);
                 
                 sleep(loopStart);
-                current++;
+                //current++;
             }
         });
         playerThread.start();
