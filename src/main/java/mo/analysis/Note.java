@@ -1,13 +1,13 @@
 package mo.analysis;
 
-public class Note {
+public class Note implements Comparable<Note>{
 	private String comment;
-	private int startTime;
-	private int endTime;
+	private long beginTime;
+	private long endTime;
 
-	public Note(String comment, int startTime, int endTime) {
+	public Note(long beginTime, long endTime, String comment) {
 		this.comment = comment;
-		this.startTime = startTime;
+		this.beginTime = beginTime;
 		this.endTime = endTime;
 	}
 
@@ -19,19 +19,32 @@ public class Note {
 		return comment;
 	}
 
-	public void setStartTime(int startTime) {
-		this.startTime = startTime;
+	public void setStartTime(long beginTime) {
+		this.beginTime = beginTime;
 	}
 
-	public int getStartTime() {
-		return startTime;
+	public long getStartTime() {
+		return beginTime;
 	}
 
-	public void setEndTime(int endTime) {
+	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
 
-	public int getEndTime() {
+	public long getEndTime() {
 		return endTime;
+	}
+
+	@Override
+	public int compareTo(Note other) {
+		if(this.beginTime < other.beginTime) {
+			return -1;
+		}
+
+		if (this.beginTime > other.beginTime) {
+			return 1;
+		}
+
+		return 0;
 	}
 }

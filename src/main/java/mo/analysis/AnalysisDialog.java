@@ -258,6 +258,8 @@ public class AnalysisDialog {
         Configuration c;
         PlayableAnalyzableConfiguration pac;
         VisualizableConfiguration vc;
+        NotesVisualization notesVisualization;
+
         for (JComboBox filesComboBox : filesComboBoxes) {
             FilePath f = (FilePath) filesComboBox.getSelectedItem();
             c = (Configuration) filesComboBox.getClientProperty("configuration");
@@ -266,7 +268,8 @@ public class AnalysisDialog {
                 pac = (PlayableAnalyzableConfiguration) c;
                 pac.addFile(f.file);
                 list.add(pac);
-                notesConfiguration.addFile(f.file);
+                notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),pac.getClass().getName());
+                ((NotesAnalysisConfig) notesConfiguration).addPlayable(notesVisualization);// #marca
             }
         }
 
@@ -274,6 +277,7 @@ public class AnalysisDialog {
     }
 
     public PlayableAnalyzableConfiguration getNotesConfiguration() {
+        System.out.println("AnalysisDialog clase = " + notesConfiguration.getClass());
         return notesConfiguration;
     }
 
@@ -299,6 +303,7 @@ public class AnalysisDialog {
         ArrayList<VisualizableConfiguration> list = new ArrayList<>();
         Configuration c;
         VisualizableConfiguration vc;
+        NotesVisualization notesVisualization;
         for (JComboBox filesComboBox : filesComboBoxes) {
             FilePath f = (FilePath) filesComboBox.getSelectedItem();
             c = (Configuration) filesComboBox.getClientProperty("configuration");
@@ -311,6 +316,8 @@ public class AnalysisDialog {
                 vc.addFile(f.file);
                 list.add(vc);
                 notesConfiguration.addFile(f.file);
+                notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),vc.getClass().getName());
+                ((NotesAnalysisConfig) notesConfiguration).addVisualizable(notesVisualization);// #marca
             }
         }
 
@@ -323,6 +330,7 @@ public class AnalysisDialog {
         File file;
 
         public FilePath(File from, File to) throws IOException {
+            System.out.println("canonical = " + to.getCanonicalPath()); // alonso
             this.file = new File(to.getCanonicalPath());
             this.from = from;
         }

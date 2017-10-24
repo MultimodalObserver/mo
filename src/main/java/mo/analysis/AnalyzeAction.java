@@ -106,6 +106,7 @@ public class AnalyzeAction implements StageAction {
 
             List<PlayableAnalyzableConfiguration> playableConfigurations = analysisDialog.getPlayableConfigurations();
             List<NotPlayableAnalyzableConfiguration> notPlayableConfigurations = analysisDialog.getNotPlayableConfigurations();
+            List<VisualizableConfiguration> visualizableConfiguration = analysisDialog.getVisualizableConfigurations();
 
             analyzableConfigurations = new ArrayList<>(playableConfigurations);
             analyzableConfigurations.addAll(notPlayableConfigurations);
@@ -190,14 +191,14 @@ public class AnalyzeAction implements StageAction {
 
             if(accepted) {
                 List<VisualizableConfiguration> vlista = (List<VisualizableConfiguration>) (List<?>) analysisDialog.getPlayableConfigurations();
-                vlista.addAll(analysisDialog.getVisualizableConfigurations());
+                vlista.addAll(visualizableConfiguration);
                 obtainMinAndMaxTime(vlista);
 
                 ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
                 ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
                 vlista.add(analysisDialog.getNotesConfiguration());
 
-                VisualizationPlayer player = new VisualizationPlayer(analysisDialog.getVisualizableConfigurations());
+                VisualizationPlayer player = new VisualizationPlayer(vlista);
                 DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());
             }
         }

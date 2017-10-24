@@ -61,4 +61,139 @@ public class DataFileFinder {
 
         return result;
     }
+
+    public static List<Path> findFilesDescriptionCreatedBy(File root, String creators) {
+        ArrayList<Path> result = new ArrayList<>();
+
+        try {
+            Properties prop = new Properties();
+            Files
+                    .walk(root.toPath())
+                    .filter((Path t) -> t.getFileName().toString().endsWith(".desc"))
+                    .forEach((Path t) -> {
+                        try {
+                            String s = new String(Files.readAllBytes(t));
+                            prop.load(new StringReader(s.replace("\\", "\\\\")));
+                            if (prop.containsKey("creator")) {
+                                if(prop.get("creator").equals("mo.analysis.NotesRecorder")) {
+                                    result.add(t);
+                                }
+                            }
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    });
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+        return result;
+    }
+
+    public static File findFileCreatedFor(File root, String captureFile, String configuration) {
+        System.out.println("DataFileFinder captureFile = "+ captureFile);
+        System.out.println("DataFileFinder configuration = " + configuration);
+        ArrayList<File> result = new ArrayList<>();
+        File file = null;
+
+        try {
+            Properties prop = new Properties();
+            Files
+                    .walk(root.toPath())
+                    .filter((Path t) -> t.getFileName().toString().endsWith(".desc"))
+                    .forEach((Path t) -> {
+                        try {
+                            String s = new String(Files.readAllBytes(t));
+                            prop.load(new StringReader(s.replace("\\", "\\\\")));
+                            if (prop.containsKey("creator")) {
+                                if (prop.get("creator").equals("mo.analysis.NotesRecorder")) {
+                                    if(prop.containsKey("captureFile")) {
+                                        if (prop.get("captureFile").equals(captureFile)) {
+                                            if(prop.containsKey("configuration")) {
+                                                if (prop.get("configuration").equals(configuration)) {
+                                                    if(prop.containsKey("file")) {
+                                                        File f = t.resolve(prop.getProperty("file")).normalize().toFile();
+                                                        if (f.exists()) {
+                                                            result.add(f);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    });
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+        if(result.size() > 0) {
+            file = result.get(0);
+        }
+
+        return file;
+    }
+
+    public static List<File> findFilesCreatedFor(File root, String creator, String compatible, String captureFile) {
+        ArrayList<File> result = new ArrayList<>();
+        File file = null;
+
+        try {
+            Properties prop = new Properties();
+            Files
+                    .walk(root.toPath())
+                    .filter((Path t) -> t.getFileName().toString().endsWith(".desc"))
+                    .forEach((Path t) -> {
+                        try {
+                            System.out.println("primer t = " + t.toString());
+                            String s = new String(Files.readAllBytes(t));
+                            prop.load(new StringReader(s.replace("\\", "\\\\")));
+
+                            if (prop.containsKey("compatible")) {
+                                System.out.println("contiene compatible = " + t.toString());
+                            }
+
+                            if (prop.containsKey("alonso")) {
+                                System.out.println("contiene alonso = " + t.toString());
+                            }
+
+
+                            if (prop.containsKey("creator")) {
+                                if (prop.get("creator").equals(creator)) {
+                                    System.out.println("si el creator");
+                                    if(prop.containsKey("captureFile")) {
+                                        if (prop.get("captureFile").equals(captureFile)) {
+                                            System.out.println("si el captureFile");
+                                            if(prop.containsKey("compatible")) {
+                                                if (prop.get("compatible").equals(compatible)) {
+                                                    System.out.println("si el compatible");
+                                                    if(prop.containsKey("file")) {
+                                                        File f = t.resolve(prop.getProperty("file")).normalize().toFile();
+                                                        System.out.println("t = " + t.toString());
+                                                        System.out.println("File f = " + f.toString());
+                                                        if (f.exists()) {
+                                                            System.out.println("existe el archivo");
+                                                            result.add(f);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (IOException ex) {
+                            logger.log(Level.SEVERE, null, ex);
+                        }
+                    });
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+        return result;
+    }
 }

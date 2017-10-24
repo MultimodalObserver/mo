@@ -4,18 +4,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.core.ui.dockables.DockableElement;
-import javax.swing.*;
-import mo.analysis.AnalysisTimePanel;
-import mo.analysis.TimePanelScroll;
-import javax.swing.JScrollPane;
-import mo.analysis.AnalyzableConfiguration;
-
 
 public class VisualizationPlayer {
 
     private long start;
     private long end;
     private long current;
+    //------Variables Christian----
+    private long inicio;
+    private long temp_act;
+    //----------------------------
     private boolean isPlaying = false;
     private boolean stopped = false;
     private boolean endReached = false;
@@ -23,22 +21,20 @@ public class VisualizationPlayer {
     private Thread playerThread;
 
     private final List<VisualizableConfiguration> configs;
-    // private final List<AnalyzableConfiguration> analysisConfigs;
 
     private final PlayerControlsPanel panel;
     private final DockableElement dockable;
-    // private final AnalysisTimePanel analysisTimePanel;
-    // private final DockableElement timePanelDockable;
-    private boolean doAnalysis = false;
 
     private static final Logger logger = Logger.getLogger(VisualizationPlayer.class.getName());
     
-    public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
+    //private byte STOPPED=0, PLAYING=1, PAUSED=2;
 
+    public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
         configs = configurations;
         obtainMinAndMaxTime();
 
         panel = new PlayerControlsPanel(this);
+
         dockable = new DockableElement();
         dockable.add(panel.getPanel());
         dockable.setTitleText("Player Controls");
@@ -88,16 +84,26 @@ public class VisualizationPlayer {
         isPlaying = false;
         panel.stop();
         //playButton.setText(">");
+        for (VisualizableConfiguration config : configs) {
+            config.getPlayer().pause();
+        }
     }
 
     public void play() {
         playerThread = new Thread(() -> {
             isPlaying = true;
+            //----------Christian------------
+            //Esto repara el problema de desface de la seekSlider
+            inicio=System.currentTimeMillis()-current;
+             //-------------------------------
             while (true/*!Thread.interrupted()*/) {
                 if (!isPlaying) {
                     return;
                 }
                 
+                //----------Christian------------
+                current=System.currentTimeMillis()-inicio;
+                 //-------------------------------
                 if (current > end) {
                     if (isPlaying && !stopped) {
                         isPlaying = false;
@@ -106,6 +112,7 @@ public class VisualizationPlayer {
                             config.getPlayer().stop();
                         }
                         panel.stop();
+                        current = start;//Christian
                         return;
                     } else {
                         current = start;
@@ -120,13 +127,9 @@ public class VisualizationPlayer {
                 }
 
                 panel.setTime(current);
-
-                // if(analysisTimePanel != null) {
-                //     analysisTimePanel.setTime(current);
-                // }
-
+                
                 sleep(loopStart);
-                current++;
+                //current++;
             }
         });
         playerThread.start();
@@ -160,16 +163,8 @@ public class VisualizationPlayer {
     public DockableElement getDockable() {
         return dockable;
     }
-
-    // public DockableElement getTimePanelDockable() {
-    //     return timePanelDockable;
-    // }
     
     public long getCurrentTime() {
         return current;
-    }
-
-    public List<VisualizableConfiguration> getConfigs() {
-        return configs;
     }
 }
