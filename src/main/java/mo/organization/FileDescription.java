@@ -14,10 +14,8 @@ public class FileDescription {
     private File file;
     private String creator;
 
-    // inicio alonso
     private String captureFile;
     private String configuration;
-    // fin alonso
 
     public FileDescription(File file, String creator) {
         this.file = file;
@@ -33,7 +31,6 @@ public class FileDescription {
         }
     }
 
-    // #todo alonso
     public FileDescription(File file, String creator, String captureFile, String configuration) {
         this.file = file;
         this.creator = creator;
@@ -66,8 +63,6 @@ public class FileDescription {
         Path f1 = file1.toPath();
         Path f2 = file2.toPath();
         Path relative = f1.relativize(f2);
-        // alonso borrame
-        System.out.println("relative.toString() = " + relative.toString());
         return relative.toString();
     }
 

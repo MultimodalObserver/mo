@@ -170,12 +170,9 @@ public class AnalyzeAction implements StageAction {
                             config.startAnalysis();
                         }
                     });
-
                     threads[i].start();
-                }
-
-                for(i = 0; i < threads.length; i++) { 
                     threads[i].join();
+                    i++;
                 }
 
                 label.setText("Analisis listo");

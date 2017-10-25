@@ -149,13 +149,13 @@ public class AnalysisDialog {
                     filesPane.add(new JLabel(configuration.getId()), gbc.gy(row++));
                     VisualizableConfiguration c = (VisualizableConfiguration) configuration;
                     List<String> creators = c.getCompatibleCreators();
+                    
                     files = findFilesCreatedBy(projectRoot, creators);
                     if (files.size() > 0) {
                         JComboBox b = new JComboBox();
                         b.putClientProperty("configuration", configuration);
                         b.addItem("Select a file");
                         for (File file : files) {
-                            
                             try {
                                 b.addItem(new FilePath(projectRoot, file));
                                 FilePath fPath = new FilePath(projectRoot, file);
@@ -277,7 +277,6 @@ public class AnalysisDialog {
     }
 
     public PlayableAnalyzableConfiguration getNotesConfiguration() {
-        System.out.println("AnalysisDialog clase = " + notesConfiguration.getClass());
         return notesConfiguration;
     }
 

@@ -91,8 +91,6 @@ public class DataFileFinder {
     }
 
     public static File findFileCreatedFor(File root, String captureFile, String configuration) {
-        System.out.println("DataFileFinder captureFile = "+ captureFile);
-        System.out.println("DataFileFinder configuration = " + configuration);
         ArrayList<File> result = new ArrayList<>();
         File file = null;
 
@@ -149,34 +147,18 @@ public class DataFileFinder {
                     .filter((Path t) -> t.getFileName().toString().endsWith(".desc"))
                     .forEach((Path t) -> {
                         try {
-                            System.out.println("primer t = " + t.toString());
                             String s = new String(Files.readAllBytes(t));
                             prop.load(new StringReader(s.replace("\\", "\\\\")));
 
-                            if (prop.containsKey("compatible")) {
-                                System.out.println("contiene compatible = " + t.toString());
-                            }
-
-                            if (prop.containsKey("alonso")) {
-                                System.out.println("contiene alonso = " + t.toString());
-                            }
-
-
                             if (prop.containsKey("creator")) {
                                 if (prop.get("creator").equals(creator)) {
-                                    System.out.println("si el creator");
                                     if(prop.containsKey("captureFile")) {
                                         if (prop.get("captureFile").equals(captureFile)) {
-                                            System.out.println("si el captureFile");
                                             if(prop.containsKey("compatible")) {
                                                 if (prop.get("compatible").equals(compatible)) {
-                                                    System.out.println("si el compatible");
                                                     if(prop.containsKey("file")) {
                                                         File f = t.resolve(prop.getProperty("file")).normalize().toFile();
-                                                        System.out.println("t = " + t.toString());
-                                                        System.out.println("File f = " + f.toString());
                                                         if (f.exists()) {
-                                                            System.out.println("existe el archivo");
                                                             result.add(f);
                                                         }
                                                     }

@@ -58,9 +58,7 @@ public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
     }
 
     public void addVisualizable(NotesVisualization visualizable) {
-        System.out.println("addVisualizable");
         visualizables.add(visualizable);
-        System.out.println("tamanio = " + visualizables.size());
     }
 
     public void setId(String id) {
@@ -128,12 +126,10 @@ public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
         this.stageFolder = stageFolder;
         this.org = org;
         this.participant = participant;
-        
     }
 
     @Override 
     public void startAnalysis() {
-        System.out.println("NotesAnalysisConfig startAnalysis " + this.getId());
         notesRecorders = new ArrayList<>();
         String projectPath = org.getLocation().toString();
         String relativeCaptureFilePath = "";
@@ -168,6 +164,7 @@ public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
                 recorder.setFile(file);
             }
             file = recorder.getFile();
+            desc = new FileDescription(file, "mo.analysis.NotesRecorder", relativeCaptureFilePath, playable.getConfiguration());
             notesRecorders.add(recorder);
 
             generatedFiles = findFilesCreatedFor(stageFolder, playable.getConfiguration(), "mo.analysis.NotesRecorder", relativeCaptureFilePath);
@@ -176,11 +173,6 @@ public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
                 recorder = new NotesRecorder(stageFolder,this);
                 recorder.setFile(f);
                 notesRecorders.add(recorder);
-            }
-
-            for (NotesRecorder recorder : notesRecorders) {
-                System.out.println("los recorders " + recorder.getFile().getName());
-                
             }
         }
     }
@@ -192,8 +184,6 @@ public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
 
     @Override
     public Playable getPlayer() {
-        System.out.println("NotesAnalysisConfig getPlayer");
-        System.out.println("que pasa " + this.getId());
         if (player == null) {
             player = new NotesPlayer(notesRecorders);
         }
