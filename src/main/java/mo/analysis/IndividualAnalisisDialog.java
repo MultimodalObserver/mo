@@ -112,7 +112,6 @@ public class IndividualAnalisisDialog extends javax.swing.JDialog {
 
       if(this.configsBox.getSelectedIndex()>0){
       this.selected = (IndividualAnalysisConfiguration) this.configs.get(this.configsBox.getSelectedIndex()-1);
-      this.selected.initIndividualAnalysis(this.participant);
       this.dispose();
       }
     }//GEN-LAST:event_acceptButtonMouseClicked
