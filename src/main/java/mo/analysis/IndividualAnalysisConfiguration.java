@@ -11,8 +11,7 @@ import mo.organization.Participant;
 import mo.organization.ProjectOrganization;
 
 
-public interface IndividualAnalysisConfiguration extends Configuration {
+public interface IndividualAnalysisConfiguration extends AnalyzableConfiguration {
     
     public void initIndividualAnalysis(Participant participant); // de prueba
-    
 }
