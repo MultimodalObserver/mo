@@ -55,7 +55,9 @@ public class AnalysisStage implements StageModule {
         }
 
         AnalyzeAction aa = new AnalyzeAction();
+        IndividualAnalisisAction a2 = new IndividualAnalisisAction();
         actions.add(aa);
+        actions.add(a2);
     }
 
 	@Override

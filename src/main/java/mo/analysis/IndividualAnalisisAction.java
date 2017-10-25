@@ -24,7 +24,7 @@ import mo.organization.StagePlugin;
  */
 public class IndividualAnalisisAction implements StageAction {
 
-    private final static String ACTION_NAME = "Analisis individual";
+    private final static String ACTION_NAME = "Administrar analisis";
     private ProjectOrganization org;
     private Participant participant;
     private ArrayList<Configuration> configurations;
