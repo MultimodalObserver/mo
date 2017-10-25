@@ -52,24 +52,20 @@ public class IndividualAnalisisAction implements StageAction {
             }
         }        
         
-        //creo que se crea una carpeta en base a la etapa
-        //aun no necesario
-        storageFolder = new File(org.getLocation(),
-                "participant-" + participant.id + "/"
-                + stage.getCodeName().toLowerCase());
-        storageFolder.mkdirs();
-     
+        this.org = organization;
+        this.participant = participant;
+
+        storageFolder = new File(org.getLocation(),"participant-" + participant.id + "/" + stage.getCodeName().toLowerCase());
+        storageFolder.mkdirs();        
         
-        
-       //luego aca debe ir el dialogo
-        //dialog = new AnalyzeDialog(configs);
-      //  dialog = new IndividualAnalisisDialog(configs,participant);
-       // configurations = dialog.showDialog();
-       // AnalyzeConfiguration selected = (AnalyzeConfiguration) dialog.getSelected()  ;
-        //selected.initAnalysis();
-        
-        //a partir de aca empieza la ejecucions del plugin, con un INIT()
-                
+
+        //luego aca debe ir el dialogo
+        IndividualAnalisisDialog dialog = new IndividualAnalisisDialog(configs,participant);
+        configurations = dialog.showDialog();
+        if(dialog.getSelected()!=null){
+        IndividualAnalysisConfiguration selected = (IndividualAnalysisConfiguration) dialog.getSelected()  ;
+        selected.initIndividualAnalysis(participant);
+        }        
     }
   
 }

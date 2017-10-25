@@ -110,7 +110,7 @@ public class IndividualAnalisisDialog extends javax.swing.JDialog {
 
     private void acceptButtonMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_acceptButtonMouseClicked
 
-      if(this.configsBox.getSelectedIndex()>1){
+      if(this.configsBox.getSelectedIndex()>0){
       this.selected = (IndividualAnalysisConfiguration) this.configs.get(this.configsBox.getSelectedIndex()-1);
       this.selected.initIndividualAnalysis(this.participant);
       this.dispose();
