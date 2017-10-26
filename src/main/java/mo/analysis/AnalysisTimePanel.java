@@ -26,6 +26,7 @@ import java.awt.Font;
 import mo.visualization.VisualizableConfiguration;
 import java.util.TreeSet;
 import java.util.Iterator;
+import javax.swing.JScrollBar;
 
 
 public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener {
@@ -81,10 +82,17 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     private Point pressed = null;
     private Point released = null;
     private int numeroPlugins;
+    private int maximo;
+
+    private JPanel panelContenedor;
 
     private final NotesPlayer notesPlayer;
 
+    private JScrollBar scrollBar;
+
+
 	public AnalysisTimePanel(NotesPlayer notesPlayer) {
+        panelContenedor = this;
         this.notesPlayer = notesPlayer;
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -126,14 +134,10 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         scroller.setPreferredSize(new Dimension(100,100));
         add(scroller);
 
-        // startTime = player.getStart();
+        scrollBar = scroller.getHorizontalScrollBar();
+
         startTime = notesPlayer.getStart();
-        System.out.println("startTime = " + notesPlayer.getStart());
-
-        // endTime = player.getEnd();
         endTime = notesPlayer.getEnd();
-        System.out.println("endTime = " + notesPlayer.getEnd());
-
         
         time = 0;
 
@@ -141,13 +145,12 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         
         PluginTrack track;
         
-        Note aNote = new Note(150, 300, "hola");
 
-        int j=0;
         int y = offset;
         int y1,y2;
+        Note aNote;
         Iterator<Note> it;
-        for (TreeSet<Note> set : notesPlayer.getNotesForTrack()) { // #marca
+        for (TreeSet<Note> set : notesPlayer.getNotesForTrack()) {
             it = set.iterator();
             y1 = y;
             y2 = y + trackHeight;
@@ -172,7 +175,6 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         drawingPane.revalidate();
 	}
 
-    // #todo probar
     public long getAbsolutTime(int relativeTime) {
         return (long) relativeTime + startTime;
     }
@@ -183,10 +185,19 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
     public void setTime(long time) {
         this.time = (int) (time - notesPlayer.getStart());
-        System.out.println("AnalysisTimePanel time = " + time);
-        System.out.println("AnalysisTimePanel notesPlayer.getStart() = " + notesPlayer.getStart());
-        System.out.println("AnalysisTimePanel this.time = " + this.time);
+        updateScrollBarPosition();
         repaint();
+    }
+
+    public void updateScrollBarPosition() {
+        int cursorPosition = pxAtMs(time);
+        int scrollBarPosition = scrollBar.getValue();
+
+        if (cursorPosition < scrollBarPosition || cursorPosition  > scrollBarPosition+panelContenedor.getSize().width-20) {
+            if(cursorPosition > 50) {
+                scrollBar.setValue(cursorPosition-20);
+            }
+        }
     }
 
     public int pxAtMs(int ms) {
@@ -231,7 +242,6 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
     public void paintPluginTracks(Graphics2D g2d) {
         int i=0;
-        System.out.println("pluginTracks.size() = " + pluginTracks.size());
         if (miliseconds == 0) {
             miliseconds = (int) (endTime - startTime);
         }
@@ -241,6 +251,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         }
 
         for(PluginTrack track : pluginTracks) {
+            g2d.setColor(Color.blue);
             g2d.setComposite(alpha04);
             g2d.fillRect(0,offset+(i*trackHeight),trackWidth,trackHeight);
             i++;
@@ -260,8 +271,6 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         g2d.setComposite(opaque);
 
         for (Note note : track.getNotes()) {
-            System.out.println("comentario = " + note.getComment());
-            System.out.println("en que tiempo = " + pxAtMs((int) getRelativeTime(note.getStartTime())));
             g2d.drawString(note.getComment(), pxAtMs((int) getRelativeTime(note.getStartTime())), track.y2-8);
         }
 
@@ -303,7 +312,6 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
     @Override
     public void mousePressed(MouseEvent e) {
-
         pressed = e.getPoint();
 
         pxMousePressed = (int) e.getPoint().getX();
@@ -374,7 +382,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 			g2d = bufferedImage.createGraphics();
 
             this.setOpaque(false);
-            this.setBounds(0,0,2000,2000);
+            this.setBounds(0,0,10000,2000);
             this.setBackground(Color.white);
     	}
 
@@ -392,15 +400,20 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
             if (endTime == 0) {
                 endTime = notesPlayer.getEnd();
+
+                miliseconds = (int) (endTime - startTime);
+                int layeredPaneWidth = ((int) Math.ceil((double) miliseconds / (double) 100) * (int) msPerPixel) + 50;
+                int layeredPaneHeight = offset + pluginTracks.size() * trackHeight;
+
+                layeredPane.setPreferredSize(new Dimension(layeredPaneWidth,layeredPaneHeight));
             }
 
             Graphics2D g2d = (Graphics2D) g;
-            // ruler = new TimeRuler(player.getStart(), player.getEnd());
             ruler = new TimeRuler(notesPlayer.getStart(), notesPlayer.getEnd());
             ruler.paint(g2d,msPerPixel);
 
             g2d.setColor(Color.red);
-            g2d.drawLine(pxAtMs((int) time),0,pxAtMs((int) time),offset+numeroPlugins*trackHeight);
+            g2d.drawLine(pxAtMs((int) time),0,pxAtMs((int) time),offset+pluginTracks.size()*trackHeight);
 
             paintPluginTracks(g2d);
 
