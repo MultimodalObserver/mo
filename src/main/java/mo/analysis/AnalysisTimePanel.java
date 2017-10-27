@@ -54,42 +54,30 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     private int endSelectTime;
     private int beginSelectX;
     private int endSelectX;
-
     private int pxMousePressed;
     private int pxMouseReleased;
     private int pxMouseDragged;
-    
     private Point rightClick;
-
     private AlphaComposite alpha04 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f);
     private AlphaComposite alpha07 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.7f);
     private AlphaComposite opaque = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f);
-
     private TextBox textBox;
-
     private JLayeredPane layeredPane;
     private JPanel topPanel;
     private JPanel anotherPanel;
-
     private int xPos;
     private int width;
-
     private Point endSelectPos;
     private Point beginSelectPos;
-
     private Point leftClick;
     private Point previousPressed = null;
     private Point pressed = null;
     private Point released = null;
     private int numeroPlugins;
     private int maximo;
-
     private JPanel panelContenedor;
-
     private final NotesPlayer notesPlayer;
-
     private JScrollBar scrollBar;
-
 
 	public AnalysisTimePanel(NotesPlayer notesPlayer) {
         panelContenedor = this;
@@ -111,7 +99,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         addMouseMotionListener(this);
         drawingPane.addMouseMotionListener(this);
 
-        newComment = new JMenuItem("Nuevo comentario");
+        newComment = new JMenuItem("Nueva nota");
         newComment.setActionCommand("newComment");
         newComment.addActionListener(this);
 
@@ -223,7 +211,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     }
 
     public void paintMouseSelection(Graphics2D g) {
-        int height = offset+numeroPlugins*trackHeight;
+        int height = offset+pluginTracks.size()*trackHeight;
         if(beginSelectPos != null && endSelectPos != null) {
             width = Math.abs(beginSelectPos.x - endSelectPos.x);
             
@@ -237,6 +225,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
             g.setComposite(alpha04);
             g.fillRect(xPos,0,width,height);
         }
+
         g.setComposite(opaque);
     }
 
@@ -290,16 +279,30 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         if (SwingUtilities.isLeftMouseButton(e)) {
 
             if (textBox.isVisible()) {
-                Note anotherNote = new Note(msAtPx(beginSelectPos.x),msAtPx(endSelectPos.x),textBox.getText()); 
+                Note newNote = new Note(getAbsolutTime(msAtPx(beginSelectPos.x)), getAbsolutTime(msAtPx(endSelectPos.x)),textBox.getText());
                 int indexTrack = getIndexTrack(rightClick.y);
-                pluginTracks.get(indexTrack).addNote(anotherNote);
-                textBox.setVisible(false);
+                notesPlayer.addNote(indexTrack,newNote);
+                loadTrack(indexTrack);
+                textBox.hideme();
 
                 repaint();
             }
 
             leftClick = e.getPoint();
         }
+    }
+
+    public void loadTrack(int indexTrack) {
+        TreeSet notesTree = notesPlayer.getNotesForTrack().get(indexTrack);
+        Iterator<Note> it = notesTree.iterator();
+        Note note; 
+        PluginTrack track = pluginTracks.get(indexTrack);
+        track.deleteNotes();
+        while(it.hasNext()) {
+            note = it.next();
+            track.addNote(note);
+        }
+        pluginTracks.set(indexTrack,track);
     }
 
     @Override
@@ -368,9 +371,9 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getActionCommand().equals("newComment")) {
-            textBox.setVisible(true);
             textBox.setLocation(rightClick.x,rightClick.y);
-            textBox.requestFocus();
+            textBox.setText("");
+            textBox.showme();
         }
     }
 

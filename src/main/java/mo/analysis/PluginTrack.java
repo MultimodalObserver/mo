@@ -16,7 +16,6 @@ public class PluginTrack {
 	private long start;
 	private long end;
 	private AlphaComposite alpha04;
-
 	public int y1;
 	public int y2;
 
@@ -29,6 +28,10 @@ public class PluginTrack {
 		color = Color.blue;
 		notes = new ArrayList<>();
 		alpha04 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f);
+	}
+
+	public void deleteNotes() {
+		this.notes.clear();
 	}
 
 	public void paint(Graphics2D g2d, int x, int y, int width, int height) {

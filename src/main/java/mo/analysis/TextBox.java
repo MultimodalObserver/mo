@@ -15,23 +15,31 @@ public class TextBox extends JPanel  implements KeyListener {
 
 	public TextBox() {
         textArea = new JTextArea(2,1);
+        textArea.getDocument().putProperty("filterNewlines", Boolean.TRUE);
+        textArea.addKeyListener(this);
 
         textAreaScrollPane = new JScrollPane(textArea);
         textAreaScrollPane.setPreferredSize(new Dimension(150,30));
         textAreaScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         textAreaScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-        textArea.getDocument().putProperty("filterNewlines", Boolean.TRUE);
-        textArea.addKeyListener(this);
+		add(textAreaScrollPane);
 
         this.setBounds(0,0,150,30);
 		this.setOpaque(false);
         this.setVisible(false);
-		add(textAreaScrollPane);
 	}
 
 	public void showme() {
 		setVisible(true);
 		requestFocus();
+	}
+
+	public void hideme() {
+		setVisible(false);
+	}
+
+	public void setText(String text) {
+		textArea.setText(text);
 	}
 
 	public String getText() {

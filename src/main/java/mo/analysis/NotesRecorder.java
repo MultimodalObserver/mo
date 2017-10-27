@@ -16,17 +16,14 @@ public class NotesRecorder {
 	private ProjectOrganization org;
 	private Participant participant;
 	private File stageFolder;
-
 	private File output;
 	private BufferedWriter writer;
-
-	public NotesRecorder(File stageFolder, NotesAnalysisConfig config) { // el org y p esta demas
+	public NotesRecorder(File stageFolder, NotesAnalysisConfig config) {
 		this.stageFolder = stageFolder;
 		this.config = config;
 	}
 
 	public void createFile() {
-		System.out.println("NotesRecorder createFile ");
 		Date now = new Date();
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss.SSS");
         String reportDate = df.format(now);
@@ -43,7 +40,6 @@ public class NotesRecorder {
 	}
 
 	public void setFile(File output) {
-		System.out.println("setFile ");
 		this.output = output;
 		createWriter();
 	}
@@ -61,7 +57,17 @@ public class NotesRecorder {
 		return output;
 	}
 
-	public BufferedWriter getWriter() { // es necesario?
+	public BufferedWriter getWriter() {
 		return writer;
+	}
+
+	public void writeNote(Note nota) {
+		try {
+			writer.write(nota.toString());
+			writer.newLine();
+			writer.flush();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 	}
 }

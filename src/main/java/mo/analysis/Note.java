@@ -47,4 +47,9 @@ public class Note implements Comparable<Note>{
 
 		return 0;
 	}
+
+	@Override
+	public String toString() {
+		return beginTime + "," + endTime + "," + comment;
+	}
 }

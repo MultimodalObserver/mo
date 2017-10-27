@@ -38,7 +38,7 @@ public class NotesPlayer implements Playable {
         this.notesRecorders = notesRecorders;
         notesForTrack = new ArrayList<>();
 
-        for (NotesRecorder nr : notesRecorders) { // por cada archivo de NoteRecorder un TreeSet
+        for (NotesRecorder nr : notesRecorders) {
             notesForTrack.add(getNotes(nr));
         }
 
@@ -61,7 +61,6 @@ public class NotesPlayer implements Playable {
     }
 
     private TreeSet<Note> getNotes(NotesRecorder recorder) {
-        System.out.println("getNotes");
         TreeSet<Note> set = new TreeSet<Note>();
         BufferedReader reader = null;
 
@@ -86,7 +85,6 @@ public class NotesPlayer implements Playable {
                     set.add(note);
                 } catch (NumberFormatException ex) {
                     logger.log(Level.INFO, "line in the file does not conform to the format of NotesRecorder");
-                    System.out.println("la linea no cumple con el formato");
                 }
             }
         } catch (IOException e) {
@@ -103,11 +101,24 @@ public class NotesPlayer implements Playable {
         Note anotherNote;
         while(it.hasNext()) {
             anotherNote = it.next();
-            System.out.println("tree begin = " + anotherNote.getStartTime());
-            System.out.println("tree end = " + anotherNote.getEndTime());
-            System.out.println("tree texto = " + anotherNote.getComment());
         }
         return set;
+    }
+
+    public void addNote(int trackIndex, Note note) {
+        notesForTrack.get(trackIndex).add(note);
+        saveNote(trackIndex,note);
+    }
+
+    public void saveNote(int trackIndex, Note note) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                notesRecorders.get(trackIndex).writeNote(note);
+            }
+        });
+
+        thread.start();
     }
 
     public void setStart(long start) {
@@ -130,7 +141,7 @@ public class NotesPlayer implements Playable {
 
     @Override
     public void play(long ms) {
-        if (ms < start) { // como la reproduccion es respecto de los timestamps absolutos, es necesario hacer estas verificaciones
+        if (ms < start) {
             play(start);
         } else if (ms > end) {
             play(end);
@@ -146,7 +157,6 @@ public class NotesPlayer implements Playable {
 
     @Override
     public void seek(long ms) {
-        System.out.println("seek(" + ms + ")");
         panel.setTime(ms);
     }
 
