@@ -4,11 +4,9 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Enumeration;
 import java.util.List;
 import javax.swing.Icon;
-import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -71,7 +69,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         
         // Plugin list tab
         pluginList = new PluginList();
-        tabbedPane.addTab("Installed plugins", new JScrollPane(pluginList));
+        tabbedPane.addTab("Installed plugins", pluginList);
         
         // Plugin installer tab
         localInstaller = new LocalPluginInstaller();
@@ -97,7 +95,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         
         tabbedPane.addChangeListener((ChangeEvent e) -> {
             /* Event - tab change */
-            pluginList.refresh();
+            pluginList.update();
             
         });
 
@@ -106,30 +104,13 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
 
-        buttonsPanel = new JPanel();
-        
-        
-        JButton refresh = new JButton("↻");
-        refresh.setToolTipText("Refresh plugins");
-        refresh.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refresh();
-                PluginPlainViewer.print();
-            }
-        });
-
-                
-        buttonsPanel.add(refresh);
-
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout()); 
         
         GridBConstraints c = new GridBConstraints();
         c.f(GridBConstraints.HORIZONTAL).gx(0).gy(0).wx(1).wy(0.1);
         
-        mainPanel.add(buttonsPanel, c);
-        
+       
         c.f(GridBConstraints.BOTH);
         mainPanel.add(tabbedPane, c.gy(1).wy(1));
         
@@ -153,8 +134,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
         
-        pluginList.refresh();
-        localInstaller.refresh();
+        pluginList.update();
     }
     
     private void populateExtensionPointTree() {

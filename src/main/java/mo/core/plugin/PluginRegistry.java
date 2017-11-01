@@ -20,11 +20,19 @@ import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 
+
 public class PluginRegistry {
+    
+    public static final String FILE_NOT_FOUND = "FileNotFound";
+    public static final String FILE_IS_DIRECTORY = "FileIsDirectory";
+    public static final String FILE_CANNOT_BE_DELETED = "FileCannotBeDeleted";
+    public static final String PLUGIN_NOT_THIRD_PARTY_PLUGIN = "PluginNotThirdPartyPlugin";
+    public static final String PLUGIN_BEING_USED = "PluginBeingUsed";
+    public static final String PLUGIN_DELETED_OK = "PluginDeletedOk";
 
     private static PluginRegistry pg;    
     
-    private List<IPluginsObserver> observers;
+    private List<IUpdatable> observers;
 
     private final String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
@@ -33,7 +41,7 @@ public class PluginRegistry {
 
     private final List<String> pluginFolders;
 
-    private ClassLoader cl;
+    private URLClassLoader cl;
 
     private final DirectoryWatcher dirWatcher;   
     
@@ -59,12 +67,15 @@ public class PluginRegistry {
             if (!folder.mkdir()) {
                 logger.log(
                         Level.WARNING, 
-                        "Can not create plugins folder \"{0}\"", pluginsFolder);
+                        "Can not create plugins folder \"{0}\"", pluginsFolder
+                );
             }
         }
-        
+
         pluginFolders.add(pluginsFolder);
+
         dirWatcher.addDirectory(folder.toPath(), true);
+
         
     }
     
@@ -74,12 +85,12 @@ public class PluginRegistry {
     }
     
     
-    public void subscribePluginsChanges(IPluginsObserver obs){
+    public void subscribePluginsChanges(IUpdatable obs){
         observers.add(obs);
     }
     
     private void notifyChanges(){
-        for(IPluginsObserver obs : observers){
+        for(IUpdatable obs : observers){
             obs.update();
         }
     }
@@ -97,20 +108,22 @@ public class PluginRegistry {
             pg = new PluginRegistry();            
             
             try{
+
                 //look for plugins in app jar
                 pg.processAppJar();
-                
+
                 //look for plugins in folders
                 pg.processPluginFolders();
-                
+
             } catch(Exception e){
                 e.printStackTrace();
             }
-            
+
 
             pg.initDirWatcher();
 
             pg.pluginData.checkDependencies();
+
         }
 
         return pg;
@@ -124,11 +137,11 @@ public class PluginRegistry {
             @Override
             public void onCreate(File file) {
                 try {
-                    processFile(file);
-                    notifyChanges();
+                    processFile(file);                    
                 } catch(Exception e){
                     e.printStackTrace();
-                }                    
+                }        
+                notifyChanges();
             }
 
             @Override
@@ -159,11 +172,10 @@ public class PluginRegistry {
             @Override
             public void onModify(File file) {
                 try {
-                    processFile(file);
-                    notifyChanges();
+                    processFile(file);                    
                 } catch(Exception e){
-                    e.printStackTrace();
-                }   
+                }
+                notifyChanges();
             }
         });            
 
@@ -175,12 +187,14 @@ public class PluginRegistry {
     
     
     private void processFile(File file) throws IOException {
-        
+
         if (file.isFile()) {
             if (file.getName().endsWith(".class")) {
                 FileInputStream in = new FileInputStream(file);
                 
                 pg.processClassAsInputStream(in, null);
+                
+                in.close();
 
             } else if (file.getName().endsWith(".jar")) {
                 pg.processJarFile(file);
@@ -212,7 +226,7 @@ public class PluginRegistry {
         exScanner.setClassLoader(cl);
         ClassReader cr = new ClassReader(classIS);
         cr.accept(exScanner, 0);
-
+        
         if(testingJar){
             return;
         }
@@ -220,49 +234,47 @@ public class PluginRegistry {
         if (exScanner.getPlugin() != null) {
             Plugin newPlugin = exScanner.getPlugin();
             
-            
             newPlugin.setPath(path);
             pg.pluginData.addPlugin(newPlugin);
 
         } else if (exScanner.getExtPoint() != null) {
             pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
-
         }
-
+        
     }
     
-    public synchronized boolean uninstallPlugin(Plugin plugin){
+    public synchronized String uninstallPlugin(Plugin plugin){
         
         if(!plugin.isThirdParty()){
-            return false;
+            return PLUGIN_NOT_THIRD_PARTY_PLUGIN;
         }
         
         File file = plugin.getPath().toFile();
 
         if(!file.exists()) {
-            return false;
+            return FILE_NOT_FOUND;
         }
         
         if(file.isDirectory()) { 
-            return false;
+            return FILE_IS_DIRECTORY;
         }
         
-        
-        System.out.println("Desinstalando plugin "+plugin.getName()+"...");
-        
-        System.out.println("Si el plugin esta en uso, no se deberia poder borrar");
-        
-        pluginData.unregisterPlugin(plugin);
-        
-        
-                
+        if(2==1){
+            return PLUGIN_BEING_USED;
+        }
+     
         try {
             boolean deleted = file.delete();
-            return deleted;
             
+            if(deleted){
+                pluginData.unregisterPlugin(plugin);
+                return PLUGIN_DELETED_OK;
+            }
+
         } catch(Exception e){
-            return false;
-        }        
+        }       
+        
+        return FILE_CANNOT_BE_DELETED;
         
     }
 
@@ -274,27 +286,34 @@ public class PluginRegistry {
     private void processJarFile(File jar, String[] packages) throws IOException {
 
         JarFile jarFile = new JarFile(jar);
-
+        
         cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-
+        
         Enumeration entries = jarFile.entries();
-
+        
         while (entries.hasMoreElements()) {
             JarEntry jarEntry = (JarEntry) entries.nextElement();
             String entryName = jarEntry.getName();
-
             if (entryName.endsWith(".class")) {
                 if (packages != null) {
                     for (String p : packages) {
                         if (entryName.startsWith(p)) {
-                            processClassAsInputStream(jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
+                            InputStream in = jarFile.getInputStream(jarEntry);
+                            processClassAsInputStream(in, jar.getAbsolutePath());
+                            in.close();
                         }
                     }
                 } else {
-                    processClassAsInputStream(jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
+                    InputStream in = jarFile.getInputStream(jarEntry);
+                    processClassAsInputStream(in, jar.getAbsolutePath());
+                    in.close();
                 }
             }
         }
+        
+        cl.close();
+        
+        jarFile.close();        
     }
 
     
@@ -355,12 +374,14 @@ public class PluginRegistry {
 
         for (File file : files) {
             if (file.getName().endsWith(".class")) {
-                processClassAsInputStream(
-                            new FileInputStream(file), null);
+                FileInputStream in = new FileInputStream(file);
+                processClassAsInputStream(in, null);
+                in.close();
             } else if (file.getName().endsWith(".jar")) {
                 processJarFile(file);
             }
         }
+
     }
 
 

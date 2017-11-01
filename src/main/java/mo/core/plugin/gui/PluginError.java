@@ -15,11 +15,7 @@ import mo.core.plugin.Plugin;
 
 class PluginError extends JPanel{
     
-    
-    
     public PluginError(Plugin plugin, PluginList treeList){
-        
-        
         
         JLabel pluginTitle = new JLabel(plugin.getName(), SwingConstants.LEFT);
         pluginTitle.setFont(new Font("", Font.BOLD, 20));
@@ -29,12 +25,9 @@ class PluginError extends JPanel{
         
         JLabel pluginVersion = new JLabel("v" + plugin.getVersion(), SwingConstants.LEFT);
         JPanel top = new JPanel();
-        
 
         top.add(pluginTitle);
         top.add(pluginVersion);        
-        
-        
         
         JPanel content = new JPanel();
         

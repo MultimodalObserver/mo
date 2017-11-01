@@ -9,6 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
@@ -56,7 +57,6 @@ class PluginInfo extends JPanel {
         tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in into MO");
         tuples.addScrollText("Description", plugin.getDescription());          
         
-       
         return tuples;
    
     }   
@@ -84,19 +84,27 @@ class PluginInfo extends JPanel {
                         JOptionPane.showMessageDialog(null, "Plugin is being used. Please stop recording data and try again.", "Error", JOptionPane.ERROR_MESSAGE);                    
                     }
                     
-                    boolean success = PluginRegistry.getInstance().uninstallPlugin(plugin);
+                    String success = PluginRegistry.getInstance().uninstallPlugin(plugin);
                     
-                    if(success){                        
+                    if(success == PluginRegistry.PLUGIN_DELETED_OK){                        
                         System.out.println("Update plugin tree");
                         
                     }
                     else {                        
-                        JOptionPane.showMessageDialog(null, "Plugin couldn't be removed.", "Error", JOptionPane.ERROR_MESSAGE);                    
+                        
+                        String extraMsg = "";
+                        if(success == PluginRegistry.FILE_CANNOT_BE_DELETED) extraMsg = "Unknown cause.";
+                        if(success == PluginRegistry.FILE_IS_DIRECTORY) extraMsg = "File is a directory.";
+                        if(success == PluginRegistry.FILE_NOT_FOUND) extraMsg = "File not found.";
+                        if(success == PluginRegistry.PLUGIN_NOT_THIRD_PARTY_PLUGIN) extraMsg = "File is not a third party plugin.";
+                        if(success == PluginRegistry.PLUGIN_BEING_USED) extraMsg = "Plugin is being used, stop recording and try again.";
+ 
+                        JOptionPane.showMessageDialog(null, "Plugin couldn't be removed. " + extraMsg, "Error", JOptionPane.ERROR_MESSAGE);                    
                     }                                       
                     
                 }
                 
-                treeList.refresh();
+                treeList.update();
             }
         });
         
@@ -140,8 +148,8 @@ class PluginInfo extends JPanel {
         JTable depTable = new JTable(depRows, depColumns);
         JTable extTable = new JTable(extRows, extColumns);
         
-        depTable.setRowSelectionAllowed(false);
-        extTable.setRowSelectionAllowed(false);
+        depTable.setEnabled(false);
+        extTable.setEnabled(false);
         
         tuples.addTuple("Dependencies", depTable);
         tuples.addTuple("Extension points", extTable);
@@ -172,14 +180,14 @@ class PluginInfo extends JPanel {
         
         
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Information", getInformationTab());
+        tabbedPane.addTab("Information", new JScrollPane(getInformationTab()));
         
         
         if(plugin.isThirdParty()){
-            tabbedPane.addTab("Operations", getOperations());
+            tabbedPane.addTab("Operations", new JScrollPane(getOperations()));
         }
         
-        tabbedPane.addTab("Advanced", getAdvanced());
+        tabbedPane.addTab("Advanced", new JScrollPane(getAdvanced()));
         
 	
 

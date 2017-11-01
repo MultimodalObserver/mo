@@ -8,9 +8,9 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import mo.core.plugin.IPluginsObserver;
 import mo.core.plugin.Plugin;
 import mo.core.plugin.PluginRegistry;
+import mo.core.plugin.IUpdatable;
 
 /**
  *
@@ -18,9 +18,8 @@ import mo.core.plugin.PluginRegistry;
  */
 
 
-public class PluginList extends JSplitPane implements IPluginsObserver {    
-    
-    
+public class PluginList extends JSplitPane implements IUpdatable {    
+        
     class PluginTreeNode extends DefaultMutableTreeNode{
     
         private Plugin plugin;
@@ -39,12 +38,6 @@ public class PluginList extends JSplitPane implements IPluginsObserver {
     
     private Plugin focusedPlugin = null;
     
-    public void refresh(){    
-        showList();
-        if(focusedPlugin != null && !PluginRegistry.getInstance().getPluginData().pluginIsRegistered(focusedPlugin)){
-            this.setRightComponent(new JPanel());
-        }
-    }
     
     public PluginList(){
         
@@ -52,8 +45,7 @@ public class PluginList extends JSplitPane implements IPluginsObserver {
         
         PluginRegistry.getInstance().subscribePluginsChanges(this);
 
-        showList();
-        
+        showList();        
     }
     
     
@@ -139,9 +131,7 @@ public class PluginList extends JSplitPane implements IPluginsObserver {
             }
         });
         
-        
-
-        
+ 
         this.setLeftComponent(scroll);
         
         if(!dynamicPlugins.isLeaf())
@@ -151,6 +141,10 @@ public class PluginList extends JSplitPane implements IPluginsObserver {
             allPlugins.add(hardCodedPlugins);
         
         
+       
+        tree.addMouseListener(new UpdateRightClick(this));
+        
+            
         expandTree(tree);
         this.getLeftComponent().revalidate();
         
@@ -158,7 +152,10 @@ public class PluginList extends JSplitPane implements IPluginsObserver {
 
     @Override
     public void update() {
-        refresh();
+        showList();
+        if(focusedPlugin != null && !PluginRegistry.getInstance().getPluginData().pluginIsRegistered(focusedPlugin)){
+            this.setRightComponent(new JPanel());
+        }       
         
     }
     

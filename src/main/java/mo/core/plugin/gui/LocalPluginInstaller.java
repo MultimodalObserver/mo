@@ -34,10 +34,7 @@ import mo.core.ui.Utils;
  */
 public class LocalPluginInstaller extends JPanel {
     
-    public void refresh(){    
-        
-    }
-    
+   
     
     private boolean confirmPluginAdd(List<File> files){        
        
@@ -98,26 +95,24 @@ public class LocalPluginInstaller extends JPanel {
             // Check files again in case they changed during the confirm dialog
             
             if(!checkFiles(files)){
-                System.out.println("Se confirmo, pero no se agrego nada");
                 return;
             }
             
-            System.out.println("Se procede a agregar (o intentar) " + files.size() + " archivos");
+            int success = 0;
+            int fails = 0;
+            
             for(File f : files){
-                System.out.println(" ---- " + f.getAbsolutePath());
                 try{
                     PluginRegistry.getInstance().copyPluginToFolder(f);
+                    success++;
                 }catch(IOException e){
+                    fails++;
                     e.printStackTrace();
-                }
-                
+                }                
             }
-            System.out.println();
             
-            JOptionPane.showMessageDialog(null, files.size() + " plugins added/updated.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(null, success + " plugins added/updated, " + fails + " errors.", "Results", JOptionPane.INFORMATION_MESSAGE);
             
-        } else {
-            System.out.println("No guardando");
         }
     }
     
@@ -147,7 +142,7 @@ public class LocalPluginInstaller extends JPanel {
                 int fcState = fc.showDialog(null, "Select plugin");
                 
                 if(fcState == JFileChooser.APPROVE_OPTION){
-                    
+                   
                     addPlugins(fc.getSelectedFiles());
                     
                 } else if(fcState == JFileChooser.ERROR_OPTION){
