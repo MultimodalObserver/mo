@@ -53,7 +53,7 @@ class PluginInfo extends JPanel {
             tuples.addTuple("File", path);
         }
         
-        tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in in MO");
+        tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in into MO");
         tuples.addScrollText("Description", plugin.getDescription());          
         
        
