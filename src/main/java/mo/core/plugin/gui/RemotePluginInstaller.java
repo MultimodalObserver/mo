@@ -8,6 +8,7 @@ import java.util.Map;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -28,9 +29,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -76,11 +79,9 @@ class RemotePluginInfo extends JPanel{
         
         TupleList tuples = new TupleList();
         
-        tuples.addTuple("Name", plugin.name);
-        tuples.addTuple("Name", plugin.name);
-        tuples.addTuple("Name", plugin.name);
-        tuples.addTuple("Name", plugin.name);
-        tuples.addTuple("Name", plugin.name);
+        tuples.addTuple("Name", plugin.name);        
+        tuples.addTuple("Website", plugin.homePage);
+        tuples.addScrollText("Description", plugin.desc);
         
         JButton installBtn = new JButton("Install");
         
@@ -93,11 +94,8 @@ class RemotePluginInfo extends JPanel{
         
         tuples.addTuple("", installBtn);
         
-        JLabel pluginTitle = new JLabel(plugin.name, SwingConstants.LEFT);
-        pluginTitle.setFont(new Font("", Font.BOLD, 20));
-        Dimension d = pluginTitle.getPreferredSize();
-        d.height = 25;
-        pluginTitle.setPreferredSize(d);         
+        Title pluginTitle = new Title(plugin.name);
+        
         JPanel top = new JPanel();
         top.add(pluginTitle);
         
@@ -130,8 +128,6 @@ public final class RemotePluginInstaller extends JPanel {
     private JLabel serverNotice = new JLabel();
     private JTextField searchInput = new JTextField(50);
     
-    private JLabel loadingTags = new JLabel("Loading tags...");
-    private JLabel loadingPlugins = new JLabel("Loading plugins...");
     
     private JPanel tagSearchResultContainer = new JPanel();
     private JPanel pluginSearchResultContainer = new JPanel();
@@ -140,6 +136,8 @@ public final class RemotePluginInstaller extends JPanel {
     DefaultMutableTreeNode tagsNode = new DefaultMutableTreeNode("Tags");
     DefaultMutableTreeNode pluginsNode = new DefaultMutableTreeNode("Plugins");
     
+    Spinner searchingSpinner;
+    
     
     private Thread searchDelay;
     
@@ -147,8 +145,10 @@ public final class RemotePluginInstaller extends JPanel {
     private void setServerNotice(){
         
         if(currentServer == null){
+            searchInput.setEnabled(false);
             serverNotice.setText("<html><p style='color: red;'>You haven't selected a server.</p></html>");
         } else {
+            searchInput.setEnabled(true);
             serverNotice.setText("<html><p>You are using server <b>" + currentServer + "</b>.</p></html>");
         }                        
     }
@@ -217,83 +217,125 @@ public final class RemotePluginInstaller extends JPanel {
     public void installPlugin(PluginNode plugin){
         installPlugin(plugin.name, plugin.shortName, plugin.desc, plugin.homePage, plugin.repoName, plugin.repoUser);
     }
+    
+    
+    private void setDownloadPanel(Component backComponent, String zipBallUrl, JScrollPane container){
+        
+        JPanel downloadPanel = new JPanel();
+        
+        LogScroll log = new LogScroll();
+        
+        downloadPanel.add(log);
+        
+        log.addLine("Beginning download...");
+        log.addLine("Downloading from " + zipBallUrl);
+        
+        
+        for(int i=0; i<100; i++){
+            log.addLine("Otra linea " + i);
+        }
+        
+        JButton backBtn = new JButton("Cancel");
+        
+        backBtn.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               container.setViewportView(backComponent);
+            }
+        });
+        
+        downloadPanel.add(backBtn);                
+
+        System.out.println("Descargando...");
+        System.out.println(zipBallUrl);        
+        
+        container.setViewportView(downloadPanel);
+    }
 
     
     public void installPlugin(String name, String shortName, String description, String homepage, String repoName, String repoUser){
         
+        
         JDialog d = new JDialog();        
         d.setModal(true);
         d.setSize(500, 500);
-        d.setTitle("Install Plugin");
+        d.setTitle("Install " + name);
+        d.setLocationRelativeTo(null);
+
         
         JPanel p = new JPanel();
-                
-        p.add(new JLabel(name));
-        p.add(new JLabel(shortName));
-        p.add(new JLabel("<html>"+description+"</html>"));
-        p.add(new JLabel(homepage));
         
-        JLabel gettingReleases = new JLabel("Getting versions...");
-        p.add(gettingReleases);     
-                
+        
+        JPanel top = new JPanel();
+        top.setBorder(new EmptyBorder(10, 10, 10, 10));
+        top.setLayout(new BorderLayout());
+        Title pluginTitle = new Title(name);
+        
+        top.add(pluginTitle, BorderLayout.NORTH);
+
+        JLabel status = new JLabel("Getting versions...");
+        top.add(status, BorderLayout.SOUTH);
+        
+        TupleList versions = new TupleList();
+        JScrollPane scroll = new JScrollPane(versions);
+
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
         
         String releasesUrl = "https://api.github.com/repos/"+repoUser+"/"+repoName+"/releases";
                 
-        asyncHttpClient.prepareGet(releasesUrl).execute(new AsyncCompletionHandler<Response>(){                
+        asyncHttpClient.prepareGet(releasesUrl).execute(new AsyncCompletionHandler<Response>(){
             @Override
-            public Response onCompleted(Response r) throws Exception{                        
-                String json = r.getResponseBody();     
+            public Response onCompleted(Response r) throws Exception{
+                String json = r.getResponseBody();
                 
                 ArrayList<HashMap<String, Object>> map = new ArrayList<HashMap<String, Object>>();
                 ObjectMapper mapper = new ObjectMapper();
                 map = mapper.readValue(json, new TypeReference<ArrayList<HashMap<String, Object>>>(){});
                 
-                
                 if(map.size() == 0){
-                    p.add(new JLabel("This plugin doesn't have releases available for download."));
+                    status.setText("This plugin doesn't have releases available for download.");
+
                 } else {
-                    JScrollPane container = new JScrollPane();
-                    JPanel versionContainer = new JPanel();
-                    GridLayout gridLayout = new GridLayout(0, 2);
-                    versionContainer.setLayout(gridLayout);
                     
                     for(int i=0; i<map.size(); i++){
-                        String tagName = (String)map.get(i).get("tag_name");                        
+                        String tagName = (String)map.get(i).get("tag_name");
                         
                         JButton installBtn = new JButton("Install");
                         String zipBallUrl = (String)map.get(i).get("zipball_url");
                         
                         installBtn.addActionListener(new ActionListener(){
                             @Override
-                            public void actionPerformed(ActionEvent e) {
-                                System.out.println("Descargando...");
-                                System.out.println(zipBallUrl);
+                            public void actionPerformed(ActionEvent e) {                                
+                                
+                                setDownloadPanel(versions, zipBallUrl, scroll);
                             }
                         });
                         
-                        versionContainer.add(installBtn);
-                        versionContainer.add(new JLabel(tagName));  
+                        versions.addTuple(tagName, installBtn);
                     }
-                    
-                    container.setViewportView(versionContainer);
-                    container.setPreferredSize(new Dimension(500, 400));
-                    p.add(container);
                 }
 
-                gettingReleases.setVisible(false);
+                status.setText("There are "+map.size()+" available versions.");
                 return r;
             }
             @Override
-            public void onThrowable(Throwable t){ 
-                JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
-            }                
+            public void onThrowable(Throwable t){
+                JOptionPane.showMessageDialog(null, "Plugin information couldn't be retrieved.", "Error", JOptionPane.ERROR_MESSAGE);
+                d.dispose();
+                status.setText("<html><span style='color: red;'>There was an error.</span></html>");
+            }
         });
+        
+        p.setLayout(new BorderLayout());
+        p.add(top, BorderLayout.NORTH);
+        
+        
+        p.add(scroll, BorderLayout.CENTER);
+        
         
         d.add(p);
         d.setVisible(true);
-        
         
     }
     
@@ -374,28 +416,33 @@ public final class RemotePluginInstaller extends JPanel {
         
         if(q.length() == 0){
             cleanResultsTree();
+            searchingSpinner.completeLoad();
             return;
         }
         
-        System.out.println("Buscando: " + q);
+        System.out.println("Searching: " + q);
         
         String tagUrl = cleanServerUrl(currentServer) + "/tags?q=" + q + "&limit=" + SEARCH_LIMIT;
         String pluginUrl = cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT;
         
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+        
+        
                 
         Future<Response> fTags = asyncHttpClient.prepareGet(tagUrl).execute(new AsyncCompletionHandler<Response>(){                
             @Override
             public Response onCompleted(Response r) throws Exception{                        
                 String json = r.getResponseBody();                
                 showTagSearchResults(json);
-                loadingTags.setVisible(false);
+                
+                searchingSpinner.completeStep();
+                
                 return r;
             }
             @Override
             public void onThrowable(Throwable t){ 
-                loadingTags.setVisible(false);
+                searchingSpinner.completeStep();
                 JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
             }                
         });
@@ -406,12 +453,12 @@ public final class RemotePluginInstaller extends JPanel {
             String json = r.getResponseBody();
             showPluginSearchResults(json);            
             System.out.println(json);
-            loadingPlugins.setVisible(false);
+            searchingSpinner.completeStep();
             return r;
         }
         @Override
         public void onThrowable(Throwable t){ 
-            loadingPlugins.setVisible(false);
+            searchingSpinner.completeStep();
             JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
         }                
         });
@@ -426,6 +473,9 @@ public final class RemotePluginInstaller extends JPanel {
         searchInput.addKeyListener(new KeyListener(){
             @Override
             public void keyTyped(KeyEvent e) {
+                
+                searchingSpinner.startLoading();
+                
                 if(searchDelay != null && searchDelay.isAlive()){
                     searchDelay.interrupt();
                 }
@@ -440,8 +490,6 @@ public final class RemotePluginInstaller extends JPanel {
                 });
                 
                 searchDelay.start();
-                loadingTags.setVisible(true);
-                loadingPlugins.setVisible(true);
             }
 
             @Override
@@ -495,18 +543,26 @@ public final class RemotePluginInstaller extends JPanel {
             }
         });
         
-        result.setLayout(new BoxLayout(result, BoxLayout.Y_AXIS));
+        TupleList inputs = new TupleList();
         
-        serverInput.setAlignmentX(result.CENTER_ALIGNMENT);
-        serverCheckButton.setAlignmentX(result.CENTER_ALIGNMENT);
-        searchInput.setAlignmentX(result.CENTER_ALIGNMENT);
-        serverNotice.setAlignmentX(result.CENTER_ALIGNMENT);
-
+        JPanel inputBtn = new JPanel();
+        
+        inputBtn.add(serverInput);
+        inputBtn.add(serverCheckButton);
+        
+        inputs.addTuple("Use server", inputBtn);
+        inputs.addTuple("Server status", serverNotice);
+        inputs.addTuple("Search", searchInput);
+        
+       
         //result.add(serverNotice);
-        result.add(serverInput);
+        /*result.add(serverInput);
         result.add(serverNotice);
         result.add(serverCheckButton);
-        result.add(searchInput);       
+        result.add(searchInput);
+        result.add(searchingSpinner);*/
+        
+        result.add(inputs);
         
         return result;
     }
@@ -595,6 +651,8 @@ public final class RemotePluginInstaller extends JPanel {
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
+        searchingSpinner = new Spinner(2);
+        
         JPanel top = createTopPanel();
         JSplitPane split = createSplitPane();
         
@@ -607,7 +665,8 @@ public final class RemotePluginInstaller extends JPanel {
         // Show initial message (related to the server status)
         setServerNotice();
         
-        cleanResultsTree();
+        cleanResultsTree();       
+        
         
     }
     

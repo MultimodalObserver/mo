@@ -163,11 +163,8 @@ class PluginInfo extends JPanel {
         this.treeList = treeList;
         this.plugin = p;
 
-        JLabel pluginTitle = new JLabel(plugin.getName(), SwingConstants.LEFT);
-        pluginTitle.setFont(new Font("", Font.BOLD, 20));
-        Dimension d = pluginTitle.getPreferredSize();
-        d.height = 25;
-        pluginTitle.setPreferredSize(d); 
+        
+        Title pluginTitle = new Title(plugin.getName());
         
         JLabel pluginVersion = new JLabel("v" + plugin.getVersion(), SwingConstants.LEFT);
         JPanel top = new JPanel();

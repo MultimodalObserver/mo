@@ -24,6 +24,8 @@ public class AppPreferencesWrapper {
     
     private int frameHeight = 300;
     
+    private String server = "http://mo-plugin-repository.herokuapp.com";
+    
     private String localeCountry = Locale.getDefault().getCountry();
     
     private String localeLanguage = Locale.getDefault().getLanguage();
@@ -141,6 +143,14 @@ public class AppPreferencesWrapper {
 
     public String getLocaleVariant() {
         return localeVariant;
+    }
+    
+    public void setServer(String s){
+        this.server = s;
+    }
+    
+    public String getServer(){
+        return this.server;
     }
      
     
