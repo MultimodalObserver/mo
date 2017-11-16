@@ -12,8 +12,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -39,6 +41,9 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
+import mo.core.MultimodalObserver;
+import mo.core.preferences.AppPreferencesWrapper;
+import mo.core.preferences.PreferencesManager;
 
 
 
@@ -137,6 +142,11 @@ public final class RemotePluginInstaller extends JPanel {
     DefaultMutableTreeNode pluginsNode = new DefaultMutableTreeNode("Plugins");
     
     Spinner searchingSpinner;
+    
+    AppPreferencesWrapper prefs
+                    = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(
+                            AppPreferencesWrapper.class,
+                            new File(MultimodalObserver.APP_PREFERENCES_FILE));
     
     
     private Thread searchDelay;
@@ -465,6 +475,58 @@ public final class RemotePluginInstaller extends JPanel {
         
     }
     
+    private void saveServerPreference(String url){        
+        File prefFile = new File(MultimodalObserver.APP_PREFERENCES_FILE);
+        prefs.setServer(url);
+        PreferencesManager.save(prefs, prefFile);
+    }
+    
+    private void checkServer(boolean popup){
+        String url = serverInput.getText().trim();   
+
+        if(!validateHTTP_URI(url)){
+            JOptionPane.showMessageDialog(null, "Invalid URL.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        serverCheckButton.setText("Checking...");
+        serverCheckButton.setEnabled(false);
+        AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+
+        Future<Response> f = asyncHttpClient.prepareGet(url).execute(new AsyncCompletionHandler<Response>(){                
+            @Override
+            public Response onCompleted(Response r) throws Exception{                        
+                String json = r.getResponseBody();
+                Map<String, Object> map = new HashMap<String, Object>();
+                ObjectMapper mapper = new ObjectMapper();
+                map = mapper.readValue(json, new TypeReference<Map<String, String>>(){});
+                if(map.containsKey("mo_plugin_repository")){                            
+                    serverCheckButton.setText(CHECK_SERVER_BUTTON_LABEL);
+                    serverCheckButton.setEnabled(true);
+                    currentServer = url;
+                    setServerNotice();
+                    saveServerPreference(url.trim());
+                    
+                    if(popup)
+                        JOptionPane.showMessageDialog(null, "Server contains a plugin repository", "Success", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    throw new Exception();
+                }                        
+                return r;
+            }
+            @Override
+            public void onThrowable(Throwable t){                        
+                serverCheckButton.setText(CHECK_SERVER_BUTTON_LABEL);
+                serverCheckButton.setEnabled(true);
+                
+                if(popup)
+                    JOptionPane.showMessageDialog(null, "A plugin repository couldn't be found.", "Error", JOptionPane.ERROR_MESSAGE);
+                setServerNotice();
+            }                
+        });
+
+    }
+    
     
     public JPanel createTopPanel(){
         JPanel result = new JPanel();
@@ -501,45 +563,16 @@ public final class RemotePluginInstaller extends JPanel {
         
         serverCheckButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {                
-                String url = serverInput.getText().trim();   
-                
-                if(!validateHTTP_URI(url)){
-                    JOptionPane.showMessageDialog(null, "Invalid URL.", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                
-                serverCheckButton.setText("Checking...");
-                serverCheckButton.setEnabled(false);
-                AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
-                
-                Future<Response> f = asyncHttpClient.prepareGet(url).execute(new AsyncCompletionHandler<Response>(){                
-                    @Override
-                    public Response onCompleted(Response r) throws Exception{                        
-                        String json = r.getResponseBody();
-                        Map<String, Object> map = new HashMap<String, Object>();
-                        ObjectMapper mapper = new ObjectMapper();
-                        map = mapper.readValue(json, new TypeReference<Map<String, String>>(){});
-                        if(map.containsKey("mo_plugin_repository")){                            
-                            serverCheckButton.setText(CHECK_SERVER_BUTTON_LABEL);
-                            serverCheckButton.setEnabled(true);
-                            currentServer = url;
-                            setServerNotice();
-                            JOptionPane.showMessageDialog(null, "Server contains a plugin repository", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        } else {
-                            throw new Exception();
-                        }                        
-                        return r;
-                    }
-                    @Override
-                    public void onThrowable(Throwable t){                        
-                        serverCheckButton.setText(CHECK_SERVER_BUTTON_LABEL);
-                        serverCheckButton.setEnabled(true);
-                        JOptionPane.showMessageDialog(null, "A plugin repository couldn't be found.", "Error", JOptionPane.ERROR_MESSAGE);
-                        setServerNotice();
-                    }                
-                });
-
+            public void actionPerformed(ActionEvent e) {
+                checkServer(true);
+            }
+        });
+        
+        serverInput.addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+              if (e.getKeyCode()==KeyEvent.VK_ENTER){
+                 checkServer(true);
+              }
             }
         });
         
@@ -553,14 +586,7 @@ public final class RemotePluginInstaller extends JPanel {
         inputs.addTuple("Use server", inputBtn);
         inputs.addTuple("Server status", serverNotice);
         inputs.addTuple("Search", searchInput);
-        
-       
-        //result.add(serverNotice);
-        /*result.add(serverInput);
-        result.add(serverNotice);
-        result.add(serverCheckButton);
-        result.add(searchInput);
-        result.add(searchingSpinner);*/
+
         
         result.add(inputs);
         
@@ -662,10 +688,26 @@ public final class RemotePluginInstaller extends JPanel {
         this.add(top);
         this.add(split);
         
+        
         // Show initial message (related to the server status)
         setServerNotice();
         
-        cleanResultsTree();       
+        cleanResultsTree();    
+        
+        try{
+                        
+            String server = prefs.getServer();
+            
+            if(server != null && server.length() > 0){
+                
+                serverInput.setText(server);
+                checkServer(false);
+                        
+            }
+            
+            
+        } catch(Exception e){
+        }
         
         
     }
