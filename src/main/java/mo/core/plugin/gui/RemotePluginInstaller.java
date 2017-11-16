@@ -569,6 +569,7 @@ public final class RemotePluginInstaller extends JPanel {
         });
         
         serverInput.addKeyListener(new KeyAdapter() {
+            @Override
             public void keyPressed(KeyEvent e) {
               if (e.getKeyCode()==KeyEvent.VK_ENTER){
                  checkServer(true);
