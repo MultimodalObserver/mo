@@ -68,7 +68,7 @@ public class PluginList extends JSplitPane implements IUpdatable {
             }
         }
 
-        this.setRightComponent(new PluginInfo(plugin, this));        
+        this.setRightComponent(new PluginInfo(plugin, this));
         
     }
     
