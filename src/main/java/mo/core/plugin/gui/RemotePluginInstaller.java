@@ -44,21 +44,26 @@ import javax.swing.tree.TreeModel;
 import mo.core.MultimodalObserver;
 import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
+import mo.core.ui.Utils;
 
 
 
-class PluginNode extends DefaultMutableTreeNode{
+class Plugin {
     
     String name, desc, homePage, shortName, repoUser, repoName;
     
-    PluginNode(String name, String desc, String homePage, String shortName, String repoUser, String repoName){
-        super(name);
+    Plugin(String name, String desc, String homePage, String shortName, String repoUser, String repoName){
         this.name = name;
         this.desc = desc;
         this.homePage = homePage;
         this.shortName = shortName;
         this.repoUser = repoUser;
         this.repoName = repoName;
+    
+    }
+    @Override
+    public String toString(){
+        return "Plugin: " + this.name;
     }
 }
 
@@ -74,10 +79,10 @@ class TagNode extends DefaultMutableTreeNode{
 
 class RemotePluginInfo extends JPanel{
     
-    PluginNode plugin;
+    Plugin plugin;
     RemotePluginInstaller container;
     
-    RemotePluginInfo(PluginNode plugin, RemotePluginInstaller container){
+    RemotePluginInfo(Plugin plugin, RemotePluginInstaller container){
         this.plugin = plugin;
         this.container = container;
         
@@ -134,12 +139,14 @@ public final class RemotePluginInstaller extends JPanel {
     private JTextField searchInput = new JTextField(50);
     
     
-    private JPanel tagSearchResultContainer = new JPanel();
-    private JPanel pluginSearchResultContainer = new JPanel();
+    //private JPanel tagSearchResultContainer = new JPanel();
+    //private JPanel pluginSearchResultContainer = new JPanel();
     
-    private JTree searchResults;
+    //private JTree searchResults;
     DefaultMutableTreeNode tagsNode = new DefaultMutableTreeNode("Tags");
     DefaultMutableTreeNode pluginsNode = new DefaultMutableTreeNode("Plugins");
+    
+    SplitPaneTriple split;
     
     Spinner searchingSpinner;
     
@@ -163,43 +170,12 @@ public final class RemotePluginInstaller extends JPanel {
         }                        
     }
     
-    private static boolean validateHTTP_URI(String uri) {
-        final URL url;
-        try {
-            url = new URL(uri);
-        } catch (Exception e1) {
-            return false;
-        }
-        return "http".equals(url.getProtocol()) || "https".equals(url.getProtocol());
-    }
-    
-    
-    public String cleanServerUrl(String url){
-        
-        if(url == null ) return "";
-        
-        String result = url.trim();
-        if(result.charAt(result.length() - 1) == '/'){
-            result = result.substring(0, result.length() - 1);
-        }
-        return result;
-    }
-    
-    private ArrayList<HashMap<String, Object>> parseArrayJson(String json){        
-        try{
-            ArrayList<HashMap<String, Object>> map = new ArrayList<HashMap<String, Object>>();
-            ObjectMapper mapper = new ObjectMapper();
-            map = mapper.readValue(json, new TypeReference<ArrayList<HashMap<String, Object>>>(){});
-            return map;
-        } catch(IOException e){
-            return new ArrayList<HashMap<String, Object>>();
-        }
-    }
+
     
     private void searchByTag(String tagName){
         
         System.out.println("Buscando por tag: " + tagName);
-        String pluginsUrl = cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins";
+        String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins";
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
                 
@@ -208,11 +184,8 @@ public final class RemotePluginInstaller extends JPanel {
             public Response onCompleted(Response r) throws Exception{                        
                 String json = r.getResponseBody();     
                 
-                /*ArrayList<HashMap<String, Object>> map = new ArrayList<HashMap<String, Object>>();
-                ObjectMapper mapper = new ObjectMapper();
-                map = mapper.readValue(json, new TypeReference<ArrayList<HashMap<String, Object>>>(){});*/
-                
                 System.out.println(json);
+                showPluginSearchResults(json, tagName);
                 return r;
             }
             @Override
@@ -224,7 +197,7 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
-    public void installPlugin(PluginNode plugin){
+    public void installPlugin(Plugin plugin){
         installPlugin(plugin.name, plugin.shortName, plugin.desc, plugin.homePage, plugin.repoName, plugin.repoUser);
     }
     
@@ -349,45 +322,68 @@ public final class RemotePluginInstaller extends JPanel {
         
     }
     
-    private void updateTree(){
-        
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode)searchResults.getModel().getRoot();
-        root.removeAllChildren();
-        root.add(tagsNode);
-        root.add(pluginsNode);
-
-        TreeModel tm = new DefaultTreeModel(root);
-        searchResults.setModel(tm);  
-
-        expandTree(searchResults);
-    }
     
     private synchronized void showTagSearchResults(String json){        
         
-        ArrayList<HashMap<String, Object>> tags = parseArrayJson(json);
+        ArrayList<HashMap<String, Object>> tags = Utils.parseArrayJson(json);
+         
+        if(tags.size() == 0){
+            cleanTagResults();
+            return;
+        }
         
-        tagsNode.removeAllChildren();
+        JPanel tagsPanel = split.getLeft();
+        tagsPanel.removeAll();
+        
+        JPanel tagContainer = new JPanel();
+        tagContainer.setLayout(new BoxLayout(tagContainer, BoxLayout.Y_AXIS));
+        
+        tagsPanel.add(new Title("Tags"), BorderLayout.NORTH);
 
         for(int i=0; i<tags.size(); i++){
-            String tag = (String)tags.get(i).get("short_name");
+            String tag = (String)tags.get(i).get("short_name");          
             
-            TagNode node = new TagNode(tag);
-            tagsNode.add(node);
+            JButton tagBtn = new JButton("#"+tag);
+            
+            tagBtn.addActionListener(new ActionListener(){
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    searchByTag(tag);
+                }
+            });
+            
+            tagContainer.add(tagBtn, Component.CENTER_ALIGNMENT);
         }
         
-        if(tags.size() == 0){
-            DefaultMutableTreeNode noResults = new DefaultMutableTreeNode("No results");
-            tagsNode.add(noResults);
-        }
         
-        updateTree();
+        tagsPanel.add(tagContainer);
+        
+        tagsPanel.revalidate();
+        tagsPanel.repaint();
     }
     
-    private synchronized void showPluginSearchResults(String json){        
+    private synchronized void showPluginSearchResults(String json, String tagName){        
         
-        ArrayList<HashMap<String, Object>> plugins = parseArrayJson(json);
+        ArrayList<HashMap<String, Object>> plugins = Utils.parseArrayJson(json);        
         
-        pluginsNode.removeAllChildren();
+        
+        JPanel pluginsPanel = split.getCenter();
+        pluginsPanel.removeAll();
+        
+        if(tagName == null){
+            pluginsPanel.add(new Title("Plugins search results"), BorderLayout.NORTH);
+        } else {
+            pluginsPanel.add(new Title("Plugins #"+tagName), BorderLayout.NORTH);
+        }
+        
+        if(plugins.size() == 0){
+            cleanPluginResults();            
+            return;
+        }
+
+        TupleList tuples = new TupleList();
+        
+        RemotePluginInstaller self = this;
 
         for(int i=0; i<plugins.size(); i++){
             
@@ -405,17 +401,27 @@ public final class RemotePluginInstaller extends JPanel {
             if(plugins.get(i).get("repo_user") != null) repoUser = (String)plugins.get(i).get("repo_user");
             if(plugins.get(i).get("repo_name") != null) repoName = (String)plugins.get(i).get("repo_name");
             
-            PluginNode node = new PluginNode(name, description, homepage, shortName, repoUser, repoName);
-            pluginsNode.add(node);
+            JButton seeBtn = new JButton("See");
+            
+            tuples.addTuple(name, seeBtn);
+            
+            Plugin plugin = new Plugin(name, description, homepage, shortName, repoUser, repoName);
+
+            seeBtn.addActionListener(new ActionListener(){
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.out.println(plugin);
+                    split.setRight(new RemotePluginInfo(plugin, self));
+                }
+            });
+            
+            //PluginNode node = new PluginNode(name, description, homepage, shortName, repoUser, repoName);
+            //pluginsNode.add(node);
         }
-               
         
-        if(plugins.size() == 0){
-            DefaultMutableTreeNode noResults = new DefaultMutableTreeNode("No results");
-            pluginsNode.add(noResults);
-        }
-        
-        updateTree();        
+        pluginsPanel.add(tuples);        
+        pluginsPanel.revalidate();
+        pluginsPanel.repaint();
          
     }
     
@@ -425,15 +431,15 @@ public final class RemotePluginInstaller extends JPanel {
         String q = searchInput.getText().trim();
         
         if(q.length() == 0){
-            cleanResultsTree();
+            cleanResults();
             searchingSpinner.completeLoad();
             return;
         }
         
         System.out.println("Searching: " + q);
         
-        String tagUrl = cleanServerUrl(currentServer) + "/tags?q=" + q + "&limit=" + SEARCH_LIMIT;
-        String pluginUrl = cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT;
+        String tagUrl = Utils.cleanServerUrl(currentServer) + "/tags?q=" + q + "&limit=" + SEARCH_LIMIT;
+        String pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT;
         
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
@@ -444,10 +450,8 @@ public final class RemotePluginInstaller extends JPanel {
             @Override
             public Response onCompleted(Response r) throws Exception{                        
                 String json = r.getResponseBody();                
-                showTagSearchResults(json);
-                
-                searchingSpinner.completeStep();
-                
+                showTagSearchResults(json);                
+                searchingSpinner.completeStep();                
                 return r;
             }
             @Override
@@ -461,8 +465,7 @@ public final class RemotePluginInstaller extends JPanel {
         @Override
         public Response onCompleted(Response r) throws Exception{                        
             String json = r.getResponseBody();
-            showPluginSearchResults(json);            
-            System.out.println(json);
+            showPluginSearchResults(json, null);            
             searchingSpinner.completeStep();
             return r;
         }
@@ -484,7 +487,7 @@ public final class RemotePluginInstaller extends JPanel {
     private void checkServer(boolean popup){
         String url = serverInput.getText().trim();   
 
-        if(!validateHTTP_URI(url)){
+        if(!Utils.validateHTTP_URI(url)){
             JOptionPane.showMessageDialog(null, "Invalid URL.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -531,6 +534,15 @@ public final class RemotePluginInstaller extends JPanel {
     public JPanel createTopPanel(){
         JPanel result = new JPanel();
         
+        JButton searchButton = new JButton("Search");
+        
+        searchButton.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                searchingSpinner.startLoading();
+                querySearch();
+            }        
+        });
         
         searchInput.addKeyListener(new KeyListener(){
             @Override
@@ -579,14 +591,19 @@ public final class RemotePluginInstaller extends JPanel {
         
         TupleList inputs = new TupleList();
         
-        JPanel inputBtn = new JPanel();
+        JPanel inputBtnServer = new JPanel();
+        JPanel inputBtnSearch = new JPanel();
         
-        inputBtn.add(serverInput);
-        inputBtn.add(serverCheckButton);
+        inputBtnServer.add(serverInput);
+        inputBtnServer.add(serverCheckButton);
         
-        inputs.addTuple("Use server", inputBtn);
+        inputBtnSearch.add(searchInput);
+        inputBtnSearch.add(searchButton);
+        inputBtnSearch.add(searchingSpinner);
+        
+        inputs.addTuple("Use server", inputBtnServer);
         inputs.addTuple("Server status", serverNotice);
-        inputs.addTuple("Search", searchInput);
+        inputs.addTuple("Search", inputBtnSearch);
 
         
         result.add(inputs);
@@ -595,81 +612,31 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
-    JSplitPane createSplitPane(){
-        JSplitPane split = new JSplitPane();
-        
-        
-        // Tree
-        
-        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode("Search results");
 
+    public void cleanTagResults(){
+        JPanel tags = split.getLeft();
+        tags.removeAll();
+        tags.add(new Title("Tags"), BorderLayout.NORTH);
+        tags.add(new JLabel("No results"), BorderLayout.LINE_START);
+        tags.revalidate();
+        tags.repaint();
         
-        rootNode.add(tagsNode);
-        rootNode.add(pluginsNode);
+    }
+   
+    public void cleanPluginResults(){
+        JPanel plugins = split.getCenter();
+        plugins.removeAll();
+        plugins.add(new Title("Plugins"), BorderLayout.NORTH);
+        plugins.add(new JLabel("No results"), BorderLayout.LINE_START);
+        plugins.revalidate();
+        plugins.repaint();
         
-        
-        searchResults = new JTree(rootNode);
-        JScrollPane leftScroll = new JScrollPane(searchResults);
-        JPanel rightPluginShow = new JPanel();
-        
-        split.setLeftComponent(leftScroll);
-        split.setRightComponent(rightPluginShow);
-        
-        RemotePluginInstaller self = this;
-        
-        searchResults.addTreeSelectionListener(new TreeSelectionListener(){
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode)
-                searchResults.getLastSelectedPathComponent();
-                
-                if(node instanceof PluginNode){
-                
-                    PluginNode plugin = (PluginNode)node;
-                    System.out.println(plugin.name);
-                    split.setRightComponent(new RemotePluginInfo(plugin, self));
-                }
-                
-                if(node instanceof TagNode){
-                
-                    TagNode plugin = (TagNode)node;
-                    
-                    System.out.println("#"+plugin.shortName);
-                }
-                
-            }
-        });
-                
-        return split;
     }
     
-    private void expandTree(JTree tree){        
-        for (int i = 0; i < tree.getRowCount(); i++) {
-            tree.expandRow(i);
-        }        
-    }
     
-    public void cleanResultsTree(){        
-        DefaultMutableTreeNode empty1 = new DefaultMutableTreeNode("Nothing to show");
-        DefaultMutableTreeNode empty2 = new DefaultMutableTreeNode("Nothing to show");
-        
-        tagsNode.removeAllChildren();
-        pluginsNode.removeAllChildren();      
-        
-        tagsNode.add(empty1);
-        pluginsNode.add(empty2);
- 
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode)searchResults.getModel().getRoot();
-        root.removeAllChildren();
-        root.add(tagsNode);
-        root.add(pluginsNode);
-        
-        TreeModel tm = new DefaultTreeModel(root);
-        searchResults.setModel(tm);  
-        
-        expandTree(searchResults);
-        
+    public void cleanResults(){   
+        cleanTagResults();
+        cleanPluginResults();
     }
     
  
@@ -681,7 +648,7 @@ public final class RemotePluginInstaller extends JPanel {
         searchingSpinner = new Spinner(2);
         
         JPanel top = createTopPanel();
-        JSplitPane split = createSplitPane();
+        split = new SplitPaneTriple();
         
         top.setAlignmentX(this.CENTER_ALIGNMENT);
         split.setAlignmentX(this.CENTER_ALIGNMENT);
@@ -693,7 +660,7 @@ public final class RemotePluginInstaller extends JPanel {
         // Show initial message (related to the server status)
         setServerNotice();
         
-        cleanResultsTree();    
+        cleanResults();    
         
         try{
                         
@@ -704,14 +671,11 @@ public final class RemotePluginInstaller extends JPanel {
                 serverInput.setText(server);
                 checkServer(false);
                         
-            }
-            
+            }            
             
         } catch(Exception e){
-        }
+        }        
         
-        
-    }
-    
+    }    
     
 }

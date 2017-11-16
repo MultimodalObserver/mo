@@ -1,5 +1,6 @@
 package mo.core.plugin.gui;
 
+import mo.core.ui.Utils;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -14,15 +15,15 @@ public class RemotePluginInstallerTest {
 
         RemotePluginInstaller r = new RemotePluginInstaller();        
       
-        assertEquals(r.cleanServerUrl("http://localhost:3000"), "http://localhost:3000");
-        assertEquals(r.cleanServerUrl("http://localhost:3000/"), "http://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("http://localhost:3000"), "http://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("http://localhost:3000/"), "http://localhost:3000");
         
-        assertEquals(r.cleanServerUrl("   http://localhost:3000"), "http://localhost:3000");
-        assertEquals(r.cleanServerUrl("http://localhost:3000/   "), "http://localhost:3000");
-        assertEquals(r.cleanServerUrl("   http://localhost:3000   "), "http://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("   http://localhost:3000"), "http://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("http://localhost:3000/   "), "http://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("   http://localhost:3000   "), "http://localhost:3000");
         
-        assertEquals(r.cleanServerUrl("https://localhost:3000"), "https://localhost:3000");
-        assertEquals(r.cleanServerUrl("https://localhost:3000/"), "https://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("https://localhost:3000"), "https://localhost:3000");
+        assertEquals(Utils.cleanServerUrl("https://localhost:3000/"), "https://localhost:3000");
 
 
     }
