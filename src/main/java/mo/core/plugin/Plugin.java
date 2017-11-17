@@ -31,7 +31,15 @@ public class Plugin {
     }
     
     public boolean isThirdParty(){
-        return path != null;
+        for(Package p : Package.getPackages()) {
+            if(p.getName().startsWith("mo.")){            
+                // p.getName() is a MO package
+                if(getId().startsWith(p.getName()+".")){
+                    return false;
+                }
+            }
+        }        
+        return true;
     }
 
     public String getId() {
