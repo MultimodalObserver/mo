@@ -9,15 +9,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 
 import org.asynchttpclient.*;
@@ -29,18 +24,11 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTree;
-import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
 import mo.core.MultimodalObserver;
 import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
@@ -148,7 +136,8 @@ public final class RemotePluginInstaller extends JPanel {
     
     SplitPaneTriple split;
     
-    Spinner searchingSpinner;
+    Spinner tagsSpinner;
+    Spinner pluginsSpinner;
     
     AppPreferencesWrapper prefs
                     = (AppPreferencesWrapper) PreferencesManager.loadOrCreate(
@@ -178,13 +167,15 @@ public final class RemotePluginInstaller extends JPanel {
         String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins";
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+        
+        split.setPluginSpinner(pluginsSpinner);
                 
         asyncHttpClient.prepareGet(pluginsUrl).execute(new AsyncCompletionHandler<Response>(){                
             @Override
             public Response onCompleted(Response r) throws Exception{                        
                 String json = r.getResponseBody();     
                 
-                System.out.println(json);
+                pluginsSpinner.completeStep();
                 showPluginSearchResults(json, tagName);
                 return r;
             }
@@ -205,18 +196,26 @@ public final class RemotePluginInstaller extends JPanel {
     private void setDownloadPanel(Component backComponent, String zipBallUrl, JScrollPane container){
         
         JPanel downloadPanel = new JPanel();
+        downloadPanel.setLayout(new BorderLayout());
         
         LogScroll log = new LogScroll();
         
-        downloadPanel.add(log);
+        downloadPanel.add(log, BorderLayout.NORTH);
         
         log.addLine("Beginning download...");
         log.addLine("Downloading from " + zipBallUrl);
         
         
-        for(int i=0; i<100; i++){
-            log.addLine("Otra linea " + i);
+        for(int i=0; i<2; i++){
+            log.addLine("(Log descarga..) ");
         }
+        
+        JPanel content = new JPanel();
+        
+        JProgressBar progress = new JProgressBar(0, 100);
+        progress.setValue(37);
+        content.add(progress);
+        
         
         JButton backBtn = new JButton("Cancel");
         
@@ -227,10 +226,12 @@ public final class RemotePluginInstaller extends JPanel {
             }
         });
         
-        downloadPanel.add(backBtn);                
+        content.add(backBtn);                
 
         System.out.println("Descargando...");
         System.out.println(zipBallUrl);        
+        
+        downloadPanel.add(content, BorderLayout.CENTER);
         
         container.setViewportView(downloadPanel);
     }
@@ -432,7 +433,8 @@ public final class RemotePluginInstaller extends JPanel {
         
         if(q.length() == 0){
             cleanResults();
-            searchingSpinner.completeLoad();
+            tagsSpinner.completeStep();
+            pluginsSpinner.completeStep();
             return;
         }
         
@@ -451,12 +453,12 @@ public final class RemotePluginInstaller extends JPanel {
             public Response onCompleted(Response r) throws Exception{                        
                 String json = r.getResponseBody();                
                 showTagSearchResults(json);                
-                searchingSpinner.completeStep();                
+                tagsSpinner.completeStep();                
                 return r;
             }
             @Override
             public void onThrowable(Throwable t){ 
-                searchingSpinner.completeStep();
+                tagsSpinner.completeStep();
                 JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
             }                
         });
@@ -466,12 +468,12 @@ public final class RemotePluginInstaller extends JPanel {
         public Response onCompleted(Response r) throws Exception{                        
             String json = r.getResponseBody();
             showPluginSearchResults(json, null);            
-            searchingSpinner.completeStep();
+            pluginsSpinner.completeStep();
             return r;
         }
         @Override
         public void onThrowable(Throwable t){ 
-            searchingSpinner.completeStep();
+            pluginsSpinner.completeStep();
             JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
         }                
         });
@@ -531,6 +533,8 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
+   
+    
     public JPanel createTopPanel(){
         JPanel result = new JPanel();
         
@@ -539,7 +543,8 @@ public final class RemotePluginInstaller extends JPanel {
         searchButton.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
-                searchingSpinner.startLoading();
+                split.setPluginSpinner(pluginsSpinner);
+                split.setTagSpinner(tagsSpinner);
                 querySearch();
             }        
         });
@@ -548,7 +553,8 @@ public final class RemotePluginInstaller extends JPanel {
             @Override
             public void keyTyped(KeyEvent e) {
                 
-                searchingSpinner.startLoading();
+                split.setPluginSpinner(pluginsSpinner);
+                split.setTagSpinner(tagsSpinner);
                 
                 if(searchDelay != null && searchDelay.isAlive()){
                     searchDelay.interrupt();
@@ -599,7 +605,6 @@ public final class RemotePluginInstaller extends JPanel {
         
         inputBtnSearch.add(searchInput);
         inputBtnSearch.add(searchButton);
-        inputBtnSearch.add(searchingSpinner);
         
         inputs.addTuple("Use server", inputBtnServer);
         inputs.addTuple("Server status", serverNotice);
@@ -645,7 +650,8 @@ public final class RemotePluginInstaller extends JPanel {
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
-        searchingSpinner = new Spinner(2);
+        tagsSpinner = new Spinner(1);
+        pluginsSpinner = new Spinner(1);
         
         JPanel top = createTopPanel();
         split = new SplitPaneTriple();

@@ -18,7 +18,7 @@ import javax.swing.border.EmptyBorder;
  */
 public class SplitPaneTriple extends JSplitPane {
     
-    JSplitPane split2;
+    private JSplitPane split2;
     
     SplitPaneTriple(){        
         
@@ -69,6 +69,22 @@ public class SplitPaneTriple extends JSplitPane {
     
     public JPanel getRight(){
         return (JPanel)((JSplitPane)this.getRightComponent()).getRightComponent();
+    }
+    
+    public void setTagSpinner(Spinner sp){        
+        getLeft().removeAll();
+        sp.startLoading();
+        getLeft().add(sp);        
+        getLeft().revalidate();
+        getLeft().repaint();
+    }
+    
+    public void setPluginSpinner(Spinner sp){       
+        getCenter().removeAll();
+        sp.startLoading();
+        getCenter().add(sp);
+        getCenter().revalidate();
+        getCenter().repaint();
     }
     
 }
