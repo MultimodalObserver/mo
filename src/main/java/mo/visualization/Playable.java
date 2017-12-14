@@ -8,5 +8,6 @@ public interface Playable {
     void pause();
     void seek(long millis);
     void stop();
+    void sync(boolean sync);
     
 }

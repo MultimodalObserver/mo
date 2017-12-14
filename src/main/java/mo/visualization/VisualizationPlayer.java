@@ -88,13 +88,22 @@ public class VisualizationPlayer {
             config.getPlayer().pause();
         }
     }
-
+    
+    public void sync(boolean sync){
+        for (VisualizableConfiguration config : configs) {
+            config.getPlayer().sync(sync);
+        }
+    }
+    
     public void play() {
+        
         playerThread = new Thread(() -> {
             isPlaying = true;
             //----------Christian------------
             //Esto repara el problema de desface de la seekSlider
-            inicio=System.currentTimeMillis()-current;
+            if(!panel.getSync()){                
+                inicio=System.currentTimeMillis()-current;
+            }
              //-------------------------------
             while (true/*!Thread.interrupted()*/) {
                 if (!isPlaying) {
@@ -102,7 +111,9 @@ public class VisualizationPlayer {
                 }
                 
                 //----------Christian------------
-                current=System.currentTimeMillis()-inicio;
+                if(!panel.getSync()){                
+                    current=System.currentTimeMillis()-inicio;
+                }
                  //-------------------------------
                 if (current > end) {
                     if (isPlaying && !stopped) {
@@ -112,7 +123,11 @@ public class VisualizationPlayer {
                             config.getPlayer().stop();
                         }
                         panel.stop();
-                        current = start;//Christian
+                        //----------Christian------------
+                        if(!panel.getSync()){                
+                            current = start;
+                        }
+                        //-------------------------------
                         return;
                     } else {
                         current = start;
@@ -129,7 +144,9 @@ public class VisualizationPlayer {
                 panel.setTime(current);
                 
                 sleep(loopStart);
-                //current++;
+                if(panel.getSync()){                
+                   current++;
+                }
             }
         });
         playerThread.start();

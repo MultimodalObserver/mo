@@ -4,6 +4,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Date;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -16,11 +17,14 @@ public class PlayerControlsPanel {
     private JPanel panel;
     private JSlider slider;
     private JButton play;
+    private JCheckBox CheckSync;
+    private JLabel LabelSync;
     private JLabel currentTime;
     private JLabel ellapsedTLabel;
     private GridBConstraints gbc;
     
     private boolean sliderMovedProgrammatically;
+    private boolean sync=false;
         
     private final static String ELLAPSED_FORMAT = "%02d:%02d:%02d:%1d";
     private final FastDateFormat timeF = FastDateFormat.getInstance("yyyy-MM-dd  HH:mm:ss:SSS");
@@ -57,23 +61,47 @@ public class PlayerControlsPanel {
             });
             gbc.f(GridBagConstraints.HORIZONTAL);
             gbc.i(new Insets(5, 5, 5, 5)).wx(1);
-            panel.add(slider, gbc.gw(3));
+            panel.add(slider, gbc.gw(5));
 
             play = new JButton(PLAY_SYMBOL);
             play.addActionListener((ActionEvent e) -> {
                 playPressed();
             });
+            CheckSync = new JCheckBox();
+            CheckSync.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+               if(CheckSync.isSelected()){
+                   setSync(true);
+               }
+               else{
+                   setSync(false);
+               }
+            }
+            
+            });
             panel.add(play, gbc.gy(1).gw(1).wx(0));
 
             ellapsedTLabel = new JLabel("00:00:00:000");
             currentTime = new JLabel("2016-10-15 00:00:00:0");
-            panel.add(ellapsedTLabel, gbc.gx(1));
+            LabelSync = new JLabel("Sync");
+            panel.add(LabelSync,gbc.gx(1));
+            panel.add(CheckSync,gbc.gx(2));
+            panel.add(ellapsedTLabel, gbc.gx(3));
 
-            panel.add(currentTime, gbc.gx(2));
+            panel.add(currentTime, gbc.gx(4));
 
         });
     }
 
+    public void setSync(boolean sync){
+        this.sync = sync;
+    }
+    
+    public boolean getSync(){
+        return sync;
+    }
+    
     private void sliderMoved() {
         int val = slider.getValue();
         long current = player.getStart() + val;
@@ -88,6 +116,7 @@ public class PlayerControlsPanel {
         } else {
             play.setText(PAUSE_SYMBOL);
             player.play();
+            player.sync(sync);
         }
     }
 

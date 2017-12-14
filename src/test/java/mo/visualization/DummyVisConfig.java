@@ -97,4 +97,8 @@ public class DummyVisConfig implements VisualizableConfiguration, Playable {
     public Playable getPlayer() {
         return this;
     }
+    @Override
+    public void sync(boolean sync) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

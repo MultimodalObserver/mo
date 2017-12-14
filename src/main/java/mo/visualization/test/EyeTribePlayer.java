@@ -282,6 +282,10 @@ public class EyeTribePlayer implements Playable {
     @Override
     public void stop() {
     }
+    @Override
+    public void sync(boolean sync) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     public static class TestPane extends JPanel {
 
