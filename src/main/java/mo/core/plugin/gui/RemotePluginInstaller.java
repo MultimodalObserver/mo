@@ -12,11 +12,17 @@ import java.awt.Component;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
-import org.asynchttpclient.*;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BoxLayout;
 
 import javax.swing.JButton;
@@ -33,6 +39,13 @@ import mo.core.MultimodalObserver;
 import mo.core.preferences.AppPreferencesWrapper;
 import mo.core.preferences.PreferencesManager;
 import mo.core.ui.Utils;
+import org.asynchttpclient.AsyncCompletionHandler;
+import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClient;
+import org.asynchttpclient.HttpResponseBodyPart;
+import org.asynchttpclient.HttpResponseStatus;
+import org.asynchttpclient.Response;
 
 
 
@@ -123,8 +136,10 @@ public final class RemotePluginInstaller extends JPanel {
     
     private JTextField serverInput = new JTextField("http://localhost:3000", 50);
     private JButton serverCheckButton = new JButton(CHECK_SERVER_BUTTON_LABEL);
-    private JLabel serverNotice = new JLabel();
-    private JTextField searchInput = new JTextField(50);
+    private JLabel serverNotice = new JLabel();    
+    private PlaceholderTextField searchInput = new PlaceholderTextField(50);
+    
+    private JButton changeServer = new JButton("Use different server");
     
     
     //private JPanel tagSearchResultContainer = new JPanel();
@@ -193,7 +208,7 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
-    private void setDownloadPanel(Component backComponent, String zipBallUrl, JScrollPane container){
+    private void setDownloadPanel(Component backComponent, String downloadUrl, int size, JScrollPane container){
         
         JPanel downloadPanel = new JPanel();
         downloadPanel.setLayout(new BorderLayout());
@@ -203,18 +218,18 @@ public final class RemotePluginInstaller extends JPanel {
         downloadPanel.add(log, BorderLayout.NORTH);
         
         log.addLine("Beginning download...");
-        log.addLine("Downloading from " + zipBallUrl);
-        
-        
-        for(int i=0; i<2; i++){
-            log.addLine("(Log descarga..) ");
-        }
+        log.addLine("Downloading from " + downloadUrl);
+        log.addLine("Total size: " + size + " bytes");
+
         
         JPanel content = new JPanel();
         
-        JProgressBar progress = new JProgressBar(0, 100);
-        progress.setValue(37);
+        JProgressBar progress = new JProgressBar(0, size);
+        progress.setValue(0);
         content.add(progress);
+        
+        String[] fileNameSplit = downloadUrl.split("/");
+        String fileName = fileNameSplit[fileNameSplit.length-1];
         
         
         JButton backBtn = new JButton("Cancel");
@@ -228,12 +243,64 @@ public final class RemotePluginInstaller extends JPanel {
         
         content.add(backBtn);                
 
-        System.out.println("Descargando...");
-        System.out.println(zipBallUrl);        
-        
+       
         downloadPanel.add(content, BorderLayout.CENTER);
         
         container.setViewportView(downloadPanel);
+        
+        
+        AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+        
+        
+        AsyncCompletionHandler handler = new AsyncCompletionHandler<Response>() {
+            
+            ByteArrayOutputStream fileBytes = new ByteArrayOutputStream();
+
+            
+            @Override
+            public AsyncHandler.State onStatusReceived(HttpResponseStatus status) throws Exception {
+                int statusCode = status.getStatusCode();
+                
+                if (statusCode >= 500) {
+                    return AsyncHandler.State.ABORT;
+                }                
+                
+                return AsyncHandler.State.CONTINUE;
+            }
+
+            @Override
+            public AsyncHandler.State onBodyPartReceived(HttpResponseBodyPart bodyPart) throws Exception {                
+                int current = progress.getValue();
+                current += bodyPart.getBodyPartBytes().length;
+                
+                fileBytes.write(bodyPart.getBodyPartBytes(), 0, bodyPart.getBodyPartBytes().length);
+                
+                progress.setValue(current);
+                return AsyncHandler.State.CONTINUE;
+            }
+
+            @Override
+            public void onThrowable(Throwable t) {                
+                t.printStackTrace();
+            }
+
+
+            @Override
+            public Response onCompleted(Response rspns) throws Exception {
+                log.addLine("Download completed.");  
+                log.addLine("Processing " + fileName + "...");
+                
+               
+                PluginUncompressor pu = new PluginUncompressor(fileBytes, fileName);
+                
+                return rspns;
+            }
+        };
+        
+        
+        Future<Response> f = asyncHttpClient.prepareGet(downloadUrl).setFollowRedirect(true).execute(handler);
+        
+
     }
 
     
@@ -272,11 +339,10 @@ public final class RemotePluginInstaller extends JPanel {
             @Override
             public Response onCompleted(Response r) throws Exception{
                 String json = r.getResponseBody();
+
+                ArrayList<HashMap<String, Object>> map = Utils.parseArrayJson(json);
                 
-                ArrayList<HashMap<String, Object>> map = new ArrayList<HashMap<String, Object>>();
-                ObjectMapper mapper = new ObjectMapper();
-                map = mapper.readValue(json, new TypeReference<ArrayList<HashMap<String, Object>>>(){});
-                
+               
                 if(map.size() == 0){
                     status.setText("This plugin doesn't have releases available for download.");
 
@@ -285,14 +351,19 @@ public final class RemotePluginInstaller extends JPanel {
                     for(int i=0; i<map.size(); i++){
                         String tagName = (String)map.get(i).get("tag_name");
                         
-                        JButton installBtn = new JButton("Install");
-                        String zipBallUrl = (String)map.get(i).get("zipball_url");
+                        HashMap<String, Object> assets = ((ArrayList<HashMap<String, Object>>)map.get(i).get("assets")).get(0);
+
                         
+                        JButton installBtn = new JButton("Install");
+                        String downloadUrl = (String)assets.get("browser_download_url");
+                        int size = (int)assets.get("size");
+                        
+                       
                         installBtn.addActionListener(new ActionListener(){
                             @Override
                             public void actionPerformed(ActionEvent e) {                                
                                 
-                                setDownloadPanel(versions, zipBallUrl, scroll);
+                                setDownloadPanel(versions, downloadUrl, size, scroll);
                             }
                         });
                         
@@ -426,6 +497,58 @@ public final class RemotePluginInstaller extends JPanel {
          
     }
     
+    private void searchDirectLink(String url){
+        
+        
+        System.out.println("LINK directo: " + url);
+        AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
+        
+        RemotePluginInstaller self = this;
+        
+        asyncHttpClient.prepareGet(url.trim()).execute(new AsyncCompletionHandler<Response>(){
+            @Override
+            public Response onCompleted(Response r) throws Exception{
+                String json = r.getResponseBody();
+                HashMap<String, Object> plugin = Utils.parseJson(json);
+                
+                String name = "";
+                String description = "";
+                String homepage = "";
+                String shortName = "";
+                String repoUser = "";
+                String repoName = "";
+                
+                if(!plugin.containsKey("name")){
+                    throw new Exception();
+                }
+
+                if(plugin.get("name") != null) name = (String)plugin.get("name");
+                if(plugin.get("description") != null) description = (String)plugin.get("description");
+                if(plugin.get("home_page") != null) homepage = (String)plugin.get("home_page");
+                if(plugin.get("short_name") != null) shortName = (String)plugin.get("short_name");
+                if(plugin.get("repo_user") != null) repoUser = (String)plugin.get("repo_user");
+                if(plugin.get("repo_name") != null) repoName = (String)plugin.get("repo_name");
+
+                Plugin plugin2 = new Plugin(name, description, homepage, shortName, repoUser, repoName);
+                
+                split.setRight(new RemotePluginInfo(plugin2, self));
+                
+                System.out.println(json);
+                
+                showPluginSearchResults(json, null);
+                tagsSpinner.completeStep();
+                pluginsSpinner.completeStep();
+                return r;
+            }
+            @Override
+            public void onThrowable(Throwable t){
+                tagsSpinner.completeStep();
+                pluginsSpinner.completeStep();
+                JOptionPane.showMessageDialog(null, "URL doesn't belong to a plugin.", "Error", JOptionPane.ERROR_MESSAGE);
+            }                
+        });
+    }
+    
     
     private void querySearch(){
         
@@ -435,6 +558,12 @@ public final class RemotePluginInstaller extends JPanel {
             cleanResults();
             tagsSpinner.completeStep();
             pluginsSpinner.completeStep();
+            return;
+        }
+        
+        if(q.toLowerCase().startsWith("http://") || q.toLowerCase().startsWith("https://")){
+            cleanResults();
+            searchDirectLink(q);
             return;
         }
         
@@ -512,6 +641,10 @@ public final class RemotePluginInstaller extends JPanel {
                     setServerNotice();
                     saveServerPreference(url.trim());
                     
+                    serverInput.setEnabled(false);
+                    changeServer.setVisible(true);
+                    serverCheckButton.setVisible(false);
+                    
                     if(popup)
                         JOptionPane.showMessageDialog(null, "Server contains a plugin repository", "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
@@ -523,6 +656,10 @@ public final class RemotePluginInstaller extends JPanel {
             public void onThrowable(Throwable t){                        
                 serverCheckButton.setText(CHECK_SERVER_BUTTON_LABEL);
                 serverCheckButton.setEnabled(true);
+                
+                serverInput.setEnabled(true);
+                changeServer.setVisible(false);
+                serverCheckButton.setVisible(true);
                 
                 if(popup)
                     JOptionPane.showMessageDialog(null, "A plugin repository couldn't be found.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -597,17 +734,34 @@ public final class RemotePluginInstaller extends JPanel {
         
         TupleList inputs = new TupleList();
         
+        changeServer.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                serverInput.setEnabled(true);
+                changeServer.setVisible(false);
+                serverCheckButton.setVisible(true);
+            }
+        });
+        
+        searchInput.setPlaceholder("e.g. video, jnativehook-mouse, http://server.com/plugins/jnativehook-mouse");
+        
+        changeServer.setVisible(false);
+        
         JPanel inputBtnServer = new JPanel();
         JPanel inputBtnSearch = new JPanel();
         
+        JPanel serverNoticePanel = new JPanel();
+        serverNoticePanel.add(serverNotice);        
+        
         inputBtnServer.add(serverInput);
         inputBtnServer.add(serverCheckButton);
+        inputBtnServer.add(changeServer);
         
         inputBtnSearch.add(searchInput);
         inputBtnSearch.add(searchButton);
         
         inputs.addTuple("Use server", inputBtnServer);
-        inputs.addTuple("Server status", serverNotice);
+        inputs.addTuple("Server status", serverNoticePanel);
         inputs.addTuple("Search", inputBtnSearch);
 
         
@@ -649,7 +803,7 @@ public final class RemotePluginInstaller extends JPanel {
     public RemotePluginInstaller(){
 
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
+                
         tagsSpinner = new Spinner(1);
         pluginsSpinner = new Spinner(1);
         

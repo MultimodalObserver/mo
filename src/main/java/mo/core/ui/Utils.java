@@ -59,6 +59,17 @@ public class Utils {
         return result;
     }
     
+    public static HashMap<String, Object> parseJson(String json){        
+        try{
+            HashMap<String, Object> map = new HashMap<String, Object>();
+            ObjectMapper mapper = new ObjectMapper();
+            map = mapper.readValue(json, new TypeReference<HashMap<String, Object>>(){});
+            return map;
+        } catch(IOException e){
+            return new HashMap<String, Object>();
+        }
+    }
+    
     public static ArrayList<HashMap<String, Object>> parseArrayJson(String json){        
         try{
             ArrayList<HashMap<String, Object>> map = new ArrayList<HashMap<String, Object>>();
