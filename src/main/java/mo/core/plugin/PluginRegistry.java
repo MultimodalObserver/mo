@@ -14,11 +14,17 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import mo.core.DirectoryWatcher;
 import mo.core.WatchHandler;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class PluginRegistry {
@@ -72,10 +78,9 @@ public class PluginRegistry {
             }
         }
 
-        pluginFolders.add(pluginsFolder);
+        pluginFolders.add(pluginsFolder);        
 
-        dirWatcher.addDirectory(folder.toPath(), true);
-
+        dirWatcher.addDirectory(folder.toPath(), true);        
         
     }
     
@@ -118,7 +123,12 @@ public class PluginRegistry {
             } catch(Exception e){
                 e.printStackTrace();
             }
-
+            
+            for(Plugin p : pg.pluginData.getPlugins()){
+                if(p.isThirdParty()){
+                    pg.assignXMLData(p);
+                }                
+            }
 
             pg.initDirWatcher();
 
@@ -131,13 +141,84 @@ public class PluginRegistry {
     
     
     
-    private void initDirWatcher(){
+    private void assignXMLData(Plugin plugin){
+        if(plugin == null) return;
+
+        Path xmlPath = null;
         
+        Path root = plugin.getPath().getParent();
+        
+        if(root == null){
+            xmlPath = Paths.get("plugin.xml");
+        } else {
+            xmlPath = Paths.get(root.toString(), "plugin.xml");
+        }
+
+            
+        try {
+
+            File fXmlFile = xmlPath.toFile();
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(fXmlFile);
+
+            doc.getDocumentElement().normalize();
+
+            Element e = doc.getDocumentElement();
+
+            try {
+                String val = e.getElementsByTagName("homepage").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setWebsite(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("author").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setAuthor(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("description").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setDescription(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("name").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setName(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("contact").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setContact(val);
+                }
+            } catch(Exception ex) {}
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    
+    private void initDirWatcher(){
+
         pg.dirWatcher.addWatchHandler(new WatchHandler() {
             @Override
-            public void onCreate(File file) {
+            public synchronized void onCreate(File file) {
                 try {
-                    processFile(file);                    
+                    processFile(file);
+                    
+                    Plugin plugin = pluginData.getPluginByPath(file.getAbsolutePath());
+                    assignXMLData(plugin);
                 } catch(Exception e){
                     e.printStackTrace();
                 }        
@@ -145,22 +226,9 @@ public class PluginRegistry {
             }
 
             @Override
-            public void onDelete(File file) {
-                
-                Path deletedFilepath = Paths.get(file.getAbsolutePath());
-                
-                Plugin plugin = null;
-                for(Plugin p : pluginData.getPlugins()){  
-                    
-                    if(!p.isThirdParty()) continue;
-                    
-                    Path pluginPath = p.getPath();
-                    
-                    if(deletedFilepath.equals(pluginPath)){
-                        plugin = p;
-                        break;
-                    }
-                }
+            public synchronized void onDelete(File file) {
+               
+                Plugin plugin = pluginData.getPluginByPath(file.getPath());
                 
                 if(plugin == null) return;
                 
@@ -170,9 +238,12 @@ public class PluginRegistry {
             }
 
             @Override
-            public void onModify(File file) {
+            public synchronized void onModify(File file) {
                 try {
-                    processFile(file);                    
+                    processFile(file);
+                    
+                    Plugin plugin = pluginData.getPluginByPath(file.getAbsolutePath());
+                    assignXMLData(plugin);
                 } catch(Exception e){
                 }
                 notifyChanges();

@@ -33,11 +33,14 @@ class PluginInfo extends JPanel {
         
         tuples.addTuple("Name", plugin.getName());
         
-        if(plugin.isThirdParty()) 
-            tuples.addTuple("Author", "xyz");
+        if(plugin.isThirdParty() && plugin.getAuthor() != null && plugin.getAuthor().length() > 0) 
+            tuples.addTuple("Author", plugin.getAuthor());
         
-        if(plugin.isThirdParty()) 
-            tuples.addTuple("Website", new Link("https://www.google.com"));
+        if(plugin.isThirdParty() && plugin.getContact() != null && plugin.getContact().length() > 0) 
+            tuples.addTuple("Contact", plugin.getContact());
+        
+        if(plugin.isThirdParty() && plugin.getWebsite() != null && plugin.getWebsite().length() > 0)
+            tuples.addTuple("Website", new Link(plugin.getWebsite()));
         
         tuples.addTuple("Version", plugin.getVersion());
         tuples.addTuple("Id", plugin.getId());
@@ -55,7 +58,9 @@ class PluginInfo extends JPanel {
         }
         
         tuples.addTuple("Source", plugin.isThirdParty()? "Third party" : "Built-in into MO");
-        tuples.addScrollText("Description", plugin.getDescription());          
+        
+        if(plugin.isThirdParty() && plugin.getDescription() != null && plugin.getDescription().length() > 0)
+            tuples.addScrollText("Description", plugin.getDescription());          
         
         return tuples;
    

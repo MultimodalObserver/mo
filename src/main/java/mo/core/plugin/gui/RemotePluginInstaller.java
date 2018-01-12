@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.BorderLayout;
@@ -14,17 +13,10 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.lang.reflect.Array;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
 import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.BoxLayout;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -208,7 +200,7 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
-    private void setDownloadPanel(Component backComponent, String downloadUrl, int size, JScrollPane container){
+    private void setDownloadPanel(String repoName, String version, Component backComponent, String downloadUrl, int size, JScrollPane container){
         
         JPanel downloadPanel = new JPanel();
         downloadPanel.setLayout(new BorderLayout());
@@ -252,10 +244,11 @@ public final class RemotePluginInstaller extends JPanel {
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
         
         
-        AsyncCompletionHandler handler = new AsyncCompletionHandler<Response>() {
+        AsyncCompletionHandler handler;
+        handler = new AsyncCompletionHandler<Response>() {
             
             ByteArrayOutputStream fileBytes = new ByteArrayOutputStream();
-
+            
             
             @Override
             public AsyncHandler.State onStatusReceived(HttpResponseStatus status) throws Exception {
@@ -283,15 +276,26 @@ public final class RemotePluginInstaller extends JPanel {
             public void onThrowable(Throwable t) {                
                 t.printStackTrace();
             }
-
-
+            
+            
             @Override
             public Response onCompleted(Response rspns) throws Exception {
                 log.addLine("Download completed.");  
                 log.addLine("Processing " + fileName + "...");
                 
+                try {
+                    PluginUncompressor pu = new PluginUncompressor(fileBytes, fileName, repoName, version);
+                    if(pu.uncompress()){
+                        log.addLine("Uncompressed succesfully.");
+                    }
+                    
+                } catch(IOException e){
+                    log.addLine("Error: There was a problem uncompressing the file.");
+                    return rspns;
+                }
                
-                PluginUncompressor pu = new PluginUncompressor(fileBytes, fileName);
+                log.addLine("Completed.");
+                backBtn.setText("Back");
                 
                 return rspns;
             }
@@ -363,7 +367,7 @@ public final class RemotePluginInstaller extends JPanel {
                             @Override
                             public void actionPerformed(ActionEvent e) {                                
                                 
-                                setDownloadPanel(versions, downloadUrl, size, scroll);
+                                setDownloadPanel(repoName, tagName, versions, downloadUrl, size, scroll);
                             }
                         });
                         

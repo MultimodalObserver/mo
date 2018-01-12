@@ -38,6 +38,19 @@ public class PluginData {
             pluginListeners.get(extensionPointId).add(listener);
         }       
     }
+    
+    public Plugin getPluginByPath(String path){        
+        for(Plugin plugin : plugins){      
+            
+            if(plugin == null) continue;
+            if(plugin.getPath() == null) continue;
+           
+            if(path.equals(plugin.getPath().toString())){
+                return plugin;
+            }
+        }
+        return null;        
+    }
 
     public void removePluginListener(String extensionPointId, PluginListener listener) {
         if (pluginListeners.containsKey(extensionPointId)) {

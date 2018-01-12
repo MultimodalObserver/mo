@@ -22,7 +22,15 @@ public class Plugin {
 
     private List<Dependency> dependencies;
     
+    private Boolean thirdParty = null;
+    
     private Path path;
+    
+    private String website;
+    
+    private String author;
+    
+    private String contact;
     
     private Class<?> clazz;
     
@@ -31,15 +39,22 @@ public class Plugin {
     }
     
     public boolean isThirdParty(){
+        
+        if(this.thirdParty != null){
+            return this.thirdParty;
+        }
+        
         for(Package p : Package.getPackages()) {
             if(p.getName().startsWith("mo.")){            
                 // p.getName() is a MO package
                 if(getId().startsWith(p.getName()+".")){
-                    return false;
+                    this.thirdParty = false;
+                    return this.thirdParty;
                 }
             }
         }        
-        return true;
+        this.thirdParty = true;
+        return this.thirdParty;
     }
 
     public String getId() {
@@ -57,9 +72,33 @@ public class Plugin {
     public void setName(String name) {
         this.name = name;
     }
+    
+    public void setWebsite(String website){
+        this.website = website;
+    }
+    
+    public String getWebsite(){
+        return this.website;
+    }
 
     public String getVersion() {
         return version;
+    }
+    
+    public String getAuthor(){
+        return this.author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+    
+    public String getContact(){
+        return this.contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 
     public void setVersion(String version) {
