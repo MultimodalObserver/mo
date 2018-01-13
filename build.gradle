@@ -99,7 +99,11 @@ dependencies {
     compile 'org.asynchttpclient:async-http-client:2.1.0-alpha26'
     
     // https://mvnrepository.com/artifact/com.github.junrar/junrar
-    compile group: 'com.github.junrar', name: 'junrar', version: '0.7'
+    compile group: 'com.github.junrar', name: 'junrar', version: '0.7'   
+    
+    // https://mvnrepository.com/artifact/org.rauschig/jarchivelib
+    compile group: 'org.rauschig', name: 'jarchivelib', version: '0.7.0'
+
 
     
     

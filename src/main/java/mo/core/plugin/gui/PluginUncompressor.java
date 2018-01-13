@@ -1,13 +1,11 @@
 package mo.core.plugin.gui;
 
 import com.github.junrar.extract.ExtractArchive;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import static java.nio.file.Files.deleteIfExists;
 import java.nio.file.Path;
@@ -15,10 +13,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import mo.core.Utils;
+import org.rauschig.jarchivelib.ArchiveFormat;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
+import org.rauschig.jarchivelib.CompressionType;
 
 /**
  *
@@ -28,25 +27,24 @@ public class PluginUncompressor {
     
     private String tempFileName;
     
-    private String fileName;
+    private final String fileName;
     
-    private static final int BUFFER_SIZE_ZIP = 4096;
     
     private final String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
     
-    private String pluginName;
+    private final String pluginName;
     
-    private String version;
+    private final String version;
     
     ByteArrayOutputStream file;
         
     public PluginUncompressor(ByteArrayOutputStream r, String fileName, String pluginName, String version){        
-        this.fileName = fileName;        
+        this.fileName = fileName.trim();        
         setTempName();        
         this.file = r; 
-        this.pluginName = pluginName;
-        this.version = version;
+        this.pluginName = pluginName.trim();
+        this.version = version.trim();
     }
 
     public boolean uncompress() throws IOException{
@@ -61,9 +59,30 @@ public class PluginUncompressor {
             
             if(fileName.endsWith(".zip")){
                 compress = true;
-                unzip(tempFileName, destination);
+                uncompress(tempFileName, destination, ArchiverFactory.createArchiver(ArchiveFormat.ZIP));
 
-            } else if(fileName.endsWith(".rar")){
+            } 
+            else if(fileName.endsWith(".tar.gz")){
+                compress = true;
+                uncompress(tempFileName, destination, ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.GZIP));
+            }
+            
+            else if(fileName.endsWith(".tar.bz2")){
+                compress = true;
+                uncompress(tempFileName, destination, ArchiverFactory.createArchiver(ArchiveFormat.TAR, CompressionType.BZIP2));          
+            }   
+            
+            /*else if(fileName.endsWith(".7z")){
+                compress = true;
+                uncompress(tempFileName, destination, ArchiverFactory.createArchiver(ArchiveFormat.SEVEN_Z));          
+            } */
+            
+            else if(fileName.endsWith(".tar")){
+                compress = true;
+                uncompress(tempFileName, destination, ArchiverFactory.createArchiver(ArchiveFormat.TAR));          
+            } 
+            
+            else if(fileName.endsWith(".rar")){
                 compress = true;
                 unrar(tempFileName, destination);
 
@@ -82,6 +101,8 @@ public class PluginUncompressor {
             }
             
         } catch(IOException e){
+            System.out.println("Error");
+            e.printStackTrace();
             throw e;
             
         } finally {
@@ -109,7 +130,16 @@ public class PluginUncompressor {
         deleteIfExists(Paths.get(tempFileName));   
     }
     
-    private void unrar(String rarFilePath, String destDirectory){
+    private void uncompress(String in, String outDir, Archiver archiver) throws FileNotFoundException, IOException{        
+        
+        File archive = new File(in);
+        File destination = new File(outDir);
+        archiver.extract(archive, destination); 
+        
+    }
+    
+    
+    private void unrar(String rarFilePath, String destDirectory) throws IOException{
         
         File destDir = new File(destDirectory);
         if (!destDir.exists()) {
@@ -119,42 +149,10 @@ public class PluginUncompressor {
         final File rar = new File(rarFilePath);  
         final File destinationFolder = new File(destDirectory);  
         ExtractArchive extractArchive = new ExtractArchive();  
-        extractArchive.extractArchive(rar, destinationFolder);        
+        extractArchive.extractArchive(rar, destinationFolder);
     }
     
-    private void unzip(String zipFilePath, String destDirectory) throws IOException {
-        File destDir = new File(destDirectory);
-        if (!destDir.exists()) {
-            destDir.mkdir();
-        }
-        ZipInputStream zipIn = new ZipInputStream(new FileInputStream(zipFilePath));
-        ZipEntry entry = zipIn.getNextEntry();
-        // iterates over entries in the zip file
-        while (entry != null) {
-            String filePath = destDirectory + File.separator + entry.getName();
-            if (!entry.isDirectory()) {
-                // if the entry is a file, extracts it
-                extractFile(zipIn, filePath);
-            } else {
-                // if the entry is a directory, make the directory
-                File dir = new File(filePath);
-                dir.mkdir();
-            }
-            zipIn.closeEntry();
-            entry = zipIn.getNextEntry();
-        }
-        zipIn.close();
-    }
-    
-    private void extractFile(ZipInputStream zipIn, String filePath) throws IOException {
-        BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath));
-        byte[] bytesIn = new byte[BUFFER_SIZE_ZIP];
-        int read = 0;
-        while ((read = zipIn.read(bytesIn)) != -1) {
-            bos.write(bytesIn, 0, read);
-        }
-        bos.close();
-    }
+
     
     
 }

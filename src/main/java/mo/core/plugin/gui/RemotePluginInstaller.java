@@ -133,6 +133,8 @@ public final class RemotePluginInstaller extends JPanel {
     
     private JButton changeServer = new JButton("Use different server");
     
+    ArrayList<HashMap<String, Object>> pluginsResult = new ArrayList<>();
+    
     
     //private JPanel tagSearchResultContainer = new JPanel();
     //private JPanel pluginSearchResultContainer = new JPanel();
@@ -171,7 +173,7 @@ public final class RemotePluginInstaller extends JPanel {
     private void searchByTag(String tagName){
         
         System.out.println("Buscando por tag: " + tagName);
-        String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins";
+        String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins?limit="+SEARCH_LIMIT;
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
         
@@ -438,30 +440,18 @@ public final class RemotePluginInstaller extends JPanel {
         tagsPanel.repaint();
     }
     
-    private synchronized void showPluginSearchResults(String json, String tagName){        
-        
-        ArrayList<HashMap<String, Object>> plugins = Utils.parseArrayJson(json);        
-        
-        
-        JPanel pluginsPanel = split.getCenter();
-        pluginsPanel.removeAll();
-        
-        if(tagName == null){
-            pluginsPanel.add(new Title("Plugins search results"), BorderLayout.NORTH);
-        } else {
-            pluginsPanel.add(new Title("Plugins #"+tagName), BorderLayout.NORTH);
-        }
-        
-        if(plugins.size() == 0){
-            cleanPluginResults();            
-            return;
-        }
-
+    
+    
+    
+    
+    
+    
+    private TupleList createPluginTupleList(){
         TupleList tuples = new TupleList();
         
         RemotePluginInstaller self = this;
 
-        for(int i=0; i<plugins.size(); i++){
+        for(int i=0; i<pluginsResult.size(); i++){
             
             String name = "";
             String description = "";
@@ -470,12 +460,12 @@ public final class RemotePluginInstaller extends JPanel {
             String repoUser = "";
             String repoName = "";
             
-            if(plugins.get(i).get("name") != null) name = (String)plugins.get(i).get("name");
-            if(plugins.get(i).get("description") != null) description = (String)plugins.get(i).get("description");
-            if(plugins.get(i).get("home_page") != null) homepage = (String)plugins.get(i).get("home_page");
-            if(plugins.get(i).get("short_name") != null) shortName = (String)plugins.get(i).get("short_name");
-            if(plugins.get(i).get("repo_user") != null) repoUser = (String)plugins.get(i).get("repo_user");
-            if(plugins.get(i).get("repo_name") != null) repoName = (String)plugins.get(i).get("repo_name");
+            if(pluginsResult.get(i).get("name") != null) name = (String)pluginsResult.get(i).get("name");
+            if(pluginsResult.get(i).get("description") != null) description = (String)pluginsResult.get(i).get("description");
+            if(pluginsResult.get(i).get("home_page") != null) homepage = (String)pluginsResult.get(i).get("home_page");
+            if(pluginsResult.get(i).get("short_name") != null) shortName = (String)pluginsResult.get(i).get("short_name");
+            if(pluginsResult.get(i).get("repo_user") != null) repoUser = (String)pluginsResult.get(i).get("repo_user");
+            if(pluginsResult.get(i).get("repo_name") != null) repoName = (String)pluginsResult.get(i).get("repo_name");
             
             JButton seeBtn = new JButton("See");
             
@@ -490,15 +480,95 @@ public final class RemotePluginInstaller extends JPanel {
                     split.setRight(new RemotePluginInfo(plugin, self));
                 }
             });
+        }
+        return tuples;
+    }
+    
+    private void loadMorePlugins(String tagName, int page){
+        System.out.println("Cargando mas plugins, pagina: " + page);
+        
+        String q = searchInput.getText().trim();
+        
+        String pluginUrl;
+        
+        if(tagName != null)
+            pluginUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins?limit=" + SEARCH_LIMIT + "&page=" + page;
+        else
+            pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT + "&page=" + page;
+        
+        
+        AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();        
+        
+                
+        Future<Response> fPlugins = asyncHttpClient.prepareGet(pluginUrl).execute(new AsyncCompletionHandler<Response>(){                
+        @Override
+        public Response onCompleted(Response r) throws Exception{       
+       
+            String json = r.getResponseBody();   
             
-            //PluginNode node = new PluginNode(name, description, homepage, shortName, repoUser, repoName);
-            //pluginsNode.add(node);
+            ArrayList<HashMap<String, Object>> result = Utils.parseArrayJson(json);
+            
+            pluginsResult.addAll(result);
+            
+            if(result.size() == SEARCH_LIMIT){
+                renderPluginResults(tagName, page, true);
+            } else {
+                renderPluginResults(tagName, page, false);
+            }
+                       
+            
+            return r;
+        }
+        @Override
+        public void onThrowable(Throwable t){ 
+            JOptionPane.showMessageDialog(null, "There was a connection error. Did you choose a working server?", "Error", JOptionPane.ERROR_MESSAGE);
+        }                
+        });
+        
+    }
+    
+    private void renderPluginResults(String tagName, int page, boolean hasMore){
+        JPanel pluginsPanel = split.getCenter();
+        pluginsPanel.removeAll();
+        
+        if(tagName == null){
+            pluginsPanel.add(new Title("Plugins search results"), BorderLayout.NORTH);
+        } else {
+            pluginsPanel.add(new Title("Plugins #"+tagName), BorderLayout.NORTH);
         }
         
-        pluginsPanel.add(tuples);        
+        if(pluginsResult.size() == 0){
+            cleanPluginResults();
+            return;
+        }
+        
+        TupleList tuples = createPluginTupleList();
+        
+        if(hasMore){
+            JButton loadMoreBtn = new JButton("Load more");
+            loadMoreBtn.addActionListener(new ActionListener(){
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    loadMoreBtn.setEnabled(false);
+                    loadMorePlugins(tagName, page+1);
+                }
+            });
+
+            tuples.addTuple("", loadMoreBtn);
+        }
+        
+        
+        pluginsPanel.add(tuples);
         pluginsPanel.revalidate();
         pluginsPanel.repaint();
-         
+    }
+    
+    
+    
+    private synchronized void showPluginSearchResults(String json, String tagName){        
+        pluginsResult.clear();
+        pluginsResult = Utils.parseArrayJson(json);
+        renderPluginResults(tagName, 1, pluginsResult.size() == SEARCH_LIMIT);
     }
     
     private void searchDirectLink(String url){
