@@ -164,4 +164,9 @@ public class NotesPlayer implements Playable {
     public void pause() {
 
     }
+
+    @Override
+    public void sync(boolean sync){
+        
+    }
 }
