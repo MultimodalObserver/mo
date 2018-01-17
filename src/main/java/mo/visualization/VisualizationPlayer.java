@@ -26,7 +26,7 @@ public class VisualizationPlayer {
     private final DockableElement dockable;
 
     private static final Logger logger = Logger.getLogger(VisualizationPlayer.class.getName());
-    
+
     //private byte STOPPED=0, PLAYING=1, PAUSED=2;
 
     public VisualizationPlayer(List<VisualizableConfiguration> configurations) {
@@ -79,7 +79,7 @@ public class VisualizationPlayer {
 
     public void pause() {
         //pauseAll();
-        
+
         playerThread.interrupt();
         isPlaying = false;
         panel.stop();
@@ -88,20 +88,20 @@ public class VisualizationPlayer {
             config.getPlayer().pause();
         }
     }
-    
+
     public void sync(boolean sync){
         for (VisualizableConfiguration config : configs) {
             config.getPlayer().sync(sync);
         }
     }
-    
+
     public void play() {
-        
+
         playerThread = new Thread(() -> {
             isPlaying = true;
             //----------Christian------------
             //Esto repara el problema de desface de la seekSlider
-            if(!panel.getSync()){                
+            if(!panel.getSync()){
                 inicio=System.currentTimeMillis()-current;
             }
              //-------------------------------
@@ -109,9 +109,9 @@ public class VisualizationPlayer {
                 if (!isPlaying) {
                     return;
                 }
-                
+
                 //----------Christian------------
-                if(!panel.getSync()){                
+                if(!panel.getSync()){
                     current=System.currentTimeMillis()-inicio;
                 }
                  //-------------------------------
@@ -124,7 +124,7 @@ public class VisualizationPlayer {
                         }
                         panel.stop();
                         //----------Christian------------
-                        if(!panel.getSync()){                
+                        if(!panel.getSync()){
                             current = start;
                         }
                         //-------------------------------
@@ -135,16 +135,16 @@ public class VisualizationPlayer {
                         isPlaying = true;
                     }
                 }
-  
+
                 long loopStart = System.nanoTime();
                 for (VisualizableConfiguration config : configs) {
                     config.getPlayer().play(current);
                 }
 
                 panel.setTime(current);
-                
+
                 sleep(loopStart);
-                if(panel.getSync()){                
+                if(panel.getSync()){
                    current++;
                 }
             }
@@ -180,7 +180,7 @@ public class VisualizationPlayer {
     public DockableElement getDockable() {
         return dockable;
     }
-    
+
     public long getCurrentTime() {
         return current;
     }

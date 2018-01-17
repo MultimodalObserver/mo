@@ -22,25 +22,25 @@ public class PlayerControlsPanel {
     private JLabel currentTime;
     private JLabel ellapsedTLabel;
     private GridBConstraints gbc;
-    
+
     private boolean sliderMovedProgrammatically;
     private boolean sync=false;
-        
+
     private final static String ELLAPSED_FORMAT = "%02d:%02d:%02d:%1d";
     private final FastDateFormat timeF = FastDateFormat.getInstance("yyyy-MM-dd  HH:mm:ss:SSS");
-    
+
     private final VisualizationPlayer player;
-    
+
     private static final String PLAY_SYMBOL = "\u25B6";
     private static final String PAUSE_SYMBOL = "||"; //"\u23F8";
     private static final String STOP_SYMBOL = "\u25A0";
-    
+
     public PlayerControlsPanel(VisualizationPlayer player) {
-        
+
         this.player = player;
-        
+
         panel = new JPanel(new GridBagLayout());
-        
+
         SwingUtilities.invokeLater(() -> {
             gbc = new GridBConstraints();
 
@@ -78,7 +78,7 @@ public class PlayerControlsPanel {
                    setSync(false);
                }
             }
-            
+
             });
             panel.add(play, gbc.gy(1).gw(1).wx(0));
 
@@ -97,18 +97,18 @@ public class PlayerControlsPanel {
     public void setSync(boolean sync){
         this.sync = sync;
     }
-    
+
     public boolean getSync(){
         return sync;
     }
-    
+
     private void sliderMoved() {
         int val = slider.getValue();
         long current = player.getStart() + val;
         setTime(current);
         player.seek(current);
     }
-    
+
     private void playPressed() {
         if (player.isPlaying()) {
             play.setText(PLAY_SYMBOL);
@@ -129,21 +129,21 @@ public class PlayerControlsPanel {
             long hour = (ellapsed / (1000 * 60 * 60)) % 24;
             ellapsedTLabel.setText(
                     String.format(ELLAPSED_FORMAT, hour, minute, second, millis));
-            
+
             Date d = new Date(time);
-            
+
             currentTime.setText(timeF.format(d));
 
             sliderMovedProgrammatically = true;
             slider.setValue(ellapsed);
             sliderMovedProgrammatically = false;
-            
+
             if (player.getCurrentTime() == player.getEnd()) {
                 stop();
             }
         });
     }
-    
+
     public JPanel getPanel() {
         return panel;
     }
