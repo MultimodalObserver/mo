@@ -256,6 +256,15 @@ public class PluginRegistry {
     }
     
     
+    public List<Plugin> getPluginsFor(String extensionPointId) {
+        return pluginData.getPluginsFor(extensionPointId, ">=0.0.0");
+    }
+
+    public List<Plugin> getPluginsFor(String extensionPointId, String version) {
+        return pluginData.getPluginsFor(extensionPointId, version);
+    }
+    
+  
     
     private void processFile(File file) throws IOException {
 
