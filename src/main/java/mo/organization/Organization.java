@@ -24,6 +24,7 @@ public class Organization implements ProjectOptionProvider {
         organizationMenu = new JMenu("Organization");
         
         List<Plugin> plugins = PluginRegistry.getInstance()
+                .getPluginData()
                 .getPluginsFor("mo.organization.OrganizationVisualizationMenuItemProvider");
         
         for (Plugin plugin : plugins) {     

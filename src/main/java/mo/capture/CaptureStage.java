@@ -47,7 +47,7 @@ public class CaptureStage implements StageModule {
         i18n = new I18n(CaptureStage.class);
 
         plugins = new ArrayList<>();
-        for (Plugin plugin : PluginRegistry.getInstance().getPluginsFor("mo.capture.CaptureProvider")) {
+        for (Plugin plugin : PluginRegistry.getInstance().getPluginData().getPluginsFor("mo.capture.CaptureProvider")) {
             CaptureProvider c = (CaptureProvider) plugin.getNewInstance();
             plugins.add(c);
         }

@@ -1,131 +1,283 @@
 package mo.core.plugin;
 
-import com.github.zafarkhaja.semver.Version;
 import mo.core.Utils;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import mo.core.DirectoryWatcher;
 import mo.core.WatchHandler;
 import org.apache.commons.io.FileUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 
 public class PluginRegistry {
+    
+    public static final String FILE_NOT_FOUND = "FileNotFound";
+    public static final String FILE_IS_DIRECTORY = "FileIsDirectory";
+    public static final String FILE_CANNOT_BE_DELETED = "FileCannotBeDeleted";
+    public static final String PLUGIN_NOT_THIRD_PARTY_PLUGIN = "PluginNotThirdPartyPlugin";
+    public static final String PLUGIN_BEING_USED = "PluginBeingUsed";
+    public static final String PLUGIN_DELETED_OK = "PluginDeletedOk";
 
-    private static PluginRegistry pg;
+    private static PluginRegistry pg;    
+    
+    private List<IUpdatable> observers;
 
-    private final List<Plugin> plugins;
-
-    private final static String pluginsFolder
+    private final String pluginsFolder
             = Utils.getBaseFolder() + "/plugins";
 
-    private final static String APP_PACKAGE = "mo/";
+    private final String APP_PACKAGE = "mo/";
 
     private final List<String> pluginFolders;
 
-    private ClassLoader cl;
+    private URLClassLoader cl;
 
-    private final DirectoryWatcher dirWatcher;
-
-    //private final Map<String, Listeners>;
-    private final List<ExtPoint> extensionPoints;
+    private final DirectoryWatcher dirWatcher;   
     
-    private final HashMap<String, List<PluginListener>> pluginListeners;
+    private final PluginData pluginData;
+    
+    private boolean testingJar = false;
+    
 
-    private final static Logger logger
+    private final Logger logger
             = Logger.getLogger(PluginRegistry.class.getName());
     
     private ArrayList<ClassLoader> classLoaders;
 
     private PluginRegistry() {
-        plugins = new ArrayList<>();
+        
+        observers = new ArrayList<>();
         pluginFolders = new ArrayList<>();
-        extensionPoints = new ArrayList<>();
-        pluginListeners = new HashMap<>();
+        pluginData = new PluginData();        
         dirWatcher = new DirectoryWatcher();
+        
         File folder = new File(pluginsFolder);
         if (!folder.isDirectory()) {
             if (!folder.mkdir()) {
                 logger.log(
                         Level.WARNING, 
-                        "Can not create plugins folder \"{0}\"", pluginsFolder);
+                        "Can not create plugins folder \"{0}\"", pluginsFolder
+                );
             }
         }
-        
-        pluginFolders.add(pluginsFolder);
-        dirWatcher.addDirectory(folder.toPath(), true);
+
+        pluginFolders.add(pluginsFolder);        
+
+        dirWatcher.addDirectory(folder.toPath(), true);        
         
     }
+    
+    
+    public Path getPluginsFolder(){
+        return Paths.get(pluginsFolder);
+    }
+    
+    
+    public void subscribePluginsChanges(IUpdatable obs){
+        observers.add(obs);
+    }
+    
+    private void notifyChanges(){
+        for(IUpdatable obs : observers){
+            obs.update();
+        }
+    }
+    
+    
+    public PluginData getPluginData(){
+        return pluginData;
+    }
+       
+  
+    
 
     public synchronized static PluginRegistry getInstance() {
         if (pg == null) {
-            pg = new PluginRegistry();
+            pg = new PluginRegistry();            
             
-            //look for plugins in app jar
-            pg.processAppJar();
+            try{
+
+                //look for plugins in app jar
+                pg.processAppJar();
+
+                //look for plugins in folders
+                pg.processPluginFolders();
+
+            } catch(Exception e){
+                e.printStackTrace();
+            }
             
-            //look for plugins in folders
-            pg.processPluginFolders();
+            for(Plugin p : pg.pluginData.getPlugins()){
+                if(p.isThirdParty()){
+                    pg.assignXMLData(p);
+                }                
+            }
 
-            pg.dirWatcher.addWatchHandler(new WatchHandler() {
-                @Override
-                public void onCreate(File file) {
-                    if (file.isFile()) {
-                        if (file.getName().endsWith(".class")) {
-                            try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in);
-                            } catch (IOException ex) {
-                                logger.log(Level.SEVERE, null, ex);
-                            }
-                        } else if (file.getName().endsWith(".jar")) {
-                            pg.processJarFile(file);
-                        }
-                    } else {
-                        pg.processFolder(file.getAbsolutePath());
-                    }
-                    pg.checkDependencies();
-                }
+            pg.initDirWatcher();
 
-                @Override
-                public void onDelete(File file) {
-                    // nothing
-                }
+            pg.pluginData.checkDependencies();
 
-                @Override
-                public void onModify(File file) {
-                    if (file.isFile()) {
-                        if (file.getName().endsWith(".class")) {
-                            try (FileInputStream in = new FileInputStream(file)) {
-                                pg.processClassAsInputStream(in);
-                            } catch (IOException ex) {
-                                logger.log(Level.SEVERE, null, ex);
-                            }
-                        } else if (file.getName().endsWith(".jar")) {
-                            pg.processJarFile(file);
-                        }
-                    } else {
-                        pg.processFolder(file.getAbsolutePath());
-                    }
-                    pg.checkDependencies();
-                }
-            });
-
-            pg.dirWatcher.start();
-
-            pg.checkDependencies();
         }
 
         return pg;
     }
+    
+    
+    
+    private void assignXMLData(Plugin plugin){
+        if(plugin == null) return;
 
-    private void processAppJar() {
+        Path xmlPath = null;
+        
+        Path root = plugin.getPath().getParent();
+        
+        if(root == null){
+            xmlPath = Paths.get("plugin.xml");
+        } else {
+            xmlPath = Paths.get(root.toString(), "plugin.xml");
+        }
+
+            
+        try {
+
+            File fXmlFile = xmlPath.toFile();
+            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+            Document doc = dBuilder.parse(fXmlFile);
+
+            doc.getDocumentElement().normalize();
+
+            Element e = doc.getDocumentElement();
+
+            try {
+                String val = e.getElementsByTagName("homepage").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setWebsite(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("author").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setAuthor(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("description").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setDescription(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("name").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setName(val);
+                }
+            } catch(Exception ex) {}
+            
+            try {
+                String val = e.getElementsByTagName("contact").item(0).getTextContent().trim();
+                if(val != null && val.length() != 0){
+                    plugin.setContact(val);
+                }
+            } catch(Exception ex) {}
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    
+    private void initDirWatcher(){
+
+        pg.dirWatcher.addWatchHandler(new WatchHandler() {
+            @Override
+            public synchronized void onCreate(File file) {
+                try {
+                    processFile(file);
+                    
+                    Plugin plugin = pluginData.getPluginByPath(file.getAbsolutePath());
+                    assignXMLData(plugin);
+                } catch(Exception e){
+                    e.printStackTrace();
+                }        
+                notifyChanges();
+            }
+
+            @Override
+            public synchronized void onDelete(File file) {
+               
+                Plugin plugin = pluginData.getPluginByPath(file.getPath());
+                
+                if(plugin == null) return;
+                
+                pluginData.unregisterPlugin(plugin);
+
+                notifyChanges();
+            }
+
+            @Override
+            public synchronized void onModify(File file) {
+                try {
+                    processFile(file);
+                    
+                    Plugin plugin = pluginData.getPluginByPath(file.getAbsolutePath());
+                    assignXMLData(plugin);
+                } catch(Exception e){
+                }
+                notifyChanges();
+            }
+        });            
+
+        pg.dirWatcher.start();
+        
+        
+    }
+    
+    
+    
+    private void processFile(File file) throws IOException {
+
+        if (file.isFile()) {
+            if (file.getName().endsWith(".class")) {
+                FileInputStream in = new FileInputStream(file);
+                
+                pg.processClassAsInputStream(in, null);
+                
+                in.close();
+
+            } else if (file.getName().endsWith(".jar")) {
+                pg.processJarFile(file);
+            }
+        } else {
+            pg.processFolder(file.getAbsolutePath());
+        }
+        pg.pluginData.checkDependencies();
+    }
+    
+
+    private void processAppJar() throws IOException {
         File jarFile = new File(PluginRegistry.class.getProtectionDomain()
                 .getCodeSource().getLocation().getFile());
 
@@ -139,154 +291,134 @@ public class PluginRegistry {
         }
     }
 
-    private void processClassAsInputStream(InputStream classIS) {
-        try {
-            ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
-            exScanner.setClassLoader(cl);
-            ClassReader cr = new ClassReader(classIS);
-            cr.accept(exScanner, 0);
+    private void processClassAsInputStream(InputStream classIS, String path) throws IOException {
 
-            if (exScanner.getPlugin() != null) {
-                addPlugin(exScanner.getPlugin());
-                //logger.info(exScanner.getPlugin()+ " added.");
-            } else if (exScanner.getExtPoint() != null) {
-                addExtensionPoint(exScanner.getExtPoint());
-                //logger.info(exScanner.getExtPoint()+ " added.");
+        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
+        exScanner.setClassLoader(cl);
+        ClassReader cr = new ClassReader(classIS);
+        cr.accept(exScanner, 0);
+        
+        if(testingJar){
+            return;
+        }
+
+        if (exScanner.getPlugin() != null) {
+            Plugin newPlugin = exScanner.getPlugin();
+            
+            newPlugin.setPath(path);
+            pg.pluginData.addPlugin(newPlugin);
+
+        } else if (exScanner.getExtPoint() != null) {
+            pg.pluginData.addExtensionPoint(exScanner.getExtPoint());
+        }
+        
+    }
+    
+    public synchronized String uninstallPlugin(Plugin plugin){
+        
+        if(!plugin.isThirdParty()){
+            return PLUGIN_NOT_THIRD_PARTY_PLUGIN;
+        }
+        
+        File file = plugin.getPath().toFile();
+
+        if(!file.exists()) {
+            return FILE_NOT_FOUND;
+        }
+        
+        if(file.isDirectory()) { 
+            return FILE_IS_DIRECTORY;
+        }
+        
+        if(2==1){
+            return PLUGIN_BEING_USED;
+        }
+     
+        try {
+            boolean deleted = file.delete();
+            
+            if(deleted){
+                pluginData.unregisterPlugin(plugin);
+                return PLUGIN_DELETED_OK;
             }
 
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
+        } catch(Exception e){
+        }       
+        
+        return FILE_CANNOT_BE_DELETED;
+        
     }
 
-    private void processJarFile(String jarFilePath) {
-        processJarFile(new File(jarFilePath));
-    }
 
-    private void processJarFile(File jar) {
+    private void processJarFile(File jar) throws IOException {
         processJarFile(jar, null);
     }
 
-    private void processJarFile(File jar, String[] packages) {
+    private void processJarFile(File jar, String[] packages) throws IOException {
 
-        try (JarFile jarFile = new JarFile(jar)) {
-
-            cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
-            
-            Enumeration entries = jarFile.entries();
-
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = (JarEntry) entries.nextElement();
-                String entryName = jarEntry.getName();
-
-                if (entryName.endsWith(".class")) {
-                    if (packages != null) {
-                        for (String p : packages) {
-                            if (entryName.startsWith(p)) {
-                                processClassAsInputStream(jarFile
-                                        .getInputStream(jarEntry));
-                            }
+        JarFile jarFile = new JarFile(jar);
+        
+        cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
+        
+        Enumeration entries = jarFile.entries();
+        
+        while (entries.hasMoreElements()) {
+            JarEntry jarEntry = (JarEntry) entries.nextElement();
+            String entryName = jarEntry.getName();
+            if (entryName.endsWith(".class")) {
+                if (packages != null) {
+                    for (String p : packages) {
+                        if (entryName.startsWith(p)) {
+                            InputStream in = jarFile.getInputStream(jarEntry);
+                            processClassAsInputStream(in, jar.getAbsolutePath());
+                            in.close();
                         }
-                    } else {
-                        processClassAsInputStream(
-                                jarFile.getInputStream(jarEntry));
                     }
-                }
-            }
-        } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
-        }
-
-    }
-
-    public void addPlugin(Plugin plugin) {
-        int toReplace = -1;
-        String newId = plugin.getId();
-        Version newVersion = Version.valueOf(plugin.getVersion());
-
-        for (int i = 0; i < plugins.size(); i++) {
-
-            Version v = Version.valueOf(plugins.get(i).getVersion());
-
-            if (newId.equals(plugins.get(i).getId())
-                    && newVersion.getMajorVersion() == v.getMajorVersion()
-                    && newVersion.getMinorVersion() == v.getMinorVersion()) {
-                toReplace = i;
-
-            }
-        }
-
-        if (toReplace > -1) {
-            plugins.set(toReplace, plugin);
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (pluginListeners.containsKey(dependency.getId())) {
-                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
-                        pluginListener.pluginUpdated(plugin);
-                    }
-                }
-            }
-        } else {
-            plugins.add(plugin);
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (pluginListeners.containsKey(dependency.getId())) {
-                    for (PluginListener pluginListener : pluginListeners.get(dependency.getId())) {
-                        pluginListener.pluginAdded(plugin);
-                    }
+                } else {
+                    InputStream in = jarFile.getInputStream(jarEntry);
+                    processClassAsInputStream(in, jar.getAbsolutePath());
+                    in.close();
                 }
             }
         }
         
-        //logger.log(Level.INFO,"Plugin added: {0}", plugin);
-    }
-
-    public List<Plugin> getPluginsFor(String extensionPointId) {
-        return getPluginsFor(extensionPointId, ">=0.0.0");
-    }
-
-    public List<Plugin> getPluginsFor(String extensionPointId, String version) {
-        List<Plugin> result = new ArrayList<>();
+        cl.close();
         
-        String xpId = null;
-        for (ExtPoint extensionPoint : extensionPoints) {
-            if (extensionPoint.getId().equals(extensionPointId)) {
-                Version v = Version.valueOf(extensionPoint.getVersion());
-                if (v.satisfies(version)) {
-                    xpId = extensionPoint.getId();
-                }
-            }
-        }
-        
-        if (xpId == null) {
-            logger.log(Level.INFO, 
-                    "Id for extension point <{0}> not found", 
-                    extensionPointId );
-            return result;
-        }
-            
-        
-        for (Plugin plugin : plugins) {
-            for (Dependency dependency : plugin.getDependencies()) {
-                if (dependency.getId().equals(extensionPointId)) {
-                    result.add(plugin);
-                    break;
-                }
-            }
-        }
-
-        return result;
+        jarFile.close();        
     }
 
-    public List<Plugin> getPlugins() {
-        return this.plugins;
+    
+    
+    public Exception checkPlugin(File file){
+        
+        testingJar = true;        
+        
+        try{            
+            processFile(file);
+            return null;            
+        } catch(Exception e){            
+            return e;            
+        } finally {
+            testingJar = false;
+        }        
     }
 
-    private void processPluginFolders() {
+  
+    public void copyPluginToFolder(File file) throws IOException{
+        Path src = Paths.get(file.getAbsolutePath());
+        Path dest = Paths.get(pluginsFolder+"/");        
+        Files.copy(src, dest.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
+    }
+    
+
+    private void processPluginFolders() throws IOException {
         for (String pluginFolder : pluginFolders) {
             processFolder(pluginFolder);
         }
     }
+    
 
-    private void processFolder(String pluginFolder) {
+    private void processFolder(String pluginFolder) throws IOException, FileNotFoundException, MalformedURLException {
         String[] extensions = {"class", "jar"};
         ClassLoader classLoader = PluginRegistry.class.getClassLoader();
         URLClassLoader urlCL;
@@ -294,14 +426,10 @@ public class PluginRegistry {
         Collection<File> files = FileUtils
                 .listFiles(new File(pluginFolder), extensions, true);
         for (File f : files) {
-            try {
-                if (f.getName().endsWith(".class")) {
-                    urls.add(f.getParentFile().toURI().toURL());
-                } else if (f.getName().endsWith(".jar")) {
-                    urls.add(f.toURI().toURL());
-                }
-            } catch (MalformedURLException ex) {
-                logger.log(Level.SEVERE, null, ex);
+            if (f.getName().endsWith(".class")) {
+                urls.add(f.getParentFile().toURI().toURL());
+            } else if (f.getName().endsWith(".jar")) {
+                urls.add(f.toURI().toURL());
             }
         }
 
@@ -317,92 +445,18 @@ public class PluginRegistry {
 
         for (File file : files) {
             if (file.getName().endsWith(".class")) {
-                try {
-                    processClassAsInputStream(
-                            new FileInputStream(file));
-                } catch (FileNotFoundException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                }
+                FileInputStream in = new FileInputStream(file);
+                processClassAsInputStream(in, null);
+                in.close();
             } else if (file.getName().endsWith(".jar")) {
                 processJarFile(file);
             }
         }
+
     }
 
-    public Object getPluginInstance(String pluginId) {
-        for (Plugin plugin : plugins) {
-            if (pluginId.equals(plugin.getId())) {
-                return plugin.getInstance();
-            }
-        }
-        return null;
-    }
 
-    public Plugin getPlugin(String pluginId) {
-        for (Plugin plugin : plugins) {
-            if (pluginId.equals(plugin.getId())) {
-                return plugin;
-            }
-        }
-        return null;
-    }
-
-    public List<ExtPoint> getExtPoints() {
-        return extensionPoints;
-    }
-
-    public void addPluginListener(String extensionPointId, PluginListener listener) {
-        if (!pluginListeners.containsKey(extensionPointId)) {
-            ArrayList<PluginListener> xpListeners = new ArrayList<>();
-            xpListeners.add(listener);
-            pluginListeners.put(extensionPointId, xpListeners);
-        } else {
-            pluginListeners.get(extensionPointId).add(listener);
-        }       
-    }
-
-    public void removePluginListener(String extensionPointId, PluginListener listener) {
-        if (pluginListeners.containsKey(extensionPointId)) {
-            List l = pluginListeners.get(extensionPointId);
-            if (l.contains(listener)) {
-                l.remove(l);
-            }
-        }
-    }
     
-    private void addExtensionPoint(ExtPoint extPoint) {
-        for (ExtPoint extensionPoint : extensionPoints) {
-            if (extensionPoint.getId().equals(extPoint.getId())) {
-                return;
-            }
-        }
-        extensionPoints.add(extPoint);
-    }
-
-    private void checkDependencies() {
-        for (Plugin plugin : plugins) {
-            for (Dependency dependency : plugin.getDependencies()) {
-                for (ExtPoint extensioPoint : extensionPoints) {
-                    if (dependency.getId().equals(extensioPoint.getId())) {
-                        dependency.setExtensionPoint(extensioPoint);
-                        dependency.setIsPresent(true);
-                        
-                        addPluginToExtensionPoint(extensioPoint, plugin);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    
-    private void addPluginToExtensionPoint(ExtPoint x, Plugin p) {
-        for (Plugin plugin : x.getPlugins()) {
-            if (plugin.getId().equals(p.getId())) {
-                return;
-            }
-        }
-        x.addPlugin(p);
-    }
     
     public List<ClassLoader> getClassLoaders() {
         return classLoaders;

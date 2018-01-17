@@ -1,28 +1,30 @@
-package mo.core.plugin;
+package mo.core.plugin.gui;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Enumeration;
 import java.util.List;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTree;
-import javax.swing.border.BevelBorder;
+import javax.swing.event.ChangeEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
+import mo.core.plugin.Dependency;
+import mo.core.plugin.ExtPoint;
+import mo.core.plugin.Extends;
+import mo.core.plugin.Extension;
+import mo.core.plugin.Plugin;
+import mo.core.plugin.PluginRegistry;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockableElement;
@@ -46,45 +48,61 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
     JMenuItem menuItem = new JMenuItem("Plugin Viewer");
     DockableElement dockable;
     JTree pluginsTree, extPointsTree;
+    LocalPluginInstaller localInstaller;
+    RemotePluginInstaller remoteInstaller;
+    PluginList pluginList;
     boolean registered = false;
     JTabbedPane tabbedPane = new JTabbedPane();
     JPanel mainPanel, buttonsPanel;
     PluginCellRenderer renderer = new PluginCellRenderer();
     private JScrollPane pluginsScrollPane, extPointScrollPane;
 
+    
+    
     public PluginViewer() {
+   
 
         menuItem.addActionListener((ActionEvent e) -> {
             menuItemClicked();
         });
+        
+        
+        // Plugin list tab
+        pluginList = new PluginList();
+        tabbedPane.addTab("Installed plugins", pluginList);
+        
+        // Plugin installer tab
+        localInstaller = new LocalPluginInstaller();
+        remoteInstaller = new RemotePluginInstaller();
+        JTabbedPane installer = new JTabbedPane();
+        installer.addTab("Local", new JScrollPane(localInstaller));
+        installer.addTab("Download", new JScrollPane(remoteInstaller));
+        tabbedPane.addTab("Get plugins", installer);
+        
 
+        // Plugins tab
         populatePluginsTree();
         pluginsScrollPane = new JScrollPane(pluginsTree);
         tabbedPane.addTab("Plugins", pluginsScrollPane);
         pluginsTree.expandRow(2);
 
+        // Extension points tab
         populateExtensionPointTree();
         extPointScrollPane = new JScrollPane(extPointsTree);
         tabbedPane.addTab("Extension Points", extPointScrollPane);
+        
+        
+        
+        tabbedPane.addChangeListener((ChangeEvent e) -> {
+            /* Event - tab change */
+            pluginList.update();
+            
+        });
 
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
-
-        buttonsPanel = new JPanel();
-        
-        
-        JButton refresh = new JButton("Refresh");
-        refresh.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                refresh();
-                PluginPlainViewer.print();
-            }
-        });
-        
-        buttonsPanel.add(refresh);
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new GridBagLayout()); 
@@ -92,8 +110,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         GridBConstraints c = new GridBConstraints();
         c.f(GridBConstraints.HORIZONTAL).gx(0).gy(0).wx(1).wy(0.1);
         
-        mainPanel.add(buttonsPanel, c);
-        
+       
         c.f(GridBConstraints.BOTH);
         mainPanel.add(tabbedPane, c.gy(1).wy(1));
         
@@ -106,23 +123,25 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         DefaultTreeModel m = (DefaultTreeModel) pluginsTree.getModel();
         ((DefaultMutableTreeNode) m.getRoot()).removeAllChildren();
         populatePluginsTree();
-        tabbedPane.setComponentAt(0, new JScrollPane(pluginsTree));
+        tabbedPane.setComponentAt(2, new JScrollPane(pluginsTree));
         TreeNode r = (TreeNode) pluginsTree.getModel().getRoot();
         expandAll(pluginsTree, new TreePath(r));
         
         m = (DefaultTreeModel) extPointsTree.getModel();
         ((DefaultMutableTreeNode) m.getRoot()).removeAllChildren();
         populateExtensionPointTree();
-        tabbedPane.setComponentAt(1, new JScrollPane(extPointsTree));
+        tabbedPane.setComponentAt(3, new JScrollPane(extPointsTree));
         r = (TreeNode) extPointsTree.getModel().getRoot();
         expandAll(extPointsTree, new TreePath(r));
+        
+        pluginList.update();
     }
     
     private void populateExtensionPointTree() {
         extPointsTree = new JTree(new DefaultMutableTreeNode("Extension Points"));
         extPointsTree.setCellRenderer(renderer);
         DefaultTreeModel modelX = (DefaultTreeModel) extPointsTree.getModel();
-        List<ExtPoint> extensionPoints = PluginRegistry.getInstance().getExtPoints();
+        List<ExtPoint> extensionPoints = PluginRegistry.getInstance().getPluginData().getExtPoints();
         DefaultMutableTreeNode rootX = (DefaultMutableTreeNode) modelX.getRoot();
         for (ExtPoint extPoint : extensionPoints) {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(extPoint);
@@ -140,7 +159,7 @@ public class PluginViewer implements IMenuBarItemProvider, IDockableElementProvi
         pluginsTree.setCellRenderer(renderer);
 
         DefaultTreeModel model = (DefaultTreeModel) pluginsTree.getModel();
-        List<Plugin> plugins = PluginRegistry.getInstance().getPlugins();
+        List<Plugin> plugins = PluginRegistry.getInstance().getPluginData().getPlugins();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
         for (Plugin plugin : plugins) {
             DefaultMutableTreeNode node = new DefaultMutableTreeNode(plugin);

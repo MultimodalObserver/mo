@@ -1,7 +1,10 @@
 package mo.core.plugin;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -16,17 +19,42 @@ public class Plugin {
     private String description;
     
     private Object instance;
-    
-    //private List<Plugin> dependencies;
-    //private List<String> dependenciesStrs;
+
     private List<Dependency> dependencies;
-    //private HashMap<String,String> dep;
-    private String path;
+    
+    private Boolean thirdParty = null;
+    
+    private Path path;
+    
+    private String website;
+    
+    private String author;
+    
+    private String contact;
     
     private Class<?> clazz;
     
     public Plugin(){
         
+    }
+    
+    public boolean isThirdParty(){
+        
+        if(this.thirdParty != null){
+            return this.thirdParty;
+        }
+        
+        for(Package p : Package.getPackages()) {
+            if(p.getName().startsWith("mo.")){            
+                // p.getName() is a MO package
+                if(getId().startsWith(p.getName()+".")){
+                    this.thirdParty = false;
+                    return this.thirdParty;
+                }
+            }
+        }        
+        this.thirdParty = true;
+        return this.thirdParty;
     }
 
     public String getId() {
@@ -44,9 +72,33 @@ public class Plugin {
     public void setName(String name) {
         this.name = name;
     }
+    
+    public void setWebsite(String website){
+        this.website = website;
+    }
+    
+    public String getWebsite(){
+        return this.website;
+    }
 
     public String getVersion() {
         return version;
+    }
+    
+    public String getAuthor(){
+        return this.author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+    
+    public String getContact(){
+        return this.contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 
     public void setVersion(String version) {
@@ -77,13 +129,22 @@ public class Plugin {
         this.dependencies.add(dependecy);
     }
     
-    public String getPath() {
+    public Path getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public void setPath(Path path) {
         this.path = path;
     }
+    
+    public void setPath(String pathStr){
+        if(pathStr == null){
+            this.path = null;
+        } else {
+            this.path = Paths.get(pathStr);
+        }        
+    }
+    
     
     public Class<?> getClazz() {
         return clazz;
@@ -115,6 +176,42 @@ public class Plugin {
         
         return newInstance;
     }
+    
+    
+    
+    public boolean sanityCheck(){
+        
+        if(getDependencies() == null) return false;
+        
+        for(Dependency dep : getDependencies()){
+        
+            if(dep == null) return false;
+            
+            if(dep.getExtensionPoint() == null) return false;
+        
+        }        
+        return true;
+    }
+    
+    
+    
+    @Override
+    public boolean equals(Object o){        
+        if (o == null) return false;
+        if (o == this) return true;
+        if (!(o instanceof Plugin)) return false;        
+        return this.id == ((Plugin) o).id && this.version == ((Plugin) o).version;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 67 * hash + Objects.hashCode(this.id);
+        hash = 67 * hash + Objects.hashCode(this.version);
+        return hash;
+    }
+
+    
     
     @Override
     public String toString(){
