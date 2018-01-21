@@ -28,13 +28,14 @@ public class SplitPaneTriple extends JSplitPane {
         JPanel p1 = new JPanel();
         JPanel p2 = new JPanel();
         JPanel p3 = new JPanel();
-        
-        p1.setBorder(new EmptyBorder(10, 10, 10, 10));
-        p2.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        p1.setBorder(new EmptyBorder(0, 0, 0, 0));
+        p2.setBorder(new EmptyBorder(0, 0, 0, 0));
         p3.setBorder(new EmptyBorder(10, 10, 10, 10));
         
         p1.setPreferredSize(new Dimension(200, 300));
-        p2.setPreferredSize(new Dimension(300, 300));
+        p2.setPreferredSize(new Dimension(350, 300));
+
         //p3.setPreferredSize(new Dimension(100, 100));
         
     
