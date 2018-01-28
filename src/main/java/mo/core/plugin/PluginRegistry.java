@@ -158,6 +158,9 @@ public class PluginRegistry {
         try {
 
             File fXmlFile = xmlPath.toFile();
+            
+            
+            
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
             Document doc = dBuilder.parse(fXmlFile);
@@ -203,7 +206,8 @@ public class PluginRegistry {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("No XML file.");
+            //e.printStackTrace();
         }
 
     }
