@@ -25,6 +25,8 @@ import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import mo.core.MultimodalObserver;
@@ -122,7 +124,7 @@ public final class RemotePluginInstaller extends JPanel {
     
     private final int DELAY_MILLISECONDS = 800;
     
-    private final int SEARCH_LIMIT = 5;
+    private final int SEARCH_LIMIT = 10; // Fixed value, the server always gives you 10 per query.
     
     private String currentServer = null;    
     
@@ -135,11 +137,6 @@ public final class RemotePluginInstaller extends JPanel {
     
     ArrayList<HashMap<String, Object>> pluginsResult = new ArrayList<>();
     
-    
-    //private JPanel tagSearchResultContainer = new JPanel();
-    //private JPanel pluginSearchResultContainer = new JPanel();
-    
-    //private JTree searchResults;
     DefaultMutableTreeNode tagsNode = new DefaultMutableTreeNode("Tags");
     DefaultMutableTreeNode pluginsNode = new DefaultMutableTreeNode("Plugins");
     
@@ -173,7 +170,7 @@ public final class RemotePluginInstaller extends JPanel {
     private void searchByTag(String tagName){
         
         System.out.println("Buscando por tag: " + tagName);
-        String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins?limit="+SEARCH_LIMIT;
+        String pluginsUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins";
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
         
@@ -401,6 +398,34 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
+    private void updateContainer(String title, Component content, JPanel container){
+        
+        JPanel contentPanel = null;
+        
+        if(!(content instanceof JPanel)){
+            contentPanel = new JPanel();
+            contentPanel.add(content);
+        } else {
+            contentPanel = (JPanel)content;
+        }
+        
+        JPanel scrollable = new JPanel();
+        
+        scrollable.setLayout(new BorderLayout());
+        scrollable.setBorder(new EmptyBorder(10, 10, 10, 10));
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));        
+        scrollable.add(getTitleWithMargin(title), BorderLayout.NORTH);
+        scrollable.add(contentPanel);              
+
+        container.removeAll();
+        container.add(new JScrollPane(scrollable));
+        
+        container.revalidate();
+        container.repaint();
+
+    }
+    
+    
     private synchronized void showTagSearchResults(String json){        
         
         ArrayList<HashMap<String, Object>> tags = Utils.parseArrayJson(json);
@@ -410,13 +435,10 @@ public final class RemotePluginInstaller extends JPanel {
             return;
         }
         
-        JPanel tagsPanel = split.getLeft();
-        tagsPanel.removeAll();
+        JPanel tagsPanel = split.getLeft();       
         
         JPanel tagContainer = new JPanel();
-        tagContainer.setLayout(new BoxLayout(tagContainer, BoxLayout.Y_AXIS));
-        
-        tagsPanel.add(new Title("Tags"), BorderLayout.NORTH);
+
 
         for(int i=0; i<tags.size(); i++){
             String tag = (String)tags.get(i).get("short_name");          
@@ -433,18 +455,11 @@ public final class RemotePluginInstaller extends JPanel {
             tagContainer.add(tagBtn, Component.CENTER_ALIGNMENT);
         }
         
+        updateContainer("Tags", tagContainer, tagsPanel);
         
-        tagsPanel.add(tagContainer);
-        
-        tagsPanel.revalidate();
-        tagsPanel.repaint();
     }
     
-    
-    
-    
-    
-    
+
     
     private TupleList createPluginTupleList(){
         TupleList tuples = new TupleList();
@@ -492,9 +507,9 @@ public final class RemotePluginInstaller extends JPanel {
         String pluginUrl;
         
         if(tagName != null)
-            pluginUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins?limit=" + SEARCH_LIMIT + "&page=" + page;
+            pluginUrl = Utils.cleanServerUrl(currentServer) + "/tags/"+tagName+"/plugins?page=" + page;
         else
-            pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT + "&page=" + page;
+            pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q + "&page=" + page;
         
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();        
@@ -514,8 +529,7 @@ public final class RemotePluginInstaller extends JPanel {
                 renderPluginResults(tagName, page, true);
             } else {
                 renderPluginResults(tagName, page, false);
-            }
-                       
+            }          
             
             return r;
         }
@@ -529,13 +543,8 @@ public final class RemotePluginInstaller extends JPanel {
     
     private void renderPluginResults(String tagName, int page, boolean hasMore){
         JPanel pluginsPanel = split.getCenter();
-        pluginsPanel.removeAll();
         
-        if(tagName == null){
-            pluginsPanel.add(new Title("Plugins search results"), BorderLayout.NORTH);
-        } else {
-            pluginsPanel.add(new Title("Plugins #"+tagName), BorderLayout.NORTH);
-        }
+        String title = tagName == null? "Plugins search results" : "Plugins #"+tagName;
         
         if(pluginsResult.size() == 0){
             cleanPluginResults();
@@ -557,10 +566,10 @@ public final class RemotePluginInstaller extends JPanel {
             tuples.addTuple("", loadMoreBtn);
         }
         
+        JPanel p = new JPanel();
+        p.add(tuples);
         
-        pluginsPanel.add(tuples);
-        pluginsPanel.revalidate();
-        pluginsPanel.repaint();
+        updateContainer(title, p, pluginsPanel);
     }
     
     
@@ -643,8 +652,8 @@ public final class RemotePluginInstaller extends JPanel {
         
         System.out.println("Searching: " + q);
         
-        String tagUrl = Utils.cleanServerUrl(currentServer) + "/tags?q=" + q + "&limit=" + SEARCH_LIMIT;
-        String pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q + "&limit=" + SEARCH_LIMIT;
+        String tagUrl = Utils.cleanServerUrl(currentServer) + "/tags?q=" + q;
+        String pluginUrl = Utils.cleanServerUrl(currentServer) + "/plugins?q=" + q;
         
         
         AsyncHttpClient asyncHttpClient = new DefaultAsyncHttpClient();
@@ -845,25 +854,24 @@ public final class RemotePluginInstaller extends JPanel {
     }
     
     
+    public Title getTitleWithMargin(String txt){
+        Title title = new Title(txt);
+        Border border = title.getBorder();
+        Border margin = new EmptyBorder(0,0,10,0);
+        title.setBorder(new CompoundBorder(border, margin));
+       
+        return title;
+    }
+    
 
     public void cleanTagResults(){
-        JPanel tags = split.getLeft();
-        tags.removeAll();
-        tags.add(new Title("Tags"), BorderLayout.NORTH);
-        tags.add(new JLabel("No results"), BorderLayout.LINE_START);
-        tags.revalidate();
-        tags.repaint();
-        
+        JPanel tags = split.getLeft();        
+        updateContainer("Tags", new JLabel("No results"), tags);        
     }
    
     public void cleanPluginResults(){
-        JPanel plugins = split.getCenter();
-        plugins.removeAll();
-        plugins.add(new Title("Plugins"), BorderLayout.NORTH);
-        plugins.add(new JLabel("No results"), BorderLayout.LINE_START);
-        plugins.revalidate();
-        plugins.repaint();
-        
+        JPanel plugins = split.getCenter();        
+        updateContainer("Plugins", new JLabel("No results"), plugins);        
     }
     
     
