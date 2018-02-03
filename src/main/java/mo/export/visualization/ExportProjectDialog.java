@@ -22,6 +22,8 @@ import javax.swing.JTree;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
 
+import mo.exchange.data.visualization.LocationWizardPanel;
+
 public class ExportProjectDialog {
 	WizardDialog dialog;
 	JPanel selectionDataPanel;

@@ -163,13 +163,13 @@ public class ExportDataManager {
                     if (SwingWorker.StateValue.DONE.equals(evt.getNewValue())) {
                         label.setText("Cancelacion lista");
                         cancelButon.setEnabled(false);
-                        okButon.setEnabled(true );
+                        okButon.setEnabled(true);
                     }
                 }
             }
         );
 
-        label.setText("cancelandors");
+        label.setText("cancelando...");
         cancelButon.setEnabled(false);
         okButon.setEnabled(false);
 

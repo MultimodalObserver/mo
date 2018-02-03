@@ -18,6 +18,18 @@ import mo.core.ui.menubar.IMenuBarItemProvider;
 import mo.core.filemanagement.FileRegistry;
 import static mo.core.ui.menubar.MenuItemLocations.UNDER;
 
+import mo.core.plugin.Plugin;
+import java.util.List;
+import java.util.ArrayList;
+import mo.core.plugin.PluginRegistry;
+
+import mo.exchange.data.importer.plugin.ImportPlugin;
+// import mo.exchange.data.importer.plugin.ImportProjectPlugin;
+import mo.exchange.data.importer.plugino.ImportProjectPlugin;
+import java.awt.event.ActionListener;
+// import mo.echange.data.importer.ImportProjectManager;
+import mo.echange.data.importer.ImportProjectManager2;
+
 @Extension(
         xtends = {
             @Extends(
@@ -29,6 +41,9 @@ public class ProjectManagement implements IMenuBarItemProvider {
 
     private JMenu projectMenu;
     private JMenuItem newProject, openProject, closeProject;
+    // private List<JMenuItem> items;
+    private JMenuItem importProject; // alonso quitar
+
     private I18n inter;
 
     public ProjectManagement() {
@@ -54,6 +69,47 @@ public class ProjectManagement implements IMenuBarItemProvider {
 
         projectMenu.add(newProject);
         projectMenu.add(openProject);
+
+        List<Plugin> plugins = PluginRegistry.getInstance().getPluginsFor("mo.exchange.data.importer.plugino.ImportProjectPlugin");
+        List<JMenuItem> items = getJMenuItemsFor(plugins);
+        addItemsToMenu(items);
+    }
+
+    private void addItemsToMenu(List<JMenuItem> items) {
+        for (JMenuItem item : items) {
+            projectMenu.add(item);
+        }
+    }
+
+    private List<JMenuItem> getJMenuItemsFor(List<Plugin> plugins) {
+        List<JMenuItem> items = new ArrayList();
+
+        JMenuItem pluginItem;
+        ImportProjectPlugin p;
+        for (Plugin plugin : plugins) {
+            p = (ImportProjectPlugin) plugin.getNewInstance();
+            pluginItem = new JMenuItem();
+            pluginItem.setName(p.getName());
+            pluginItem.setText(p.getName());
+            pluginItem.addActionListener(new ActionListener() {
+                ImportProjectPlugin p = (ImportProjectPlugin) plugin.getNewInstance();
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    importProject(p);
+                }
+            });
+
+            items.add(pluginItem);
+        }
+
+        return items;
+    }
+
+    private void importProject(ImportProjectPlugin plugin) {
+        System.out.println("importProject()");
+
+        // ImportProjectManager manager = new ImportProjectManager(plugin);
+        ImportProjectManager2 manager = new ImportProjectManager2(plugin);
     }
 
     private void openProject() {
