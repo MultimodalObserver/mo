@@ -327,6 +327,33 @@ public class PluginRegistry {
         
     }
     
+    
+    private void processClassAsInputStream(InputStream classIS) throws IOException{        
+        
+
+        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
+        exScanner.setClassLoader(cl);
+        ClassReader cr = new ClassReader(classIS);
+        cr.accept(exScanner, 0);
+        
+        if(testingJar){
+            return;
+        }
+
+        if (exScanner.getPlugin() != null) {
+            pluginData.addPlugin(exScanner.getPlugin());
+            //logger.info(exScanner.getPlugin()+ " added.");
+        } else if (exScanner.getExtPoint() != null) {
+            pluginData.addExtensionPoint(exScanner.getExtPoint());
+            //logger.info(exScanner.getExtPoint()+ " added.");
+        }
+
+
+    }
+    
+    
+    
+    
     public synchronized String uninstallPlugin(Plugin plugin){
         
         if(!plugin.isThirdParty()){
@@ -367,6 +394,40 @@ public class PluginRegistry {
         processJarFile(jar, null);
     }
 
+    
+    private void processJarFile(File jar, String[] packages) {
+
+        try (JarFile jarFile = new JarFile(jar)) {
+
+            cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
+            
+            Enumeration entries = jarFile.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = (JarEntry) entries.nextElement();
+                String entryName = jarEntry.getName();
+
+                if (entryName.endsWith(".class")) {
+                    if (packages != null) {
+                        for (String p : packages) {
+                            if (entryName.startsWith(p)) {
+                                processClassAsInputStream(jarFile
+                                        .getInputStream(jarEntry));
+                            }
+                        }
+                    } else {
+                        processClassAsInputStream(
+                                jarFile.getInputStream(jarEntry));
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+    }
+    
+    /*
     private void processJarFile(File jar, String[] packages) throws IOException {
 
         JarFile jarFile = new JarFile(jar);
@@ -398,7 +459,7 @@ public class PluginRegistry {
         cl.close();
         
         jarFile.close();        
-    }
+    }*/
 
     
     
