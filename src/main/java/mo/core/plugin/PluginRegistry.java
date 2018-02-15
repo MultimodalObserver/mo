@@ -80,8 +80,8 @@ public class PluginRegistry {
 
         pluginFolders.add(pluginsFolder);        
 
-        dirWatcher.addDirectory(folder.toPath(), true);        
-        
+        dirWatcher.addDirectory(folder.toPath(), true);
+                
     }
     
     
@@ -127,7 +127,7 @@ public class PluginRegistry {
             for(Plugin p : pg.pluginData.getPlugins()){
                 if(p.isThirdParty()){
                     pg.assignXMLData(p);
-                }                
+                }
             }
 
             pg.initDirWatcher();
@@ -146,7 +146,11 @@ public class PluginRegistry {
 
         Path xmlPath = null;
         
-        Path root = plugin.getPath().getParent();
+        Path path = plugin.getPath();
+        
+        if(path == null) return;
+        
+        Path root = path.getParent();
         
         if(root == null){
             xmlPath = Paths.get("plugin.xml");
@@ -327,6 +331,8 @@ public class PluginRegistry {
         
     }
     
+        
+    
     public synchronized String uninstallPlugin(Plugin plugin){
         
         if(!plugin.isThirdParty()){
@@ -367,6 +373,40 @@ public class PluginRegistry {
         processJarFile(jar, null);
     }
 
+    
+    private void processJarFile(File jar, String[] packages) {
+
+        try (JarFile jarFile = new JarFile(jar)) {
+
+            cl = URLClassLoader.newInstance(new URL[] {jar.toURI().toURL()}, PluginRegistry.class.getClassLoader());
+            
+            Enumeration entries = jarFile.entries();
+
+            while (entries.hasMoreElements()) {
+                JarEntry jarEntry = (JarEntry) entries.nextElement();
+                String entryName = jarEntry.getName();
+
+                if (entryName.endsWith(".class")) {
+                    if (packages != null) {
+                        for (String p : packages) {
+                            if (entryName.startsWith(p)) {
+                                processClassAsInputStream(jarFile
+                                        .getInputStream(jarEntry), jar.getAbsolutePath());
+                            }
+                        }
+                    } else {
+                        processClassAsInputStream(
+                                jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
+
+    }
+    
+    /*
     private void processJarFile(File jar, String[] packages) throws IOException {
 
         JarFile jarFile = new JarFile(jar);
@@ -398,7 +438,7 @@ public class PluginRegistry {
         cl.close();
         
         jarFile.close();        
-    }
+    }*/
 
     
     

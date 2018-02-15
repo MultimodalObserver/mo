@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.nio.file.Path;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -47,7 +48,11 @@ class PluginInfo extends JPanel {
         
         if(plugin.isThirdParty()){
             
-            String simplifiedPath = PluginRegistry.getInstance().getPluginsFolder().relativize(plugin.getPath()).toString();
+            Path fullPath = plugin.getPath();            
+            
+            Path relative = PluginRegistry.getInstance().getPluginsFolder().relativize(fullPath);            
+            
+            String simplifiedPath = relative.toString();
             
             // Show only relative path
             JLabel path = new JLabel(simplifiedPath);
