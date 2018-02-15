@@ -80,8 +80,8 @@ public class PluginRegistry {
 
         pluginFolders.add(pluginsFolder);        
 
-        dirWatcher.addDirectory(folder.toPath(), true);        
-        
+        dirWatcher.addDirectory(folder.toPath(), true);
+                
     }
     
     
@@ -127,7 +127,7 @@ public class PluginRegistry {
             for(Plugin p : pg.pluginData.getPlugins()){
                 if(p.isThirdParty()){
                     pg.assignXMLData(p);
-                }                
+                }
             }
 
             pg.initDirWatcher();
@@ -146,7 +146,11 @@ public class PluginRegistry {
 
         Path xmlPath = null;
         
-        Path root = plugin.getPath().getParent();
+        Path path = plugin.getPath();
+        
+        if(path == null) return;
+        
+        Path root = path.getParent();
         
         if(root == null){
             xmlPath = Paths.get("plugin.xml");
@@ -327,32 +331,7 @@ public class PluginRegistry {
         
     }
     
-    
-    private void processClassAsInputStream(InputStream classIS) throws IOException{        
         
-
-        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
-        exScanner.setClassLoader(cl);
-        ClassReader cr = new ClassReader(classIS);
-        cr.accept(exScanner, 0);
-        
-        if(testingJar){
-            return;
-        }
-
-        if (exScanner.getPlugin() != null) {
-            pluginData.addPlugin(exScanner.getPlugin());
-            //logger.info(exScanner.getPlugin()+ " added.");
-        } else if (exScanner.getExtPoint() != null) {
-            pluginData.addExtensionPoint(exScanner.getExtPoint());
-            //logger.info(exScanner.getExtPoint()+ " added.");
-        }
-
-
-    }
-    
-    
-    
     
     public synchronized String uninstallPlugin(Plugin plugin){
         
@@ -412,12 +391,12 @@ public class PluginRegistry {
                         for (String p : packages) {
                             if (entryName.startsWith(p)) {
                                 processClassAsInputStream(jarFile
-                                        .getInputStream(jarEntry));
+                                        .getInputStream(jarEntry), jar.getAbsolutePath());
                             }
                         }
                     } else {
                         processClassAsInputStream(
-                                jarFile.getInputStream(jarEntry));
+                                jarFile.getInputStream(jarEntry), jar.getAbsolutePath());
                     }
                 }
             }

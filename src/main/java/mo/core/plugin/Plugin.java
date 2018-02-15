@@ -134,6 +134,7 @@ public class Plugin {
     }
 
     public void setPath(Path path) {
+        System.out.println("set path de plugin ("+this.getName()+"): " + path.toString());
         this.path = path;
     }
     
