@@ -112,8 +112,9 @@ public class AnalyzeAction implements StageAction {
             analyzableConfigurations.addAll(notPlayableConfigurations);
 
             List<AnalyzableConfiguration> analyzableList = new ArrayList(analyzableConfigurations);
-            analyzableList.add(analysisDialog.getNotesConfiguration());
-
+            if (analysisDialog.getNotesConfiguration() != null) {
+                analyzableList.add(analysisDialog.getNotesConfiguration());
+            }
             JDialog waitDialog = new JDialog();
             JLabel label = new JLabel("Procesando, por favor espere.");
 
@@ -191,9 +192,11 @@ public class AnalyzeAction implements StageAction {
                 vlista.addAll(visualizableConfiguration);
                 obtainMinAndMaxTime(vlista);
 
-                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
-                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
-                vlista.add(analysisDialog.getNotesConfiguration());
+                if (analysisDialog.getNotesConfiguration() != null) {
+                    ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
+                    ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
+                    vlista.add(analysisDialog.getNotesConfiguration());
+                }
 
                 VisualizationPlayer player = new VisualizationPlayer(vlista);
                 DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());

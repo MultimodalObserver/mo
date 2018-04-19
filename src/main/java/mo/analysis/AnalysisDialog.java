@@ -47,7 +47,9 @@ public class AnalysisDialog {
 
     public AnalysisDialog(StagePlugin notesPlugin, List<Configuration> configs, File project) {
         this.notesPlugin = notesPlugin;
-        notesConfiguration = (PlayableAnalyzableConfiguration) notesPlugin.getConfigurations().get(0);
+        if (notesPlugin.getConfigurations() != null && notesPlugin.getConfigurations().size() > 0) {
+            notesConfiguration = (PlayableAnalyzableConfiguration) notesPlugin.getConfigurations().get(0);
+        }
         gbc = new GridBConstraints();
         projectRoot = project;
         dialog = new WizardDialog(null, "Visualization setup");
@@ -314,9 +316,11 @@ public class AnalysisDialog {
                 vc = (VisualizableConfiguration) c;
                 vc.addFile(f.file);
                 list.add(vc);
-                notesConfiguration.addFile(f.file);
-                notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),vc.getClass().getName());
-                ((NotesAnalysisConfig) notesConfiguration).addVisualizable(notesVisualization);// #marca
+                if (notesConfiguration != null) {
+                    notesConfiguration.addFile(f.file);
+                    notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),vc.getClass().getName());
+                    ((NotesAnalysisConfig) notesConfiguration).addVisualizable(notesVisualization);// #marca
+                }
             }
         }
 
