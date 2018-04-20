@@ -1,11 +1,19 @@
 package mo.core.filemanagement.project;
 
+import bibliothek.util.xml.XElement;
+import bibliothek.util.xml.XIO;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import mo.core.I18n;
 import mo.core.MultimodalObserver;
@@ -30,6 +38,7 @@ public class ProjectManagement implements IMenuBarItemProvider {
     private JMenu projectMenu;
     private JMenuItem newProject, openProject, closeProject;
     private I18n inter;
+    private final String dockablesProjectFileName = "dockables.xml";
 
     public ProjectManagement() {
         inter = new I18n(ProjectManagement.class);
@@ -78,12 +87,38 @@ public class ProjectManagement implements IMenuBarItemProvider {
             //System.out.println(chooser.getSelectedFile());
             File selected = chooser.getSelectedFile();
             if (ProjectUtils.isProjectFolder(selected)) {
+                
+                //fix bug 
+                File dockablesFile = new File(selected,dockablesProjectFileName);
+                updateDockablesProjectFile(dockablesFile);
+                //fix bug
+                
                 Project project = new Project(selected.getAbsolutePath());
                 //saveProjectInAppPreferences(project);
                 FileRegistry.getInstance().addOpenedProject(project);
-
             }
         }
+    }
+    
+    private void updateDockablesProjectFile(File dockablesFile){
+    
+               try {
+                    //correccion de bug
+                    XElement root = XIO.readUTF(new FileInputStream(dockablesFile));                
+                    for(XElement dockable :  root.getElements("dockable")){
+                        XElement originaGroup = dockable.getElement("group");
+                        String originalGroupPath = originaGroup.getString();
+                        if(originalGroupPath!=null){
+                            File originalDir =  new File(originalGroupPath);
+                            if(!originalDir.exists()){
+                                originaGroup.setString(dockablesFile.getParentFile().getAbsolutePath());
+                            }
+                        }
+                    }
+                     XIO.writeUTF(root, new FileOutputStream(dockablesFile));
+                } catch (IOException ex) {
+                    Logger.getLogger(ProjectManagement.class.getName()).log(Level.SEVERE, null, ex);
+                }    
     }
 
     private void saveProjectInAppPreferences(Project project) {
