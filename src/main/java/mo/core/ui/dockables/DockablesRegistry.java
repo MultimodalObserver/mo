@@ -213,7 +213,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
                 if(menuItem.getDockable() == d){
                     menu.remove(item);
                     control.removeDockable(d);
-                    d.setVisible(false);
+                    //d.setVisible(false);
                     List dockableList = dockables.get(d.group);
                     if(dockableList!=null){
                         dockableList.remove(d);
