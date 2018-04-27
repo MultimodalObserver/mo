@@ -174,7 +174,7 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
             @Override
             public void closed(CVetoClosingEvent cvce) {
-                control.removeDockable(d);
+                //control.removeDockable(d);
                 parentMenu.remove(menuItem);
             }
         });
