@@ -25,6 +25,7 @@ import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import mo.core.I18n;
 import mo.core.plugin.Extends;
 import mo.core.plugin.Extension;
@@ -81,8 +82,8 @@ public class DockablesRegistry implements IMenuBarItemProvider {
 
     public void addDockableInProjectGroup(String projectPath, DockableElement dockable) {
         addDockable(projectPath, dockable);
-    }
-
+    }     
+    
     private void addDockable(String group, DockableElement dockable) {
         addDockableToHashMap(group, dockable);
         addDockableToControlAndSetVisible(dockable);
@@ -107,11 +108,12 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         control.addDockable(d);
         d.setVisible(true);
     }
-
+    
     private void setupMenuItemForAppDockable(JMenu parentMenu, DockableElement d) {
 
         DockableCheckBoxMenuItem menuItem = new DockableCheckBoxMenuItem();
         menuItem.setText(d.getTitleText());
+        
         menuItem.setDockable(d);
         d.addVetoClosingListener(new CVetoClosingListener() {
             @Override
@@ -136,7 +138,156 @@ public class DockablesRegistry implements IMenuBarItemProvider {
         menuItem.setVisible(true);
         menuItem.addItemListener(this::checkBoxMenuItemStateChanged);
     }
+    
+    
+    public void addAppTemporalWideDockable(DockableElement dockable) {
+        addTemporalDockableInProjectGroup(null, dockable);
+    }    
 
+    public void addTemporalDockableInProjectGroup(String projectPath, DockableElement dockable) {
+        addTemporalDockable(projectPath, dockable);
+    }    
+    
+    private void addTemporalDockable(String group, DockableElement dockable) {
+        addDockableToControlAndSetVisible(dockable);
+
+        JMenu parentMenu;
+        if (group == null) {
+            parentMenu = windowMenu;
+        } else {
+            parentMenu = getOrCreateMenuItemForGroup(group);
+        }
+        setupTemporalMenuItemForAppDockable(parentMenu, dockable);
+    }    
+    
+    
+    private void setupTemporalMenuItemForAppDockable(JMenu parentMenu, DockableElement d) {
+
+        DockableCheckBoxMenuItem menuItem = new DockableCheckBoxMenuItem();
+        menuItem.setText(d.getTitleText());
+        
+        menuItem.setDockable(d);
+        d.addVetoClosingListener(new CVetoClosingListener() {
+            @Override
+            public void closing(CVetoClosingEvent cvce) {
+            }
+
+            @Override
+            public void closed(CVetoClosingEvent cvce) {
+                control.removeDockable(d);
+                parentMenu.remove(menuItem);
+            }
+        });
+        d.addCDockableLocationListener((CDockableLocationEvent cdle) -> {
+            CDockable cd = cdle.getDockable();
+            if (!cd.isVisible()) {
+                menuItem.setSelected(false);
+                d.setBackupLocation(cdle.getOldLocation());
+            }
+        });
+        menuItem.setState(true);
+
+        parentMenu.add(menuItem);
+        menuItem.setVisible(true);
+        menuItem.addItemListener(this::checkBoxMenuItemStateChanged);
+    }    
+
+    public void removeDockableFromRgistry(DockableElement d){
+        removeDockableFromRgistry(windowMenu, d);
+    }
+    
+    public void removeDockableFromRgistry(JMenu menu, DockableElement d){
+        DockableCheckBoxMenuItem menuItem = new DockableCheckBoxMenuItem();;
+        JMenuItem item;
+        
+        
+        for(int i=0 ; i<= menu.getItemCount()-1; i++){
+
+            item = menu.getItem(i);
+            
+            if(item instanceof JMenu){
+                removeDockableFromRgistry((JMenu)item, d);
+            }
+            if(item instanceof DockableCheckBoxMenuItem){
+                menuItem = (DockableCheckBoxMenuItem)item;
+                if(menuItem.getDockable() == d){
+                    menu.remove(item);
+                    control.removeDockable(d);
+                    d.setVisible(false);
+                    List dockableList = dockables.get(d.group);
+                    if(dockableList!=null){
+                        dockableList.remove(d);
+                    }    
+                }
+            }  
+        }    
+    }
+    
+    public DockableElement getDockableByTitle(String title){
+        return getDockableFromTitle(windowMenu, title);
+    }
+    
+    
+    private DockableElement getDockableFromTitle(JMenu menu, String title){
+        
+        JMenuItem item;
+        
+        for(int i=0 ; i<= menu.getItemCount()-1; i++){
+
+            item = menu.getItem(i);
+            
+            if(item instanceof JMenu){
+                DockableElement e = getDockableFromTitle((JMenu)item, title);
+                if(e!=null){return e;}
+            }
+            if(item instanceof DockableCheckBoxMenuItem){
+                DockableCheckBoxMenuItem menuItem = (DockableCheckBoxMenuItem)item;
+                if(menuItem.getDockable().getTitleText().equals(title) ){
+                    return menuItem.getDockable();
+                }
+            }
+            
+            
+        }
+        return null;
+    }    
+    
+    public DockableCheckBoxMenuItem getDockableMeuItemByTitle(String title){
+        return getDockableMenuItemByTitle(windowMenu, title);
+    }
+    
+    
+    private DockableCheckBoxMenuItem getDockableMenuItemByTitle(JMenu menu, String title){
+        
+        JMenuItem item;
+        
+        for(int i=0 ; i<= menu.getItemCount()-1; i++){
+
+            item = menu.getItem(i);
+            
+            if(item instanceof JMenu){
+                DockableCheckBoxMenuItem it = getDockableMenuItemByTitle((JMenu)item, title);
+                if(it!=null){return it;}
+            }
+            if(item instanceof DockableCheckBoxMenuItem){
+                DockableCheckBoxMenuItem menuItem = (DockableCheckBoxMenuItem)item;
+                if(menuItem.getDockable().getTitleText().equals(title) ){
+                    return menuItem;
+                }
+            }
+            
+            
+        }
+        return null;
+    }          
+
+        
+        
+    
+
+     
+    
+    
     private JMenu getOrCreateMenuItemForGroup(String group) {
 
         for (Component c : windowMenu.getMenuComponents()) {
