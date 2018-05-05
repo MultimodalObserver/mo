@@ -17,39 +17,30 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import static mo.core.DataFileFinder.findFilesCreatedBy;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.WizardDialog;
 import mo.organization.Configuration;
 import mo.visualization.VisualizableConfiguration;
-
 import mo.organization.StagePlugin;
+import static mo.core.DataFileFinder.findFilesCreatedBy;
+
 
 public class AnalysisDialog {
-
-    WizardDialog dialog;
-
-    List<Configuration> configurations;
-
     ArrayList<JCheckBox> checkBoxs;
     ArrayList<JComboBox> filesComboBoxes;
-
     List<File> files;
-
     File projectRoot;
-
     JPanel filesPane;
-
     GridBConstraints gbc;
-
+    WizardDialog dialog;
+    List<Configuration> configurations;
+    
     private StagePlugin notesPlugin;
-    private PlayableAnalyzableConfiguration notesConfiguration;
+    private PlayableAnalyzableConfiguration notesConfiguration = null;
 
     public AnalysisDialog(StagePlugin notesPlugin, List<Configuration> configs, File project) {
         this.notesPlugin = notesPlugin;
-        if (notesPlugin.getConfigurations() != null && notesPlugin.getConfigurations().size() > 0) {
-            notesConfiguration = (PlayableAnalyzableConfiguration) notesPlugin.getConfigurations().get(0);
-        }
+
         gbc = new GridBConstraints();
         projectRoot = project;
         dialog = new WizardDialog(null, "Visualization setup");
@@ -113,6 +104,8 @@ public class AnalysisDialog {
                 }
             }
 
+            updateNotePlugin();
+
             if (configurations.size() > 0) {
                 dialog.enableNext();
             } else {
@@ -134,6 +127,19 @@ public class AnalysisDialog {
         }
     }
 
+    private void updateNotePlugin() {
+        for (Configuration noteConfig : notesPlugin.getConfigurations()) {
+            for (Configuration config : configurations) {
+                if (config.equals(noteConfig)) {
+                    notesConfiguration = (PlayableAnalyzableConfiguration) notesPlugin.getConfigurations().get(0);
+                    return;
+                }
+            }
+        }
+
+        notesConfiguration = null;
+    }
+
     private void stepChanged() {
         if (dialog.getCurrentStep() == 0) {
             dialog.disableBack();
@@ -147,6 +153,7 @@ public class AnalysisDialog {
 
             int row = 0;
             for (Configuration configuration : configurations) {
+                if (!notesPlugin.getConfigurations().contains(configuration)) {
                 if (configuration instanceof VisualizableConfiguration) {
                     filesPane.add(new JLabel(configuration.getId()), gbc.gy(row++));
                     VisualizableConfiguration c = (VisualizableConfiguration) configuration;
@@ -201,6 +208,7 @@ public class AnalysisDialog {
                     });
                     filesPane.add(b, gbc.gy(row++));
                 }
+            }
             }
             
         } 
@@ -271,7 +279,7 @@ public class AnalysisDialog {
                 pac.addFile(f.file);
                 list.add(pac);
                 notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),pac.getClass().getName());
-                ((NotesAnalysisConfig) notesConfiguration).addPlayable(notesVisualization);// #marca
+                ((NotesAnalysisConfig) notesConfiguration).addPlayable(notesVisualization);
             }
         }
 
@@ -319,7 +327,7 @@ public class AnalysisDialog {
                 if (notesConfiguration != null) {
                     notesConfiguration.addFile(f.file);
                     notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),vc.getClass().getName());
-                    ((NotesAnalysisConfig) notesConfiguration).addVisualizable(notesVisualization);// #marca
+                    ((NotesAnalysisConfig) notesConfiguration).addVisualizable(notesVisualization);
                 }
             }
         }
@@ -333,7 +341,6 @@ public class AnalysisDialog {
         File file;
 
         public FilePath(File from, File to) throws IOException {
-            System.out.println("canonical = " + to.getCanonicalPath()); // alonso
             this.file = new File(to.getCanonicalPath());
             this.from = from;
         }
