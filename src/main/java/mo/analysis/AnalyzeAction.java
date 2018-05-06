@@ -2,10 +2,23 @@ package mo.analysis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.io.File;
+import java.awt.GridBagLayout;
+import java.awt.Dialog.ModalityType;
+import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JButton;
+import java.awt.FlowLayout;
+import javax.swing.SwingWorker;
+import javax.swing.JFrame;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.Configuration;
 import mo.organization.StagePlugin;
-
 import mo.organization.StageAction;
 import mo.organization.ProjectOrganization;
 import mo.organization.Participant;
@@ -14,46 +27,17 @@ import mo.visualization.VisualizationDialog2;
 import mo.visualization.VisualizationPlayer;
 import mo.visualization.VisualizableConfiguration;
 
-import java.awt.GridBagLayout;
-import java.awt.Dialog.ModalityType;
-
-import java.io.File;
-
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-
-import javax.swing.JPanel;
-
-import javax.swing.JButton;
-
-import java.awt.FlowLayout;
-
-import javax.swing.SwingWorker;
-
-import javax.swing.JFrame;
-
-import java.awt.event.ActionEvent;
-import java.awt.BorderLayout;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 
 public class AnalyzeAction implements StageAction {
-
     private File storageFolder;
-    private ProjectOrganization org;
     private Thread[] threads;
     private JButton cancelButon;
     private JButton okButon;
     private boolean accepted;
-    private StagePlugin notesPlugin;
-
-    private Participant participant;
-
-
     private long current, start, end;
-
+    private StagePlugin notesPlugin;
+    private Participant participant;
+    private ProjectOrganization org;
     private List<AnalyzableConfiguration> analyzableConfigurations;
 
     private static final Logger logger = Logger.getLogger(AnalyzeAction.class.getName());
@@ -61,7 +45,7 @@ public class AnalyzeAction implements StageAction {
     public static void main(String[] args) {
         
     }
-    
+
     @Override
     public String getName() {
         return "Analyze";
@@ -90,7 +74,6 @@ public class AnalyzeAction implements StageAction {
         for (StagePlugin plugin : stage.getPlugins()) {
             if(plugin.getName().equals("Notes plugin")) {
                 notesPlugin = plugin;
-                continue;
             }
 
             for (Configuration configuration : plugin.getConfigurations()) {
@@ -112,8 +95,9 @@ public class AnalyzeAction implements StageAction {
             analyzableConfigurations.addAll(notPlayableConfigurations);
 
             List<AnalyzableConfiguration> analyzableList = new ArrayList(analyzableConfigurations);
-            analyzableList.add(analysisDialog.getNotesConfiguration());
-
+            if (analysisDialog.getNotesConfiguration() != null) {
+                analyzableList.add(analysisDialog.getNotesConfiguration());
+            }
             JDialog waitDialog = new JDialog();
             JLabel label = new JLabel("Procesando, por favor espere.");
 
@@ -191,9 +175,11 @@ public class AnalyzeAction implements StageAction {
                 vlista.addAll(visualizableConfiguration);
                 obtainMinAndMaxTime(vlista);
 
-                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
-                ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
-                vlista.add(analysisDialog.getNotesConfiguration());
+                if (analysisDialog.getNotesConfiguration() != null) {
+                    ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setStart(start);
+                    ((NotesPlayer) analysisDialog.getNotesConfiguration().getPlayer()).setEnd(end);
+                    vlista.add(analysisDialog.getNotesConfiguration());
+                }
 
                 VisualizationPlayer player = new VisualizationPlayer(vlista);
                 DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());

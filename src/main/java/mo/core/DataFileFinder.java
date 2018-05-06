@@ -30,7 +30,6 @@ public class DataFileFinder {
         ArrayList<File> result = new ArrayList<>();
 
         try {
-            //Files.walkFileTree(root.toPath(), new )
             Properties prop = new Properties();
             Files
                     .walk(root.toPath())
