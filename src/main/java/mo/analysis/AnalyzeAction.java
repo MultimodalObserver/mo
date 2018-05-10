@@ -26,6 +26,7 @@ import mo.organization.StageModule;
 import mo.visualization.VisualizationDialog2;
 import mo.visualization.VisualizationPlayer;
 import mo.visualization.VisualizableConfiguration;
+import mo.core.I18n;
 
 
 public class AnalyzeAction implements StageAction {
@@ -39,6 +40,7 @@ public class AnalyzeAction implements StageAction {
     private Participant participant;
     private ProjectOrganization org;
     private List<AnalyzableConfiguration> analyzableConfigurations;
+    private I18n i18n;
 
     private static final Logger logger = Logger.getLogger(AnalyzeAction.class.getName());
 
@@ -46,9 +48,13 @@ public class AnalyzeAction implements StageAction {
         
     }
 
+    public AnalyzeAction() {
+        i18n = new I18n(AnalyzeAction.class);
+    }
+
     @Override
     public String getName() {
-        return "Analyze";
+        return i18n.s("AnalysisStage.analyze");
     }
 
     @Override

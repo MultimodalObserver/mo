@@ -23,6 +23,7 @@ import mo.organization.Configuration;
 import mo.visualization.VisualizableConfiguration;
 import mo.organization.StagePlugin;
 import static mo.core.DataFileFinder.findFilesCreatedBy;
+import mo.core.I18n;
 
 
 public class AnalysisDialog {
@@ -37,15 +38,17 @@ public class AnalysisDialog {
     
     private StagePlugin notesPlugin;
     private PlayableAnalyzableConfiguration notesConfiguration = null;
+    private I18n i18n;
 
     public AnalysisDialog(StagePlugin notesPlugin, List<Configuration> configs, File project) {
+        i18n = new I18n(AnalysisDialog.class);
         this.notesPlugin = notesPlugin;
 
         gbc = new GridBConstraints();
         projectRoot = project;
-        dialog = new WizardDialog(null, "Visualization setup");
+        dialog = new WizardDialog(null, i18n.s("AnalysisStage.visualizationSetup"));
         JPanel configsPanel = new JPanel();
-        configsPanel.setName("Select configurations");
+        configsPanel.setName(i18n.s("AnalysisStage.selectConfigs"));
 
         configsPanel.setLayout(new GridBagLayout());
         GridBConstraints g = new GridBConstraints();
@@ -69,7 +72,7 @@ public class AnalysisDialog {
         dialog.addPanel(configsPanel);
 
         filesPane = new JPanel(new GridBagLayout());
-        filesPane.setName("Select files");
+        filesPane.setName(i18n.s("AnalysisStage.selectFiles")); // marcador
 
         dialog.addPanel(filesPane);
 

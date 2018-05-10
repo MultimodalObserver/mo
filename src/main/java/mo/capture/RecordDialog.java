@@ -11,16 +11,20 @@ import javax.swing.JDialog;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.organization.Configuration;
+import mo.core.I18n;
 
 public class RecordDialog extends JDialog {
-
     JButton recordButton;
     ArrayList<JCheckBox> checkBoxs;
     List<RecordableConfiguration> configurations;
     boolean startRecording = false;
+    private I18n i18n;
 
     public RecordDialog(List<Configuration> configs) {
-        super(null, "Record", JDialog.ModalityType.APPLICATION_MODAL);
+        super(null, "", JDialog.ModalityType.APPLICATION_MODAL);
+
+        i18n = new I18n(RecordDialog.class);
+        setTitle(i18n.s("CaptureStage.record"));
 
         setLayout(new GridBagLayout());
         GridBConstraints g = new GridBConstraints();
@@ -39,7 +43,7 @@ public class RecordDialog extends JDialog {
                 }
             });
         }
-        recordButton = new JButton("Record");
+        recordButton = new JButton(i18n.s("CaptureStage.record"));
         recordButton.setEnabled(false);
         recordButton.addActionListener(new ActionListener() {
             @Override

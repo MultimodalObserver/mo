@@ -21,8 +21,11 @@ import static mo.core.DataFileFinder.findFilesCreatedBy;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.WizardDialog;
 import mo.organization.Configuration;
+import mo.core.I18n;
 
 public class VisualizationDialog2 {
+
+    private I18n i18n;
 
     WizardDialog dialog;
 
@@ -40,11 +43,12 @@ public class VisualizationDialog2 {
     GridBConstraints gbc;
 
     public VisualizationDialog2(List<Configuration> configs, File project) {
+        i18n = new I18n(VisualizationDialog2.class);
         gbc = new GridBConstraints();
         projectRoot = project;
-        dialog = new WizardDialog(null, "Visualization setup");
+        dialog = new WizardDialog(null, i18n.s("VisualizationStage.visualizationSetup"));
         JPanel configsPanel = new JPanel();
-        configsPanel.setName("Select configurations");
+        configsPanel.setName(i18n.s("VisualizationStage.selectConfigs"));
 
         configsPanel.setLayout(new GridBagLayout());
         GridBConstraints g = new GridBConstraints();
@@ -70,7 +74,7 @@ public class VisualizationDialog2 {
         dialog.addPanel(configsPanel);
 
         filesPane = new JPanel(new GridBagLayout());
-        filesPane.setName("Select files");
+        filesPane.setName(i18n.s("VisualizationStage.selectFiles"));
 
         dialog.addPanel(filesPane);
 

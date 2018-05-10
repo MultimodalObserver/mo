@@ -8,8 +8,14 @@ import mo.organization.ProjectOrganization;
 import mo.organization.StageAction;
 import mo.organization.StagePlugin;
 import mo.organization.StageModule;
+import mo.core.I18n;
 
 public class VisualizeAction implements StageAction {
+    private I18n i18n;
+
+    public VisualizeAction() {
+        i18n = new I18n(VisualizeAction.class);
+    }
 
     public static void main(String[] args) {
         
@@ -17,7 +23,7 @@ public class VisualizeAction implements StageAction {
     
     @Override
     public String getName() {
-        return "Visualize";
+        return i18n.s("VisualizationStage.visualize");
     }
 
     @Override

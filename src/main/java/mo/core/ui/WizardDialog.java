@@ -23,6 +23,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingUtilities;
+import mo.core.I18n;
+
 
 public class WizardDialog extends JDialog {
 
@@ -36,6 +38,7 @@ public class WizardDialog extends JDialog {
     private final JLabel warningLabel;
     private final JLabel stepTitleLabel;
     private int currentStepIndex = 0;
+    private I18n i18n;
 
     private List<WizardListener> listeners;
 
@@ -45,13 +48,13 @@ public class WizardDialog extends JDialog {
     public WizardDialog(JFrame parent, String title) {
         super(parent, title);
         super.setModalityType(ModalityType.APPLICATION_MODAL);
+        i18n = new I18n(WizardDialog.class);
         this.panels = new ArrayList<>();
         result = new HashMap<>();
         stepsLabels = new ArrayList<>();
         listeners = new ArrayList<>();
 
-        //setLayout(new BoxLayout(dialogPanel, BoxLayout.LINE_AXIS));
-        JLabel stepsLabel = new JLabel("Steps", JLabel.LEFT);
+        JLabel stepsLabel = new JLabel(i18n.s("Button.steps"), JLabel.LEFT);
         stepsLabel.setFont(boldFont);
 
         stepsLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -69,26 +72,26 @@ public class WizardDialog extends JDialog {
         externalStepsPanel.setBackground(Color.WHITE);
         externalStepsPanel.add(stepsPanel);
 
-        backButton = new JButton("< Back");
+        backButton = new JButton("< " + i18n.s("Button.back"));
         backButton.setEnabled(false);
         backButton.addActionListener((ActionEvent e) -> {
             showPrevPanel();
         });
 
-        nextButton = new JButton("Next >");
+        nextButton = new JButton(i18n.s("Button.next") + " >");
         nextButton.setEnabled(false);
         nextButton.addActionListener((ActionEvent e) -> {
             showNextPanel();
         });
 
-        finishButton = new JButton("Finish");
+        finishButton = new JButton(i18n.s("Button.finish"));
         finishButton.setEnabled(false);
         finishButton.addActionListener((ActionEvent e) -> {
             setVisible(false);
             dispose();
         });
 
-        JButton cancelButton = new JButton("Cancel");
+        JButton cancelButton = new JButton(i18n.s("Button.cancel"));
         cancelButton.addActionListener((ActionEvent e) -> {
             result = null;
             setVisible(false);

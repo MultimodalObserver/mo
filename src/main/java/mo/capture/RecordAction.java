@@ -14,9 +14,11 @@ import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.*;
+import mo.core.I18n;
 
 public class RecordAction implements StageAction {
 
+    private I18n i18n;
     private final static String ACTION_NAME = "Record";
     private ProjectOrganization org;
     private Participant participant;
@@ -34,12 +36,13 @@ public class RecordAction implements StageAction {
     private static final Logger logger = Logger.getLogger(RecordAction.class.getName());
 
     public RecordAction() {
+        i18n = new I18n(RecordAction.class);
         configurations = new ArrayList<>();
     }
 
     @Override
     public String getName() {
-        return ACTION_NAME;
+        return i18n.s("CaptureStage.record");
     }
 
     @Override
