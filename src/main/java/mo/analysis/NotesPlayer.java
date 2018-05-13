@@ -1,30 +1,21 @@
 package mo.analysis;
 
-import mo.visualization.Playable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.io.BufferedReader;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.NumberFormatException;
-
-import java.util.Iterator;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.SwingUtilities;
-
+import mo.visualization.Playable;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
 
 
-
 public class NotesPlayer implements Playable {
-
     private long start;
     private long end;
     private List<NotesRecorder> notesRecorders;
@@ -97,11 +88,6 @@ public class NotesPlayer implements Playable {
             }
         }
 
-        Iterator<Note> it = set.iterator();
-        Note anotherNote;
-        while(it.hasNext()) {
-            anotherNote = it.next();
-        }
         return set;
     }
 

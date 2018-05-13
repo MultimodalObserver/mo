@@ -6,37 +6,30 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.TextArea;
-import java.awt.BorderLayout;
-import mo.analysis.TimeRuler;
 import mo.visualization.VisualizationPlayer;
 import javax.swing.JScrollPane;
 import java.util.List;
 import java.util.ArrayList;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.AdjustmentEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.AlphaComposite;
 import java.awt.Point;
 import java.awt.event.MouseMotionListener;
 import java.awt.Font;
-import mo.visualization.VisualizableConfiguration;
 import java.util.TreeSet;
 import java.util.Iterator;
 import javax.swing.JScrollBar;
+import mo.analysis.TextBox.NewNoteListener;
 
+public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener, NewNoteListener {
 
-public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener {
-	private BufferedImage bufferedImage;
-	private Graphics2D g2d;
-	private int height;
-	private Dimension panelDimension;
-    private JScrollBar horizontalScrollBar;
+    private BufferedImage bufferedImage;
+    private Graphics2D g2d;
+    private int height;
     private DrawingPane drawingPane;
-	private JScrollPane scroller;
+    private JScrollPane scroller;
     private TimeRuler ruler;
     private List<PluginTrack> pluginTracks;
     private VisualizationPlayer player;
@@ -50,12 +43,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     private int trackWidth;
     private JMenuItem newComment;
     private JPopupMenu popupMenu;
-    private int beginSelectTime;
-    private int endSelectTime;
-    private int beginSelectX;
-    private int endSelectX;
     private int pxMousePressed;
-    private int pxMouseReleased;
     private int pxMouseDragged;
     private Point rightClick;
     private AlphaComposite alpha04 = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.4f);
@@ -73,13 +61,11 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
     private Point previousPressed = null;
     private Point pressed = null;
     private Point released = null;
-    private int numeroPlugins;
-    private int maximo;
     private JPanel panelContenedor;
     private final NotesPlayer notesPlayer;
     private JScrollBar scrollBar;
 
-	public AnalysisTimePanel(NotesPlayer notesPlayer) {
+    public AnalysisTimePanel(NotesPlayer notesPlayer) {
         panelContenedor = this;
         this.notesPlayer = notesPlayer;
 
@@ -87,11 +73,11 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
         layeredPane = new JLayeredPane();
         layeredPane.setPreferredSize(new Dimension(3000,3000));
-        
+
         setBackground(Color.black);
         this.player = player;
 
-		drawingPane = new DrawingPane();
+        drawingPane = new DrawingPane();
 
         addMouseListener(this);
         drawingPane.addMouseListener(this);
@@ -114,10 +100,11 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         anotherPanel.setOpaque(true);
 
         textBox = new TextBox();
+        textBox.addNewNoteListener(this);
 
         layeredPane.add(drawingPane, new Integer(0));
         layeredPane.add(textBox, new Integer(1));
-        
+
         scroller = new JScrollPane(layeredPane);
         scroller.setPreferredSize(new Dimension(100,100));
         add(scroller);
@@ -126,13 +113,12 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
         startTime = notesPlayer.getStart();
         endTime = notesPlayer.getEnd();
-        
+
         time = 0;
 
         pluginTracks = new ArrayList<>();
-        
+
         PluginTrack track;
-        
 
         int y = offset;
         int y1,y2;
@@ -142,7 +128,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
             it = set.iterator();
             y1 = y;
             y2 = y + trackHeight;
-            track = new PluginTrack(notesPlayer.getStart(),notesPlayer.getEnd(),y1,y2);
+            track = new PluginTrack(y1,y2);
             pluginTracks.add(track);
             while(it.hasNext()) {
                 aNote = it.next();
@@ -158,7 +144,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
 	    Dimension panelDimension = getSize();
 	    width = (int) panelDimension.getWidth();
-	    height = (int) panelDimension.getHeight();
+	    this.height = (int) panelDimension.getHeight();
 	    scroller.setPreferredSize(panelDimension);
         drawingPane.revalidate();
 	}
@@ -212,6 +198,7 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
 
     public void paintMouseSelection(Graphics2D g) {
         int height = offset+pluginTracks.size()*trackHeight;
+        
         if(beginSelectPos != null && endSelectPos != null) {
             width = Math.abs(beginSelectPos.x - endSelectPos.x);
             
@@ -274,24 +261,6 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         popupMenu.add(newComment);
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        if (SwingUtilities.isLeftMouseButton(e)) {
-
-            if (textBox.isVisible()) {
-                Note newNote = new Note(getAbsolutTime(msAtPx(beginSelectPos.x)), getAbsolutTime(msAtPx(endSelectPos.x)),textBox.getText());
-                int indexTrack = getIndexTrack(rightClick.y);
-                notesPlayer.addNote(indexTrack,newNote);
-                loadTrack(indexTrack);
-                textBox.hideme();
-
-                repaint();
-            }
-
-            leftClick = e.getPoint();
-        }
-    }
-
     public void loadTrack(int indexTrack) {
         TreeSet notesTree = notesPlayer.getNotesForTrack().get(indexTrack);
         Iterator<Note> it = notesTree.iterator();
@@ -304,14 +273,32 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         }
         pluginTracks.set(indexTrack,track);
     }
+    
+    public void addNewNote() {
+        Note newNote = new Note(getAbsolutTime(msAtPx(beginSelectPos.x)), getAbsolutTime(msAtPx(endSelectPos.x)),textBox.getText());
+        int indexTrack = getIndexTrack(rightClick.y);
+        notesPlayer.addNote(indexTrack,newNote);
+        loadTrack(indexTrack);
+        textBox.hideme();
 
+        repaint();
+    }
+    
     @Override
-    public void mouseEntered(MouseEvent e) {
+    public void mouseClicked(MouseEvent e) {
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (textBox.isVisible()) {
+                addNewNote();
+            }
+            leftClick = e.getPoint();
+        }
     }
 
     @Override
-    public void mouseExited(MouseEvent e) {
-    }
+    public void mouseEntered(MouseEvent e) {}
+
+    @Override
+    public void mouseExited(MouseEvent e) {}
 
     @Override
     public void mousePressed(MouseEvent e) {
@@ -326,6 +313,8 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         if(SwingUtilities.isRightMouseButton(e)) {
             rightClick = e.getPoint();
             if(beginSelectPos != null && endSelectPos != null) {
+                System.out.println("beginSelectPos.x = " +  beginSelectPos.x);
+                System.out.println("endSelectPos.x = " +  endSelectPos.x);
                 if(rightClick.x >= beginSelectPos.x && rightClick.x <= endSelectPos.x) {
                     if(getIndexTrack((int) rightClick.y) != -1) {
                         if(popupMenu == null) {
@@ -334,14 +323,13 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
                         popupMenu.show(this,e.getX(),e.getY());
                     }
                 }
+                
             }
         }
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        pxMouseReleased = (int) e.getPoint().getX();
-
         if (SwingUtilities.isLeftMouseButton(e)) {
             released = e.getPoint();
             if (released.x == pressed.x && released.y == pressed.y) {
@@ -349,6 +337,12 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
                 beginSelectPos = pressed;
             } else {
                 previousPressed = pressed;
+                if (beginSelectPos.x > endSelectPos.x) {
+                    int inicio = beginSelectPos.x;
+                    int fin = endSelectPos.x;
+                    beginSelectPos.x = fin;
+                    endSelectPos.x = inicio;
+                }
             }
         }
     }
@@ -377,12 +371,17 @@ public class AnalysisTimePanel extends JPanel implements MouseListener, MouseMot
         }
     }
 
+    @Override
+    public void newNote() {
+        addNewNote();
+    }
+
     public class DrawingPane extends JPanel {
 
     	public DrawingPane() {
             setFont(new Font("Arial Unicode MS", Font.PLAIN, 11));
-			bufferedImage = new BufferedImage(100,100, BufferedImage.TYPE_INT_ARGB);
-			g2d = bufferedImage.createGraphics();
+            bufferedImage = new BufferedImage(100,100, BufferedImage.TYPE_INT_ARGB);
+            g2d = bufferedImage.createGraphics();
 
             this.setOpaque(false);
             this.setBounds(0,0,10000,2000);
