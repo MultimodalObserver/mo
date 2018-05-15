@@ -113,10 +113,12 @@ public class PlayerControlsPanel {
         if (player.isPlaying()) {
             play.setText(PLAY_SYMBOL);
             player.pause();
+            CheckSync.setEnabled(true);
         } else {
             play.setText(PAUSE_SYMBOL);
             player.play();
             player.sync(sync);
+            CheckSync.setEnabled(false);            
         }
     }
 

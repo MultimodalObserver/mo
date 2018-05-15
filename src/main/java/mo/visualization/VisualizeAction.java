@@ -9,6 +9,7 @@ import mo.organization.StageAction;
 import mo.organization.StagePlugin;
 import mo.organization.StageModule;
 import mo.core.I18n;
+import mo.core.ui.dockables.DockableElement;
 
 public class VisualizeAction implements StageAction {
     private I18n i18n;
@@ -41,10 +42,19 @@ public class VisualizeAction implements StageAction {
         
         if (accept) {
             VisualizationPlayer p = new VisualizationPlayer(d.getConfigurations());
+            
+            //delete last dockable
+            DockableElement last = DockablesRegistry.getInstance().getDockableByTitle(p.getDockable().getTitleText());
+            if(last!=null){
+                   DockablesRegistry.getInstance().removeDockableFromRgistry(last);
+            }            
+ 
             DockablesRegistry.getInstance()
                     .addDockableInProjectGroup(
                             organization.getLocation().getAbsolutePath(),
                             p.getDockable());
+            
+
         }
     }
     
