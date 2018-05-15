@@ -27,6 +27,7 @@ import mo.visualization.VisualizationDialog2;
 import mo.visualization.VisualizationPlayer;
 import mo.visualization.VisualizableConfiguration;
 import mo.core.I18n;
+import mo.core.ui.dockables.DockableElement;
 
 
 public class AnalyzeAction implements StageAction {
@@ -188,7 +189,17 @@ public class AnalyzeAction implements StageAction {
                 }
 
                 VisualizationPlayer player = new VisualizationPlayer(vlista);
+                
+                //delete last dockable
+                DockableElement last = DockablesRegistry.getInstance().getDockableByTitle(player.getDockable().getTitleText());
+                if(last!=null){
+                   DockablesRegistry.getInstance().removeDockableFromRgistry(last);
+                }                
+                //continue
+                
                 DockablesRegistry.getInstance().addDockableInProjectGroup(organization.getLocation().getAbsolutePath(),player.getDockable());
+                
+
             }
         }
     }

@@ -282,7 +282,7 @@ public class AnalysisDialog {
                 pac.addFile(f.file);
                 list.add(pac);
                 notesVisualization = new NotesVisualization(f.file.getAbsolutePath(),pac.getClass().getName());
-                ((NotesAnalysisConfig) notesConfiguration).addPlayable(notesVisualization);
+                if( notesConfiguration!=null){((NotesAnalysisConfig) notesConfiguration).addPlayable(notesVisualization);}
             }
         }
 
