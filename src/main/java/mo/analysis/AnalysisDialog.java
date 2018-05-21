@@ -35,10 +35,9 @@ public class AnalysisDialog {
     GridBConstraints gbc;
     WizardDialog dialog;
     List<Configuration> configurations;
-    
-    private StagePlugin notesPlugin;
+    private final StagePlugin notesPlugin;
     private PlayableAnalyzableConfiguration notesConfiguration = null;
-    private I18n i18n;
+    private final I18n i18n;
 
     public AnalysisDialog(StagePlugin notesPlugin, List<Configuration> configs, File project) {
         i18n = new I18n(AnalysisDialog.class);

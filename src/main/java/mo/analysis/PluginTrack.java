@@ -5,17 +5,16 @@ import java.util.List;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-
 public class PluginTrack {
-    private final Color color;
+    private Color color;
     private List<Note> notes;
+    private String name;
     public int y1;
     public int y2;
 
     public PluginTrack(int y1, int y2) {
         this.y1 = y1;
         this.y2 = y2;
-        color = Color.blue;
         notes = new ArrayList<>();
     }
 
@@ -46,5 +45,21 @@ public class PluginTrack {
 
     public List<Note> getNotes() {
         return notes;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
     }
 }
