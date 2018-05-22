@@ -1,51 +1,41 @@
 package mo.analysis;
 
-import mo.visualization.Playable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.io.BufferedReader;
-
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.NumberFormatException;
-
-import java.util.Iterator;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.swing.SwingUtilities;
-
+import mo.visualization.Playable;
 import mo.core.ui.dockables.DockableElement;
 import mo.core.ui.dockables.DockablesRegistry;
 
-
-
 public class NotesPlayer implements Playable {
-
     private long start;
     private long end;
-    private List<NotesRecorder> notesRecorders;
-    private List<TreeSet> notesForTrack;
-
+    private final List<NotesRecorder> notesRecorders;
+    private final List<Track> tracks;
     private final AnalysisTimePanel panel;
 
     private static final Logger logger = Logger.getLogger(NotesPlayer.class.getName());
 
     public NotesPlayer(List<NotesRecorder> notesRecorders) {
         this.notesRecorders = notesRecorders;
-        notesForTrack = new ArrayList<>();
+        tracks = new ArrayList<>();
 
+        Track track;
         for (NotesRecorder nr : notesRecorders) {
-            notesForTrack.add(getNotes(nr));
+            track = new Track(getTrackName(nr), getNotes(nr));
+            tracks.add(track);
         }
 
         panel = new AnalysisTimePanel(this);
 
         SwingUtilities.invokeLater(() -> {
-                
             try {
                 DockableElement e = new DockableElement();
                 e.add(panel);
@@ -53,15 +43,15 @@ public class NotesPlayer implements Playable {
             } catch (Exception ex) {
                 logger.log(Level.INFO, null, ex);
             }
-        });        
+        });
     }
 
-    public List<TreeSet> getNotesForTrack() {
-        return notesForTrack;
+    public List<Track> getTracks() {
+        return tracks;
     }
 
     private TreeSet<Note> getNotes(NotesRecorder recorder) {
-        TreeSet<Note> set = new TreeSet<Note>();
+        TreeSet<Note> set = new TreeSet<>();
         BufferedReader reader = null;
 
         try {
@@ -97,16 +87,18 @@ public class NotesPlayer implements Playable {
             }
         }
 
-        Iterator<Note> it = set.iterator();
-        Note anotherNote;
-        while(it.hasNext()) {
-            anotherNote = it.next();
-        }
         return set;
     }
 
+    public String getTrackName(NotesRecorder notesRecorder) {
+        String trackNameWithExtension = notesRecorder.getFile().getName();
+        String trackName = trackNameWithExtension.substring(0, trackNameWithExtension.length()-(4+1));
+
+        return trackName;
+    }
+
     public void addNote(int trackIndex, Note note) {
-        notesForTrack.get(trackIndex).add(note);
+        tracks.get(trackIndex).getNotes().add(note);
         saveNote(trackIndex,note);
     }
 
@@ -129,12 +121,12 @@ public class NotesPlayer implements Playable {
         this.end = end;
     }
 
-	@Override
-	public long getStart() {
-		return start;
-	}
+    @Override
+    public long getStart() {
+            return start;
+    }
 
-	@Override
+    @Override
     public long getEnd() {
     	return end;
     }

@@ -1,7 +1,6 @@
 package mo.analysis;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -9,43 +8,28 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import mo.organization.Configuration;
 import mo.visualization.Playable;
-import mo.visualization.VisualizableConfiguration;
-import mo.analysis.AnalyzableConfiguration;
 import mo.organization.ProjectOrganization;
 import mo.organization.Participant;
-import mo.core.ui.dockables.DockableElement;
-import mo.core.ui.dockables.DockablesRegistry;
-import javax.swing.JPanel;
 import java.io.IOException;
-
-import java.nio.file.Path;
-
 import static mo.core.DataFileFinder.findFileCreatedFor;
 import static mo.core.DataFileFinder.findFilesCreatedFor;
 
 import mo.organization.FileDescription;
 
 public class NotesAnalysisConfig implements PlayableAnalyzableConfiguration {
-
     private final String[] creators = {};
-    
-    private List<File> files;
+    private final List<File> files;
     private String id;
     private NotesPlayer player;
-
-    private List<NotesVisualization> playables;
-    private List<NotesVisualization> visualizables;
-    
-    private static final Logger logger = Logger.getLogger(NotesAnalysisConfig.class.getName());
+    private final List<NotesVisualization> playables;
+    private final List<NotesVisualization> visualizables;
     private boolean stopped;
-
     private NotesRecorder recorder;
-
     private ProjectOrganization org;
     private File stageFolder;
     private Participant participant;
-
     private List<NotesRecorder> notesRecorders;
+    private static final Logger logger = Logger.getLogger(NotesAnalysisConfig.class.getName());
 
     public NotesAnalysisConfig() {
         playables = new ArrayList<>();
