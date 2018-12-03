@@ -215,7 +215,7 @@ public class DockableElement extends DefaultSingleCDockable {
                         setLocation(CLocation.external(x, y, w, h));
                         
                     } else {
-                        setLocationsAside(l.get(0));
+//                        setLocationsAside(l.get(0));
                     }
                 } else if (mode.endsWith("normal")) {
                 }

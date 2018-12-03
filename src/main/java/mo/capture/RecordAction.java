@@ -4,19 +4,26 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import mo.communication.Command;
+import mo.communication.ConnectionListener;
+import mo.communication.ConnectionSender;
+import mo.communication.PetitionResponse;
+import mo.communication.ServerConnection;
+import mo.communication.streaming.capture.PluginCaptureSender;
 import mo.core.ui.GridBConstraints;
 import mo.core.ui.Utils;
 import mo.core.ui.dockables.DockablesRegistry;
 import mo.organization.*;
 import mo.core.I18n;
 
-public class RecordAction implements StageAction {
+public class RecordAction implements StageAction, ConnectionListener, ConnectionSender  {
 
     private I18n i18n;
     private final static String ACTION_NAME = "Record";
@@ -26,6 +33,7 @@ public class RecordAction implements StageAction {
     private RecordDialog dialog;
     File storageFolder;
     boolean isPaused = false;
+    boolean isTrayEnable = false, isRecording = false;
 
     private static final Image recImage
             = Utils.createImageIcon("images/rec.png", RecordAction.class).getImage();
@@ -38,6 +46,8 @@ public class RecordAction implements StageAction {
     public RecordAction() {
         i18n = new I18n(RecordAction.class);
         configurations = new ArrayList<>();
+        ServerConnection.getInstance().addListener(this);
+        this.subscribeListener(ServerConnection.getInstance());
     }
 
     @Override
@@ -79,7 +89,7 @@ public class RecordAction implements StageAction {
             for (RecordableConfiguration config : configurations) {
                 config.setupRecording(storageFolder, org, participant);
             }
-
+            isRecording = true;
             JFrame frame = DockablesRegistry.getInstance().getMainFrame();
             if (SystemTray.isSupported()) {
                 try {
@@ -91,25 +101,44 @@ public class RecordAction implements StageAction {
                 createAndShowControls();
             }
             frame.setVisible(false);
+            ServerConnection.getInstance().setParticipantInfo(org, participant, storageFolder);
 
             for (RecordableConfiguration config : configurations) {
+                if (config instanceof PluginCaptureSender)
+                    ServerConnection.getInstance().addActiveCapturePlugin((PluginCaptureSender)config);
+                if (config instanceof ConnectionListener)
+                    ServerConnection.getInstance().subscribeListener((ConnectionListener) config);
+                if (config instanceof ConnectionSender)
+                    ((ConnectionSender)config).subscribeListener(ServerConnection.getInstance());
+                System.out.println(config.getId());
                 config.startRecording();
+            }
+            
+            ServerConnection.getInstance().sendInitialConfigs(null);
+            if(listeners != null){
+                HashMap<String,Object> map = new HashMap<>();
+                map.put("recording_state", "recording");
+                PetitionResponse pr = new PetitionResponse(Command.UPDATE_STATE_RECORDING,map);
+                for(ConnectionListener listener: listeners){
+                    listener.onMessageReceived(this, pr);
+                }
             }
         } catch (Exception ex) {
             logger.log(Level.SEVERE, null, ex);
         }
     }
 
+    private MenuItem pauseResume, stop, cancel;
     private void createAndShowTray() throws AWTException {
 
         final PopupMenu popup = new PopupMenu();
         final TrayIcon trayIcon = new TrayIcon(recImage);
         final SystemTray tray = SystemTray.getSystemTray();
 
-        MenuItem pauseResume = new MenuItem("Pause Recording");
+        pauseResume = new MenuItem("Pause Recording");
 
-        MenuItem stop = new MenuItem("Stop Recording");
-        MenuItem cancel = new MenuItem("Cancel Recording");
+        stop = new MenuItem("Stop Recording");
+        cancel = new MenuItem("Cancel Recording");
 
         popup.add(pauseResume);
         popup.add(stop);
@@ -137,6 +166,7 @@ public class RecordAction implements StageAction {
             public void actionPerformed(ActionEvent e) {
                 cancelRecording();
                 tray.remove(trayIcon);
+                pauseResume =null; stop=null; cancel = null;
             }
         });
 
@@ -144,12 +174,15 @@ public class RecordAction implements StageAction {
             public void actionPerformed(ActionEvent e) {
                 stopRecording();
                 tray.remove(trayIcon);
+                pauseResume =null; stop=null; cancel = null;
             }
         });
 
+        isTrayEnable = true;
         tray.add(trayIcon);
     }
 
+    private JButton stopButton, pauseButton, cancelButton;
     private void createAndShowControls() {
         JDialog controlsDialog
                 = new JDialog((JFrame) null, "Recording Controls");
@@ -161,9 +194,9 @@ public class RecordAction implements StageAction {
         gbc.f(GridBConstraints.HORIZONTAL);
         gbc.i(new Insets(5, 5, 5, 5));
 
-        JButton stopButton = new JButton("Stop");
-        JButton pauseButton = new JButton("||  Pause");
-        JButton cancelButton = new JButton("Cancel");
+        stopButton = new JButton("Stop");
+        pauseButton = new JButton("||  Pause");
+        cancelButton = new JButton("Cancel");
 
         controlsDialog.add(pauseButton, gbc);
         controlsDialog.add(stopButton, gbc.gx(1));
@@ -209,7 +242,7 @@ public class RecordAction implements StageAction {
         });
         controlsDialog.pack();
         controlsDialog.setVisible(true);
-
+        isTrayEnable = false;
     }
 
     private void cancelRecording() {
@@ -218,7 +251,15 @@ public class RecordAction implements StageAction {
         }
         JFrame frame = DockablesRegistry.getInstance().getMainFrame();
         frame.setVisible(true);
-
+        isRecording = false;
+        if(listeners != null){
+            HashMap<String,Object> map = new HashMap<>();
+            map.put("recording_state", "cancelled");
+            PetitionResponse pr = new PetitionResponse(Command.UPDATE_STATE_RECORDING,map);
+            for(ConnectionListener listener: listeners){
+                listener.onMessageReceived(this, pr);
+            }
+        }
     }
 
     private void stopRecording() {
@@ -227,6 +268,15 @@ public class RecordAction implements StageAction {
         }
         JFrame frame = DockablesRegistry.getInstance().getMainFrame();
         frame.setVisible(true);
+        isRecording = false;
+        if(listeners != null){
+            HashMap<String,Object> map = new HashMap<>();
+            map.put("recording_state", "stopped");
+            PetitionResponse pr = new PetitionResponse(Command.UPDATE_STATE_RECORDING,map);
+            for(ConnectionListener listener: listeners){
+                listener.onMessageReceived(this, pr);
+            }
+        }
     }
 
     private void pauseRecording() {
@@ -234,6 +284,14 @@ public class RecordAction implements StageAction {
             configuration.pauseRecording();
         }
         isPaused = true;
+        if(listeners != null){
+            HashMap<String,Object> map = new HashMap<>();
+            map.put("recording_state", "paused");
+            PetitionResponse pr = new PetitionResponse(Command.UPDATE_STATE_RECORDING,map);
+            for(ConnectionListener listener: listeners){
+                listener.onMessageReceived(this, pr);
+            }
+        }
     }
 
     private void resumeRecording() {
@@ -241,5 +299,70 @@ public class RecordAction implements StageAction {
             configuration.resumeRecording();
         }
         isPaused = false;
+        if(listeners != null){
+            HashMap<String,Object> map = new HashMap<>();
+            map.put("recording_state", "recording");
+            PetitionResponse pr = new PetitionResponse(Command.UPDATE_STATE_RECORDING,map);
+            for(ConnectionListener listener: listeners){
+                listener.onMessageReceived(this, pr);
+            }
+        }
+    }
+
+    @Override
+    public void onMessageReceived(Object obj, PetitionResponse pr) {
+        //System.out.println("Record action recibe 1: "+connection.mensajeRecibido+"\n");
+        if(pr != null && isRecording){
+            //System.out.println("Record action recibe 2: "+connection.mensajeRecibido+"\n");
+            try{
+                switch (pr.getType()) {
+                    case Command.STOP_RECORDING:
+                        if(isTrayEnable)
+                            stop.getActionListeners()[0].actionPerformed(
+                                        new ActionEvent(stop,ActionEvent.ACTION_PERFORMED,stop.getActionCommand()));
+                        else stopButton.doClick();
+                        break;
+                        
+                    case Command.PAUSE_RESUME_RECORDING:
+                        if(isPaused){
+                            if(isTrayEnable)
+                            pauseResume.getActionListeners()[0].actionPerformed(
+                                    new ActionEvent(pauseResume,ActionEvent.ACTION_PERFORMED,pauseResume.getActionCommand()));
+                            else pauseButton.doClick();
+                        }
+                        else{
+                            if(isTrayEnable)
+                                pauseResume.getActionListeners()[0].actionPerformed(
+                                        new ActionEvent(pauseResume,ActionEvent.ACTION_PERFORMED,pauseResume.getActionCommand()));
+                            else pauseButton.doClick();
+                        }
+                        break;
+                        
+                    case Command.CANCEL_RECORDING:
+                        if(isTrayEnable)
+                            cancel.getActionListeners()[0].actionPerformed(
+                                    new ActionEvent(cancel,ActionEvent.ACTION_PERFORMED,cancel.getActionCommand()));
+                        else cancelButton.doClick();
+                        break;
+                    default:
+                        break;
+                }
+            }catch(NullPointerException e){
+                System.out.println("Ha ocurrido un error");
+            }
+        }
+    }
+
+    ArrayList<ConnectionListener> listeners;
+    @Override
+    public void subscribeListener(ConnectionListener c) {
+        if(listeners == null) listeners = new ArrayList<>();
+        listeners.add(c);
+    }
+
+    @Override
+    public void unsubscribeListener(ConnectionListener c) {
+        if(listeners == null) listeners = new ArrayList<>();
+        if(listeners.contains(c)) listeners.remove(c);
     }
 }
