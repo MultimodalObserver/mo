@@ -10,7 +10,6 @@ build/
 
 # Package Files #
 *.jar
-!libs     # track manually downloaded libs
 
 build
 

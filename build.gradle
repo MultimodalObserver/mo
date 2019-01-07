@@ -44,10 +44,10 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.10'
     
     // http://mvnrepository.com/artifact/org.ow2.asm/asm
-    compile group: 'org.ow2.asm', name: 'asm', version: '5.1'
+    compile group: 'org.ow2.asm', name: 'asm', version: '7.0'
     
     // http://mvnrepository.com/artifact/com.esotericsoftware.reflectasm/reflectasm
-    compile group: 'com.esotericsoftware.reflectasm', name: 'reflectasm', version: '1.09'
+    compile group: 'com.esotericsoftware', name: 'reflectasm', version: '1.11.7'
 
     // http://mvnrepository.com/artifact/commons-io/commons-io
     compile group: 'commons-io', name: 'commons-io', version: '2.5'
