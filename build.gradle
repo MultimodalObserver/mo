@@ -3,7 +3,7 @@ apply plugin: 'java'
 
 sourceCompatibility = '1.8'
 
-[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+[compileJava]*.options*.encoding = 'UTF-8'
 
 //mainClassName = 'core.App'
 version = '0.0.0'
@@ -43,8 +43,9 @@ dependencies {
     //   http://www.gradle.org/docs/current/userguide/dependency_management.html#sec:how_to_declare_your_dependencies
     testCompile group: 'junit', name: 'junit', version: '4.10'
     
-    // http://mvnrepository.com/artifact/org.ow2.asm/asm
+    // https://mvnrepository.com/artifact/org.ow2.asm/asm
     compile group: 'org.ow2.asm', name: 'asm', version: '7.0'
+
     
     // http://mvnrepository.com/artifact/com.esotericsoftware.reflectasm/reflectasm
     compile group: 'com.esotericsoftware', name: 'reflectasm', version: '1.11.7'

@@ -310,7 +310,7 @@ public class PluginRegistry {
 
     private void processClassAsInputStream(InputStream classIS, String path) throws IOException {
 
-        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM5);
+        ExtensionScanner exScanner = new ExtensionScanner(Opcodes.ASM7);
         exScanner.setClassLoader(cl);
         ClassReader cr = new ClassReader(classIS);
         cr.accept(exScanner, 0);
