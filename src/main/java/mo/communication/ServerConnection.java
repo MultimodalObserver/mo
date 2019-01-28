@@ -213,7 +213,14 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
 //            chat.setName(participant.name);
 //            chat.setInfo(storageFolder);
 //        }
+        if(configsPluginsTCP == null || configsPluginsTCP.isEmpty()){
+            System.out.println("Lista de plugins TCP vacia!");
+            return;
+        }
         for(CommunicationConfiguration config: configsPluginsTCP){
+            if(config == null){
+                break;
+            }
             config.setInfo(storageFolder, participant.name);
             System.out.println(config.toString()+ " configurado en setParticipantInfo");
         }
