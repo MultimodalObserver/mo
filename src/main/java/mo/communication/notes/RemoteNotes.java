@@ -28,7 +28,6 @@ public class RemoteNotes implements CommunicationConfiguration, ConnectionListen
     }
     
 
-    
     public void createFileName(){
         Date now = new Date();
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss.SSS");

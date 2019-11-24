@@ -45,6 +45,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
     private ServerUDP serverUDP;
     private ServerTCP serverTCP;
     private HashMap<String,Integer> ports;
+    private static final int BUFFER_SIZE = 30720;
 
     private ProjectOrganization org;
     private Participant participant;
@@ -61,7 +62,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 public void run() {
                     try {
-                        System.out.println("Cerrando con "+Thread.activeCount()+" hebras");
+                        //System.out.println("Cerrando con "+Thread.activeCount()+" hebras");
                         downServer();
                         //latch.countDown();
                     } catch (ClassNotFoundException ex) {
@@ -71,6 +72,10 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                 }
             }));
         } catch (UnknownHostException ex) {}
+    }
+    
+    public void setLocalIP(String ip){
+        localIP = ip;
     }
 
     public static ServerConnection getInstance(){
@@ -89,7 +94,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
             portTCP = Integer.parseInt((String) configuration.get("portTCP"));
             
             serverTCP = new ServerTCP(portTCP);
-            serverUDP = new ServerUDP(multicastIP, portUDP,2048);
+            serverUDP = new ServerUDP(multicastIP, portUDP,BUFFER_SIZE);
             
             if(configuration.containsKey("configDirectDevs")){
                 // configurar dispositivos configDirectDevs
@@ -110,16 +115,19 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
 
             for(CommunicationProvider1 plugin: pluginsTCP){
                 CommunicationConfiguration config = plugin.initNewConfiguration(null);
+                if(config == null){
+                    continue;
+                }
                 configsPluginsTCP.add(config);
                 if(config instanceof ConnectionListener){
                     ServerConnection.getInstance().subscribeListener((ConnectionListener) config);
                 }
                 if(config instanceof ConnectionSender){
                     ((ConnectionSender) config).subscribeListener(this);
-                    System.out.println("Se suscribió "+config.toString()+" a Connection");
+                    //System.out.println("Se suscribió "+config.toString()+" a Connection");
                 }
                 config.showPlayer();
-                System.out.println(config.toString()+ " isntancido en UPSERVER");
+                //System.out.println(config.toString()+ " isntancido en UPSERVER");
             }
             
             
@@ -140,13 +148,13 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
     }
     
     public void downServer() throws ClassNotFoundException{
-        System.out.println("DownServer ejecutando");
-        System.out.println("online = "+isOnline);
+        //System.out.println("DownServer ejecutando");
+        //System.out.println("online = "+isOnline);
         if(isOnline){
-            System.out.println("está online");
+            //System.out.println("está online");
             PetitionResponse response = new PetitionResponse(Command.END_CONNECTION,null);
             for(RemoteClient rc: clients){
-                System.out.println("cerrando cliente "+rc);
+                //System.out.println("cerrando cliente "+rc);
                 try {
                     rc.send(response);
                     rc.endConnection();
@@ -180,7 +188,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                 
             
         }
-        System.out.println("salió de downServer");
+        //System.out.println("salió de downServer");
     }
     
     public ServerConnection setPortUDP(int port){
@@ -214,7 +222,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
 //            chat.setInfo(storageFolder);
 //        }
         if(configsPluginsTCP == null || configsPluginsTCP.isEmpty()){
-            System.out.println("Lista de plugins TCP vacia!");
+            //System.out.println("Lista de plugins TCP vacia!");
             return;
         }
         for(CommunicationConfiguration config: configsPluginsTCP){
@@ -222,7 +230,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                 break;
             }
             config.setInfo(storageFolder, participant.name);
-            System.out.println(config.toString()+ " configurado en setParticipantInfo");
+            //System.out.println(config.toString()+ " configurado en setParticipantInfo");
         }
         //this storageFolder = storageFolder;
     }
@@ -239,7 +247,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
         for(RemoteClient rc: clients){
             rc.addCapturePlugin(configID);
         }
-        System.out.println("hay "+availablePlugins.size()+" plugins de capture que pueden ser transmitidos");
+        //System.out.println("hay "+availablePlugins.size()+" plugins de capture que pueden ser transmitidos");
     }
 
     // para agregar listeners que escuchen a conexión, por ejemplo, el módulo de captura para pausar remotamente
@@ -257,7 +265,10 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
         if(clients != null && !clients.isEmpty() && availablePlugins != null && !availablePlugins.isEmpty()){
             HashMap<String,Object> map = new HashMap<>();
             map.put("data", e);
-            serverUDP.send(new PetitionResponse(Command.DATA_STREAMING,map));
+            PetitionResponse pr = new PetitionResponse(Command.DATA_STREAMING,map);
+            //System.out.println("Voy a enviar por UDP");
+            //System.out.println(pr);
+            serverUDP.send(pr);
         }
     }
     
@@ -366,7 +377,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
         ArrayList<RemoteClient> inactiveClients = new ArrayList<>();
         switch (p.getType()) {
             case Command.GET_ACTIVE_PLUGINS:
-                System.out.println("ESTA PIDIENDO LOS PLUGINS");
+                //System.out.println("ESTA PIDIENDO LOS PLUGINS");
                 break;
                 
             case Command.GET_PORTS:
@@ -381,7 +392,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                     NOTAS Y CHAT
                 */
             case Command.MSG_CLIENT_TO_SERVER:
-                System.out.println("CHATEANDO");
+                //System.out.println("CHATEANDO");
                 notifyListeners(this,p);
                 r = new PetitionResponse(Command.MSG_SERVER_TO_CLIENT, p.getHashMap());
                 
@@ -422,7 +433,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                 break;
                 
             case Command.UPDATE_STATE_STREAMING:
-                System.out.println("Se actualiza el % de streaming con "+p);
+                //System.out.println("Se actualiza el % de streaming con "+p);
                 for(RemoteClient client: clients){
                     sent = client.send(p);
                     if(!sent)
@@ -450,9 +461,8 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
                 rc.addCapturePlugin(p.getHashMap().get("id").toString());
                 notifyListeners(this,p);
                 break;
-                
             default:
-                System.out.println("se notifica  "+p);
+                //System.out.println("se notifica  "+p);
                 notifyListeners(this,p);
         }
     }
@@ -476,6 +486,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
     public void removeClients(ArrayList<RemoteClient> inactiveClients){
         clients.removeAll(inactiveClients);
     }
+    
 
     private HashMap<String,CommunicationProvider> directPlugins;
     private HashMap<String,StreamableConfiguration> directPluginsConfigs;
@@ -495,21 +506,21 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
     
     public void initStreaming(){
         if(!isOnline) return;
-        System.out.println("ENTRO A INISTREAMINT CON "+isStreaming+" y "+directPluginsConfigs);
+        //System.out.println("ENTRO A INISTREAMINT CON "+isStreaming+" y "+directPluginsConfigs);
         if(!isStreaming && directPluginsConfigs != null){
             for(String k : directPluginsConfigs.keySet()){
                 new Thread(()->{
                     if(directPluginsConfigs.get(k) instanceof ConnectionListener){
                         ServerConnection.getInstance().subscribeListener((ConnectionListener) directPluginsConfigs.get(k));
-                        System.out.println("el plugin es listener");
+                        //System.out.println("el plugin es listener");
                     }
                     if(directPluginsConfigs.get(k) instanceof ConnectionSender){
                         ((ConnectionSender)directPluginsConfigs.get(k)).subscribeListener(this);
-                        System.out.println("el plugin es sender");
+                        //System.out.println("el plugin es sender");
                     }
                     ((StreamableConfiguration)directPluginsConfigs.get(k)).startStreaming();
                     
-                    System.out.println("transmitiendo "+((StreamableConfiguration)directPluginsConfigs.get(k)).toString());
+                    //System.out.println("transmitiendo "+((StreamableConfiguration)directPluginsConfigs.get(k)).toString());
                 }).start();
             }
             isStreaming = true;
@@ -529,7 +540,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
     private HashMap<String,Object> devConfig;
     public void configureDirectDevices(HashMap<String,Object> devConf){
         devConfig = devConf;
-        System.out.println("ENTRO A CONFIGURAR PLUGINS CON "+devConf);
+        //System.out.println("ENTRO A CONFIGURAR PLUGINS CON "+devConf);
         if(directPluginsConfigs == null)
             directPluginsConfigs = new HashMap<>();
         int auxPort;
@@ -586,8 +597,8 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
         if (listeners == null)
             listeners = new ArrayList<>();
         listeners.add(c);
-        if(c instanceof CommunicationConfiguration)
-            System.out.println("Se ha suscrito uno más de nombre: "+((CommunicationConfiguration)c).toString());
+        //if(c instanceof CommunicationConfiguration)
+            //System.out.println("Se ha suscrito uno más de nombre: "+((CommunicationConfiguration)c).toString());
     }
 
     @Override
@@ -595,7 +606,7 @@ public class ServerConnection implements PluginCaptureListener,ConnectionSender,
         if (listeners == null || listeners.isEmpty() || !listeners.contains(c))
             return;
         listeners.remove(c);
-        System.out.println("Se ha suscrito uno más");
+        //System.out.println("Se ha suscrito uno más");
     }
 
     @Override

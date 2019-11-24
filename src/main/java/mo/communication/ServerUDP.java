@@ -51,9 +51,10 @@ public class ServerUDP {
                 DatagramPacket packetToSend = new DatagramPacket(serializedMessage,serializedMessage.length,host,port);
                 socketUDP.send(packetToSend);
             }
-            else
-                System.out.println("serializedMessage es nulo");
-        } catch (IOException ex) {
+            else{
+                //System.out.println("serializedMessage es nulo");
+        }}
+        catch (IOException ex) {
             Logger.getLogger(ServerUDP.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

@@ -42,7 +42,7 @@ public class NewConnectionWizardPanel extends JPanel {
         
         JLabel ipAddressLabel = new JLabel(inter.s("ServerConfigurationWizardPanel.serverConfigurationLocalIP"));
         ipField = new JTextField();
-        ipField.setEditable(false);
+        //ipField.setEditable(false);
         ipField.setText(InetAddress.getLocalHost().getHostAddress());
         ipField.setHorizontalAlignment(JTextField.CENTER);
 
@@ -219,6 +219,7 @@ public class NewConnectionWizardPanel extends JPanel {
 //        } 
         else {
             wizard.addResult("localIP", ipField.getText());
+            ServerConnection.getInstance().setLocalIP(ipField.getText());
             wizard.addResult("portTCP", portTCPField.getText());
             wizard.addResult("portUDP", portUDPField.getText());
 //            wizard.addResult("portRTP", portRTPField.getText());
